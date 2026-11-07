@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Phenol Red Line Analyzer — Mobile v6 · Auto tilt correction</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Phenol Red Line Analyzer — Mobile v6.1 · Tilt & sample bounds</title>
 <style>
 :root{--bg:#f3f6fb;--card:#fff;--ink:#132b45;--muted:#607286;--line:#dbe4ee;--blue:#225dc2;--cyan:#0c8e9d;--good:#167455;--warm:#96510d;--red:#bc4d55}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.48 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}header{background:linear-gradient(112deg,#153354,#23578c);color:white;padding:24px max(18px,calc((100vw - 1420px)/2)) 28px}header .eyebrow{font-size:11px;letter-spacing:1.5px;font-weight:800;color:#a0e5ea}h1{font-size:clamp(23px,3vw,34px);margin:5px 0}header p{margin:5px 0 0;color:#e6f2ff;max-width:920px}main{max-width:1460px;margin:18px auto 50px;padding:0 18px}.topbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px}.layout{display:grid;grid-template-columns:minmax(0,1.07fr) minmax(0,1fr);gap:15px;align-items:start}.column{min-width:0}.card{background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:0 2px 12px #1431550a;padding:19px;margin-bottom:15px}h2{margin:0 0 10px;font-size:17px;line-height:1.4}h3{margin:0 0 9px;font-size:14px}.help,.small{color:var(--muted)}.help{margin:3px 0 13px}.small{font-size:12px}.hint{padding:10px 12px;border-left:3px solid var(--cyan);border-radius:6px;background:#edf9fc;font-size:12px;line-height:1.5}.hint.warn{border-color:#e6a54a;background:#fff8e9}.button,button,.btn{cursor:pointer;border:1px solid #b9cde6;background:#f8fbff;border-radius:8px;padding:9px 12px;color:#17456d;font-weight:700;font-size:13px;white-space:nowrap}.button:hover,button:hover,.btn:hover{background:#e7f2ff}button.primary,.primary{color:white;background:var(--blue);border-color:var(--blue)}button.primary:hover{background:#164a9c}button.danger{color:#95404c}input[type="file"]{display:block;min-width:220px;max-width:100%;color:#1b4769;font-size:14px;background:#fff;border:1px solid #8faed0;border-radius:9px;padding:8px;cursor:pointer}input[type="file"]::file-selector-button{border:0;border-radius:6px;background:#225dc2;color:white;font-weight:700;padding:10px 12px;margin-right:12px;cursor:pointer}.upload-card{border:2px dashed #88a9d5;background:#eef6ff;border-radius:12px;padding:16px 20px;margin-bottom:12px}.upload-card.drag-over{border-color:#15806a;background:#ddf4ed}.upload-heading{color:#16436d;font-weight:850;font-size:14px;margin-bottom:10px}.upload-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.upload-prompt{font-size:14px}.upload-hint{font-size:12px;color:#456987;margin-top:9px}.upload-status{margin-top:9px;font-weight:750;color:#135b47}.upload-status.error{color:#ae3545}.upload-card .small{margin-top:5px}.upload-card button{background:#fff}input[type="number"],input[type="text"],select{max-width:100%;min-width:0;border:1px solid #cbd8e5;border-radius:7px;background:#fff;padding:8px;color:var(--ink);font:inherit}input[type="number"]{width:100%}select{width:auto}label{font-weight:600;font-size:12px;color:#37516a}input[type="checkbox"]{accent-color:var(--blue);width:18px;height:18px;margin:0}.checkrow{display:flex;align-items:center;gap:10px;margin:4px 0}.checkrow label{font-size:14px;cursor:pointer}.settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.setting label{display:block;margin:0 0 4px}.setting .small{display:block;line-height:1.4;margin:4px 0 0}.setting input[type="range"]{width:100%;accent-color:var(--blue)}.value{float:right;font-weight:800;color:var(--blue)}.inline{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.imagebox{border:1px solid #ccd8e6;border-radius:9px;background:#f0f2f7;max-height:800px;overflow:auto;text-align:center;touch-action:auto}#imageCanvas{display:block;width:auto;max-width:100%;height:auto;margin:auto;cursor:crosshair;touch-action:none}#imageCanvas.dragging{cursor:crosshair}#imageCanvas.native{cursor:default}.samplelist{display:flex;flex-direction:column;gap:8px;max-height:440px;overflow:auto}.sample{border:1px solid #dce6ef;border-radius:9px;padding:10px;background:#fafcff;display:grid;grid-template-columns:1fr auto;gap:7px}.sample.active{outline:2px solid #4c90d8;background:#f0f8ff}.sample .txt{width:100%;font-weight:700}.sample .meta{font-size:12px;color:var(--muted)}.sample .length{width:110px}.sample .actions{display:flex;gap:5px;align-items:center}.sample .actions button{padding:6px 8px;font-size:12px}.pill{display:inline-block;background:#eef6ff;color:#23599d;padding:2px 7px;border-radius:9px;font-size:11px;font-weight:700}.tag{display:inline-block;background:#e6f4f0;color:#14634f;padding:2px 7px;border-radius:8px;font-size:11px}.resultcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.resultcard{border:1px solid #dce8f0;border-radius:9px;padding:12px;background:#fbfdff}.resultcard .title{font-weight:800;font-size:13px}.resultcard .big{font-weight:850;font-size:23px;color:#184fa6;margin:4px 0}.resultcard .kv{display:flex;justify-content:space-between;border-top:1px solid #e5edf5;padding:4px 0;gap:8px;font-size:12px}.resultcard .kv span:last-child{text-align:right;font-weight:700}.resultcard .sub{color:#638096;font-size:11px}.tablewrap{overflow:auto;max-height:460px;border:1px solid #dce8f0;border-radius:8px}table{border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}th{position:sticky;top:0;background:#173d66;color:#fff;text-align:left;padding:9px 10px;z-index:1}td{padding:9px 10px;border-top:1px solid #e8eff7}tbody tr:nth-child(even){background:#f7faff}.chart{height:235px;width:100%;border:1px solid #dce6ef;border-radius:8px;background:white}.legend{font-size:12px;color:var(--muted)}.unavailable{opacity:.45;pointer-events:none}.unit{color:#457394;font-size:12px}.error{color:#a53a4c;font-weight:600}.footer{font-size:12px;color:#587187;padding:10px 2px}.stats{display:flex;gap:8px;flex-wrap:wrap}.stats span{background:#eaf1f9;border-radius:9px;padding:4px 8px;color:#244d77;font-size:12px;font-weight:700}details summary{font-weight:700;cursor:pointer;color:#235590}details p{font-size:13px;color:#475f75}.status{font-size:12px;color:#1b705b;min-height:17px}@media(max-width:1000px){.layout{grid-template-columns:1fr}.resultcards{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.settings,.resultcards{grid-template-columns:1fr}header{padding:20px}.card{padding:14px}.imagebox{max-height:650px}}
@@ -53,7 +53,7 @@ header p{font-size:13px}
 </div>
 <div class="topbar"><button class="btn" id="loadSyntheticDemo" type="button">Try built-in synthetic test (no upload)</button><span class="small">Use this to check that the analyzer actually runs in your browser.</span></div>
 <div class="layout"><section class="column">
-<div class="card"><h2>1 · Detect and select samples</h2><p class="help">Click <b>Auto-detect</b> to find every pair of red lines. For unusual images, draw a box around <b>both lines</b> to add or replace a sample region. Rename samples below.</p>
+<div class="card"><h2>1 · Detect and select samples</h2><p class="help">Click <b>Auto-detect</b> to find every pair of red lines. Automatic bounds exclude isolated marks and respect detected horizontal frame lines. Check every box; for unusual images, draw a box around <b>both lines</b> to add or replace a sample region. Rename samples below.</p>
 <div class="inline" style="margin-bottom:12px"><button class="primary" id="autodetect">Auto-detect samples</button><button id="addROI">+ Draw new sample box</button><button id="editROI">Redraw selected box</button><button id="cancelDraw">Cancel drawing</button></div>
 <div class="image-workspace"><div class="image-preview"><div class="imagebox"><canvas id="imageCanvas" aria-label="Image with editable sample boxes and detected line contours"></canvas></div><p class="small" id="imageInfo">Image not loaded.</p><div class="hint">Boxes include <b>both</b> lines. Thin green markers trace the dark-red body edges, excluding pale halos. Internal highlights are not boundaries. Check the overlay to confirm that the correct boundaries were detected.</div></div><div class="nearby-settings"><label class="checkrow"><input type="checkbox" id="showEdges" checked> Show thin edge overlay</label><h2>Adjust & preview</h2><div class="checkrow"><input type="checkbox" id="autoTilt" checked><label for="autoTilt">Auto-correct sample tilt</label></div><p class="small">Corrects a single rotation per sample (up to ±25°). Preserves local bends and width variation. Does not correct perspective. Draw a box around both complete stripes if auto-detection misses a tilted sample.</p><p class="small">Changes update the contours and measurements automatically.</p><div class="settings"><div class="setting"><label for="threshold">Dark-core boundary level <span class="value" id="thresholdText">50%</span></label><input id="threshold" type="range" min="15" max="65" step="1" value="50"><span class="small">Tracks the dark-red body; excludes pale halos. Higher level selects a darker, narrower boundary. Keep the same level across images.</span></div><div class="setting"><label for="trend">Roughness reference window <span class="value" id="trendText">61 px</span></label><input id="trend" type="range" min="21" max="201" step="10" value="61"><span class="small">Use the same scale across images.</span></div><div class="setting"><label for="scale">Image scale (µm/pixel; optional)</label><input id="scale" type="number" min="0" step="any" placeholder="No scale → width in px"><span class="small">Only calibrated images yield physical width/roughness units.</span></div><div class="setting"><label for="defectPct">Width defect threshold (%)</label><input id="defectPct" type="number" min="5" max="100" value="25"><span class="small">A contiguous region with width change beyond this threshold is counted as a defect.</span></div></div><div class="checkrow"><input type="checkbox" id="unequal" checked><label for="unequal">Different sample / line lengths</label></div><p class="small" id="lengthDesc">ON: independently normalize the position along each sample from 0–100%. Use the start/end percentage to measure the same relative section of each line. Undetected fraction and coverage remain percentages of the section analyzed.</p>
 <div id="lengthControls" class="settings" style="margin:11px 0 16px"><div class="setting"><label for="startPct">Start of each line (%)</label><input id="startPct" type="number" value="2" min="0" max="95" step="1"></div><div class="setting"><label for="endPct">End of each line (%)</label><input id="endPct" type="number" value="98" min="5" max="100" step="1"></div></div>
@@ -70,7 +70,7 @@ header p{font-size:13px}
 <p><b>Quality target:</b> each stripe should have straight, parallel dark-red outer boundaries and constant width. The 1 µL and 2 µL stripes are evaluated separately; their widths need not match. <b>Edge straightness RMS</b> fits each edge with one straight line and combines the perpendicular residual RMS values. This removes overall tilt while retaining bending. <b>Centerline bending RMS</b> measures wandering of the midpoint. <b>Overall edge angle difference</b> measures taper only; width CV also detects local loss of parallelism. A zero angle difference alone does not imply good quality. Compare equal analysis lengths and calibrated resolution. Lower values are not trustworthy where detection coverage is poor.</p><p><b>Mean width</b> = mean separation of the detected dark-red boundaries. With tilt correction enabled and accepted, cross-sections are perpendicular to one estimated sample direction. One rigid rotation is used for both stripes; individual rows are not straightened. Width is still an optical estimate, not a physical edge standard. <b>Width CV (%)</b> = 100 × standard deviation of width / mean width. <b>Edge Rq</b> is RMS edge deviation from a centered moving-average trend (optical contour roughness, not contact profilometry). <b>Relative edge Rq (%)</b> = 100 × edge Rq / mean width.</p>
 <p><b>Undetected (%)</b> = 100 × undetected rows / expected analysis rows; <b>longest gap (%)</b> = 100 × longest consecutive undetected sequence / expected analysis rows. <b>Defects per 100 px</b> = counted non-gap width-anomaly intervals / analyzed pixel length × 100. With sample length entered in millimeters, <b>defects per 10 mm</b> is additionally shown, normalized to the physical section length.</p>
 <p><b>Different line lengths</b> ON: the Start/End percentage is applied to each sample's own ROI height. OFF: the entire drawn ROI is analyzed. Results are calculated independently in both modes. A checkbox does not make edge Rq numerically invariant to different imaging resolution, noise, or observation length. For QC, use a common image magnification and identical settings, or a fixed calibrated segment length. Inspect overlays, especially where gaps or faint lines occur.</p>
-<p>Automatic sample discovery assumes two approximately vertical pink/red stripes per sample. For rotation, perspective distortion, weak colors, unusual backgrounds or heavy JPEG artifacts, manually draw a tight ROI, adjust contrast threshold, and verify contours. Tilt is estimated robustly from red-signal centroids over the middle 76% of each sample. Weak, inconsistent, or >25° estimates are left uncorrected and labelled uncertain. Crop tightly around both full stripes, excluding unrelated red marks. Perspective, lens distortion and out-of-plane deformation are not corrected. Bilinear resampling can affect pixel-scale roughness; use consistent resolution and settings. This is a prototype, not a validated QC standard. Images are processed entirely inside the browser.</p></details></div>
+<p>Automatic sample discovery assumes two approximately vertical pink/red stripes per sample. For rotation, perspective distortion, weak colors, unusual backgrounds or heavy JPEG artifacts, manually draw a tight ROI, adjust contrast threshold, and verify contours. Automatic sample bounds require sustained evidence of both stripes; isolated spots and short label fragments are excluded. Detected dark horizontal frame borders constrain the range. The entire interval between accepted endpoints is retained, including internal gaps. These heuristics can still fail on unfamiliar layouts: inspect or redraw boxes before measuring. Tilt is estimated robustly from red-signal centroids over the middle 76% of each sample. Weak, inconsistent, or >25° estimates are left uncorrected and labelled uncertain. Crop tightly around both full stripes, excluding unrelated red marks. Perspective, lens distortion and out-of-plane deformation are not corrected. Bilinear resampling can affect pixel-scale roughness; use consistent resolution and settings. This is a prototype, not a validated QC standard. Images are processed entirely inside the browser.</p></details></div>
 </section></div><div class="footer">Mobile-ready single-page app · Touch-friendly ROI editing · Supports photo library / camera / Files · Local image analysis · No photo uploads to a server · Calibrate using the processed image resolution.</div>
 </main>
 <script>
@@ -121,6 +121,54 @@ function detectedPairs(roi,project=getProjection){
  if(!best){ps.sort((a,b)=>smooth[b]-smooth[a]);ps=ps.slice(0,2).sort((a,b)=>a-b);best={l:ps[0]+x,r:ps[1]+x}}
  return [best.l,best.r];
 }
+// Use sustained paired stripe evidence, not the first isolated red pixel.
+function sampleExtent(l,r,height){
+ const step=2,sep=r-l,half=Math.max(5,Math.min(16,Math.round(sep*.17)));
+ const rows=[];
+ for(let y=1;y<height-1;y+=step){
+  const present=[l,r].map(cx=>{
+   const values=[];for(let dx=-half;dx<=half;dx++)values.push(scoreAt(cx+dx,y));
+   const bg=Math.min(scoreAt(cx-half-5,y),scoreAt(cx+half+5,y));
+   const level=Math.max(18,bg+14);
+   return values.filter(v=>v>level).length>=3;
+  });
+  rows.push({y,either:present[0]||present[1],both:present[0]&&present[1]});
+ }
+ const radius=4;
+ const stable=rows.map((row,i)=>{
+  const a=rows.slice(Math.max(0,i-radius),Math.min(rows.length,i+radius+1));
+  return a.filter(v=>v.either).length>=Math.ceil(a.length*.75);
+ });
+ // Only bridge very short interruptions for finding the enclosing range.
+ // The image and the measurement validity mask are never filled or changed.
+ const maxHole=Math.max(2,Math.round(height*.008/step));
+ for(let i=0;i<stable.length;){if(stable[i]){i++;continue;}let j=i;while(j<stable.length&&!stable[j])j++;if(i>0&&j<stable.length&&j-i<=maxHole)for(let k=i;k<j;k++)stable[k]=true;i=j;}
+ const components=[];
+ for(let i=0;i<stable.length;){if(!stable[i]){i++;continue;}let j=i;while(j<stable.length&&stable[j])j++;
+  const both=rows.slice(i,j).filter(v=>v.both).length;
+  if((j-i)*step>=Math.max(24,height*.055)&&both*step>=Math.max(12,height*.025))components.push({a:i,b:j-1,length:j-i,both});i=j;
+ }
+ if(!components.length)return null;
+ const main=components.reduce((a,b)=>a.length>b.length?a:b);
+ // A printed horizontal frame is a hard limit. Ignore text-sized dark patches.
+ const borders=[];
+ if(raster){
+  const x0=Math.max(0,Math.round(l-sep*.35)),x1=Math.min(rawCanvas.width-1,Math.round(r+sep*.35));
+  for(let y=1;y<height-1;y++){
+   let dark=0,total=0;for(let x=x0;x<=x1;x+=2){let k=4*(y*rawCanvas.width+x);const lum=.2126*raster[k]+.7152*raster[k+1]+.0722*raster[k+2];if(lum<95&&scoreAt(x,y)<18)dark++;total++;}
+   if(total&&dark/total>.72)borders.push(y);
+  }
+ }
+ const anchorY=rows[Math.round((main.a+main.b)/2)].y;
+ const top=borders.filter(y=>y<anchorY).at(-1)??0;
+ const bottom=borders.find(y=>y>anchorY)??height-1;
+ const candidates=components.filter(c=>rows[c.a].y>=top&&rows[c.b].y<=bottom);
+ if(!candidates.length)return null;
+ const first=Math.min(...candidates.map(c=>rows[c.a].y));
+ const last=Math.max(...candidates.map(c=>rows[c.b].y));
+ // Stay inside the physical frame, with only two pixels of endpoint padding.
+ return {y:Math.max(top+1,first-2),end:Math.min(bottom,last+3),framed:top>0||bottom<height-1};
+}
 function autoSamples(){
  if(!state.img)return;
  let w=rawCanvas.width,h=rawCanvas.height;
@@ -136,15 +184,12 @@ function autoSamples(){
   if(d<15)continue;
   let pad=Math.min(52,Math.max(26,Math.round(d*.61)));
   let x=Math.max(0,Math.round(l-pad)), right=Math.min(w,Math.round(r+pad));
-  let yscan0=Math.round(h*.09),yscan1=Math.round(h*.99),ys=[];
-  for(let y=yscan0;y<yscan1;y+=2){let v1=-Infinity,v2=-Infinity;for(let k=-6;k<=6;k+=2){v1=Math.max(v1,scoreAt(l+k,y));v2=Math.max(v2,scoreAt(r+k,y))}
-   if(Math.max(v1,v2)>15)ys.push(y)}
-  let y0=ys.length>h*.15?Math.max(0,ys[0]-2):Math.round(h*.17);
-  let y1=ys.length>h*.15?Math.min(h,ys.at(-1)+3):Math.round(h*.96);
-  if(y1-y0<h*.21){y0=Math.round(h*.17);y1=Math.round(h*.96)}
+  const extent=sampleExtent(l,r,h);
+  if(!extent)continue;
+  const y0=extent.y,y1=extent.end;
   arr.push(newSample({x,y:y0,w:right-x,h:y1-y0},[l,r]));
  }
- state.samples=arr;state.chosen=arr.length?arr[0].id:null;state.measurements=[];render();refreshSamples();updateResults();setStatus(`Detected ${arr.length} samples / ${arr.length*2} lines. Check the boxes and run analysis.`);
+ state.samples=arr;state.chosen=arr.length?arr[0].id:null;state.measurements=[];render();refreshSamples();updateResults();setStatus(`Detected ${arr.length} samples / ${arr.length*2} lines using sustained stripe evidence. Check the top/bottom bounds; redraw any incorrect box before analysis.`);
 }
 function newSample(roi,centers=null){return {id:++state.uid,label:'Sample '+state.uid,roi,centers,lengthmm:null,color:COLORS[(state.uid-1)%COLORS.length]}}
 function setStatus(s,bad=false){E('status').textContent=s;E('status').style.color=bad?'#aa3652':'#197b60'}
@@ -192,7 +237,7 @@ function safeRegion(roi){let x=Math.max(0,Math.round(roi.x)),y=Math.max(0,Math.r
 // Estimate one global direction per sample; never follow local bending.
 function tiltFrame(roi,enabled){
  const cx=roi.x+roi.w/2,cy=roi.y+roi.h/2;
- const identity={angle:0,cx,cy,cos:1,sin:0,status:enabled?'uncertain: not corrected':'off'};
+ const identity={bounds:roi,angle:0,cx,cy,cos:1,sin:0,status:enabled?'uncertain: not corrected':'off'};
  if(!enabled)return identity;
  const points=[];
  for(let j=0;j<55;j++){
@@ -212,7 +257,7 @@ function tiltFrame(roi,enabled){
  const scatter=median(points.map(p=>Math.abs(p.x-intercept-slope*(p.y-cy))));
  const angle=Math.atan(slope);
  if(Math.abs(angle)>25*Math.PI/180||scatter>Math.max(4,roi.w*.08))return identity;
- return {angle:angle*180/Math.PI,cx,cy,cos:Math.cos(angle),sin:Math.sin(angle),status:'corrected'};
+ return {bounds:roi,angle:angle*180/Math.PI,cx,cy,cos:Math.cos(angle),sin:Math.sin(angle),status:'corrected'};
 }
 function imagePoint(frame,x,y){
  const u=x-frame.cx,v=y-frame.cy;
@@ -220,6 +265,8 @@ function imagePoint(frame,x,y){
 }
 function frameScore(frame,x,y){
  const p=imagePoint(frame,x,y);
+ const b=frame.bounds;
+ if(b&&(p.x<b.x||p.y<b.y||p.x>=b.x+b.w||p.y>=b.y+b.h))return NaN;
  if(p.x<0||p.y<0||p.x>=rawCanvas.width-1||p.y>=rawCanvas.height-1)return NaN;
  const ix=Math.floor(p.x),iy=Math.floor(p.y),dx=p.x-ix,dy=p.y-iy;
  return (1-dy)*((1-dx)*score(ix,iy)+dx*score(ix+1,iy))+dy*((1-dx)*score(ix,iy+1)+dx*score(ix+1,iy+1));
@@ -263,8 +310,12 @@ function analyzeStripe(s,vol){
 
  for(let j=0;j<n;j++){
   let y=y0+j;let seq=[];for(let x=x0;x<=x1;x++)seq.push((sampleScore(x,y-1)+2*sampleScore(x,y)+sampleScore(x,y+1))/4);
-  if(seq.some(v=>!Number.isFinite(v))){previous=null;continue;}
-  let k=seq.length,side=Math.max(3,Math.min(7,Math.floor(k*.13))),bg=median([...seq.slice(0,side),...seq.slice(-side)]);
+  const pixelValid=seq.map(Number.isFinite),finiteSeq=seq.filter(Number.isFinite);
+  if(finiteSeq.length<12){previous=null;continue;}
+  let k=seq.length,side=Math.max(3,Math.min(7,Math.floor(finiteSeq.length*.13))),bg=median([...finiteSeq.slice(0,side),...finiteSeq.slice(-side)]);
+  // Outside-box pixels cannot form crossings; missing background must not
+  // discard an otherwise valid cross-section through the stripe body.
+  seq=seq.map(v=>Number.isFinite(v)?v:bg);
   const sorted=[...seq].sort((a,b)=>a-b);
   // A high percentile is less sensitive than a single maximum to dark specks.
   const pk=sorted[Math.floor((k-1)*.97)],contrast=pk-bg;
@@ -272,6 +323,7 @@ function analyzeStripe(s,vol){
   const level=bg+Math.max(6.5,threshold*contrast);
   const rising=[],falling=[];
   for(let i=0;i<k-1;i++){
+   if(!pixelValid[i]||!pixelValid[i+1])continue;
    const delta=seq[i+1]-seq[i];
    if(seq[i]<level&&seq[i+1]>=level)rising.push({x:i+(level-seq[i])/delta,g:delta});
    if(seq[i]>=level&&seq[i+1]<level)falling.push({x:i+(level-seq[i])/delta,g:-delta});

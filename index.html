@@ -1,0 +1,315 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Phenol Red Line Analyzer — Mobile v4</title>
+<style>
+:root{--bg:#f3f6fb;--card:#fff;--ink:#132b45;--muted:#607286;--line:#dbe4ee;--blue:#225dc2;--cyan:#0c8e9d;--good:#167455;--warm:#96510d;--red:#bc4d55}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.48 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}header{background:linear-gradient(112deg,#153354,#23578c);color:white;padding:24px max(18px,calc((100vw - 1420px)/2)) 28px}header .eyebrow{font-size:11px;letter-spacing:1.5px;font-weight:800;color:#a0e5ea}h1{font-size:clamp(23px,3vw,34px);margin:5px 0}header p{margin:5px 0 0;color:#e6f2ff;max-width:920px}main{max-width:1460px;margin:18px auto 50px;padding:0 18px}.topbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px}.layout{display:grid;grid-template-columns:minmax(0,1.07fr) minmax(0,1fr);gap:15px;align-items:start}.column{min-width:0}.card{background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:0 2px 12px #1431550a;padding:19px;margin-bottom:15px}h2{margin:0 0 10px;font-size:17px;line-height:1.4}h3{margin:0 0 9px;font-size:14px}.help,.small{color:var(--muted)}.help{margin:3px 0 13px}.small{font-size:12px}.hint{padding:10px 12px;border-left:3px solid var(--cyan);border-radius:6px;background:#edf9fc;font-size:12px;line-height:1.5}.hint.warn{border-color:#e6a54a;background:#fff8e9}.button,button,.btn{cursor:pointer;border:1px solid #b9cde6;background:#f8fbff;border-radius:8px;padding:9px 12px;color:#17456d;font-weight:700;font-size:13px;white-space:nowrap}.button:hover,button:hover,.btn:hover{background:#e7f2ff}button.primary,.primary{color:white;background:var(--blue);border-color:var(--blue)}button.primary:hover{background:#164a9c}button.danger{color:#95404c}input[type="file"]{display:block;min-width:220px;max-width:100%;color:#1b4769;font-size:14px;background:#fff;border:1px solid #8faed0;border-radius:9px;padding:8px;cursor:pointer}input[type="file"]::file-selector-button{border:0;border-radius:6px;background:#225dc2;color:white;font-weight:700;padding:10px 12px;margin-right:12px;cursor:pointer}.upload-card{border:2px dashed #88a9d5;background:#eef6ff;border-radius:12px;padding:16px 20px;margin-bottom:12px}.upload-card.drag-over{border-color:#15806a;background:#ddf4ed}.upload-heading{color:#16436d;font-weight:850;font-size:14px;margin-bottom:10px}.upload-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.upload-prompt{font-size:14px}.upload-hint{font-size:12px;color:#456987;margin-top:9px}.upload-status{margin-top:9px;font-weight:750;color:#135b47}.upload-status.error{color:#ae3545}.upload-card .small{margin-top:5px}.upload-card button{background:#fff}input[type="number"],input[type="text"],select{max-width:100%;min-width:0;border:1px solid #cbd8e5;border-radius:7px;background:#fff;padding:8px;color:var(--ink);font:inherit}input[type="number"]{width:100%}select{width:auto}label{font-weight:600;font-size:12px;color:#37516a}input[type="checkbox"]{accent-color:var(--blue);width:18px;height:18px;margin:0}.checkrow{display:flex;align-items:center;gap:10px;margin:4px 0}.checkrow label{font-size:14px;cursor:pointer}.settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.setting label{display:block;margin:0 0 4px}.setting .small{display:block;line-height:1.4;margin:4px 0 0}.setting input[type="range"]{width:100%;accent-color:var(--blue)}.value{float:right;font-weight:800;color:var(--blue)}.inline{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.imagebox{border:1px solid #ccd8e6;border-radius:9px;background:#f0f2f7;max-height:800px;overflow:auto;text-align:center;touch-action:auto}#imageCanvas{display:block;width:auto;max-width:100%;height:auto;margin:auto;cursor:crosshair;touch-action:none}#imageCanvas.dragging{cursor:crosshair}#imageCanvas.native{cursor:default}.samplelist{display:flex;flex-direction:column;gap:8px;max-height:440px;overflow:auto}.sample{border:1px solid #dce6ef;border-radius:9px;padding:10px;background:#fafcff;display:grid;grid-template-columns:1fr auto;gap:7px}.sample.active{outline:2px solid #4c90d8;background:#f0f8ff}.sample .txt{width:100%;font-weight:700}.sample .meta{font-size:12px;color:var(--muted)}.sample .length{width:110px}.sample .actions{display:flex;gap:5px;align-items:center}.sample .actions button{padding:6px 8px;font-size:12px}.pill{display:inline-block;background:#eef6ff;color:#23599d;padding:2px 7px;border-radius:9px;font-size:11px;font-weight:700}.tag{display:inline-block;background:#e6f4f0;color:#14634f;padding:2px 7px;border-radius:8px;font-size:11px}.resultcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.resultcard{border:1px solid #dce8f0;border-radius:9px;padding:12px;background:#fbfdff}.resultcard .title{font-weight:800;font-size:13px}.resultcard .big{font-weight:850;font-size:23px;color:#184fa6;margin:4px 0}.resultcard .kv{display:flex;justify-content:space-between;border-top:1px solid #e5edf5;padding:4px 0;gap:8px;font-size:12px}.resultcard .kv span:last-child{text-align:right;font-weight:700}.resultcard .sub{color:#638096;font-size:11px}.tablewrap{overflow:auto;max-height:460px;border:1px solid #dce8f0;border-radius:8px}table{border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}th{position:sticky;top:0;background:#173d66;color:#fff;text-align:left;padding:9px 10px;z-index:1}td{padding:9px 10px;border-top:1px solid #e8eff7}tbody tr:nth-child(even){background:#f7faff}.chart{height:235px;width:100%;border:1px solid #dce6ef;border-radius:8px;background:white}.legend{font-size:12px;color:var(--muted)}.unavailable{opacity:.45;pointer-events:none}.unit{color:#457394;font-size:12px}.error{color:#a53a4c;font-weight:600}.footer{font-size:12px;color:#587187;padding:10px 2px}.stats{display:flex;gap:8px;flex-wrap:wrap}.stats span{background:#eaf1f9;border-radius:9px;padding:4px 8px;color:#244d77;font-size:12px;font-weight:700}details summary{font-weight:700;cursor:pointer;color:#235590}details p{font-size:13px;color:#475f75}.status{font-size:12px;color:#1b705b;min-height:17px}@media(max-width:1000px){.layout{grid-template-columns:1fr}.resultcards{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.settings,.resultcards{grid-template-columns:1fr}header{padding:20px}.card{padding:14px}.imagebox{max-height:650px}}
+
+/* v4 mobile */
+.mobile-runtime{padding:13px 14px;margin:0 0 14px;border-radius:10px;font-size:14px;font-weight:700}
+.runtime-blocked{background:#fff0d6;border:2px solid #d99529;color:#6e3a08}
+.runtime-ready{background:#e5f7ed;border:2px solid #309464;color:#14603c}
+.mobileUploadButtons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
+.mobileUploadButton{position:relative;display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:74px;background:#225dc2;color:white;border-radius:11px;border:2px solid #1c54b2;padding:14px 12px;font-weight:850;font-size:16px;overflow:hidden;text-align:center;cursor:pointer}
+.mobileUploadButton small{font-size:11px;opacity:.95;color:#fff}
+.mobileUploadButton.cameraButton{background:#087f8b;border-color:#087f8b}
+.mobileUploadButton input[type="file"]{opacity:0;position:absolute;inset:0;width:100%;height:100%;padding:0;margin:0;cursor:pointer;z-index:2;min-width:unset;max-width:none}
+.mobileUploadButton:focus-within{outline:3px solid #f7c84b;outline-offset:2px}
+button,.btn{min-height:43px;white-space:normal}input[type="text"],input[type="number"],select{font-size:16px}
+#imageCanvas{touch-action:pan-y;user-select:none;-webkit-user-select:none}
+#imageCanvas.draw-enabled{touch-action:none}
+.upload-card{padding:15px;border-style:solid}
+#sampleList .sample{grid-template-columns:minmax(0,1fr) auto}
+@media(max-width:560px){
+main{padding:0 10px;margin-top:12px}
+header{padding:17px 15px 22px}
+header p{font-size:13px}
+.layout{gap:10px}.card{margin-bottom:10px}
+.mobileUploadButtons{grid-template-columns:1fr;gap:9px}
+.mobileUploadButton{min-height:66px}
+.sample .actions{grid-column:1/-1}
+.sample .length{width:112px}
+#sampleList .sample{column-gap:8px}
+#imageCanvas{max-width:100%;height:auto}
+.resultcards{grid-template-columns:1fr}
+.inline{gap:7px}
+.inline button{flex:1 0 auto}
+}
+</style></head><body>
+<header><div class="eyebrow">PHENOL RED · MOBILE / DESKTOP</div><h1>Line Width & Quality Analyzer</h1><p>Measure each line independently. Left line = <b>1 µL</b> phenol-red solution; right line = <b>2 µL</b>. Supports <b>one or multiple samples per image</b>, individually selected sample lengths, and local CSV export.</p></header>
+<main>
+<div id="runtimeNotice" class="mobile-runtime runtime-blocked" role="status">⚠️ This appears to be an HTML preview. iPhone Files / ChatGPT previews may block the analyzer. For full functionality, open this app through an HTTPS website in Safari. <span class="small">If the app is running, this message will change to “App ready.”</span></div>
+<div class="upload-card" id="dropZone">
+  <div class="upload-heading">STEP 1 — SELECT YOUR IMAGE</div>
+  <div class="mobileUploadButtons">
+    <label class="mobileUploadButton"><span>📷  Choose Photo / File</span><small>Photo Library or Files</small><input id="upload" type="file" accept="image/*" aria-label="Choose photo or image file"></label>
+    <label class="mobileUploadButton cameraButton"><span>📸  Take Photo</span><small>Open rear camera</small><input id="cameraUpload" type="file" accept="image/*" capture="environment" aria-label="Take photo with camera"></label>
+  </div>
+  <div id="uploadStatus" class="upload-status" role="status" aria-live="polite">Select a photo (one or multiple samples). Images remain on your device.</div>
+  <div class="small" id="fileLabel">Current image: none</div>
+  <p class="small" style="margin-top:12px">Accepted: formats supported by your browser (JPEG / PNG / WebP; HEIC depends on device). Large photos are resized for mobile performance. Analyzed pixel sizes refer to the resized image.</p>
+</div>
+<div class="topbar"><button class="btn" id="loadSyntheticDemo" type="button">Try built-in synthetic test (no upload)</button><span class="small">Use this to check that the analyzer actually runs in your browser.</span></div>
+<div class="layout"><section class="column">
+<div class="card"><h2>1 · Detect and select samples</h2><p class="help">Click <b>Auto-detect</b> to find every pair of red lines. For unusual images, draw a box around <b>both lines</b> to add or replace a sample region. Rename samples below.</p>
+<div class="inline" style="margin-bottom:12px"><button class="primary" id="autodetect">Auto-detect samples</button><button id="addROI">+ Draw new sample box</button><button id="editROI">Redraw selected box</button><button id="cancelDraw">Cancel drawing</button></div>
+<div class="imagebox"><canvas id="imageCanvas" aria-label="Image with editable sample boxes and detected line contours"></canvas></div><p class="small" id="imageInfo">Image not loaded.</p><div class="hint">Boxes include <b>both</b> lines. Green markers trace the left and right edges of each detected stripe. Check the overlay to confirm that the correct boundaries were detected.</div>
+</div>
+<div class="card"><h2>2 · Sample list and lengths</h2><div class="stats" id="stats"></div><p class="help">Select a sample to inspect it or rename it. Optionally enter its full physical line length (mm). The analysis section is defined relative to each sample box.</p><div id="sampleList" class="samplelist"><p class="small">No samples yet.</p></div><div class="inline" style="margin-top:12px"><button id="deleteSelected" class="danger">Remove selected sample</button><button id="removeAll">Remove all samples</button></div></div>
+<div class="card"><h2>3 · Analysis settings</h2><div class="checkrow"><input type="checkbox" id="unequal" checked><label for="unequal">Different sample / line lengths</label></div><p class="small" id="lengthDesc">ON: independently normalize the position along each sample from 0–100%. Use the start/end percentage to measure the same relative section of each line. Gap fraction and coverage remain percentages of the section analyzed.</p>
+<div id="lengthControls" class="settings" style="margin:11px 0 16px"><div class="setting"><label for="startPct">Start of each line (%)</label><input id="startPct" type="number" value="2" min="0" max="95" step="1"></div><div class="setting"><label for="endPct">End of each line (%)</label><input id="endPct" type="number" value="98" min="5" max="100" step="1"></div></div>
+<div class="settings"><div class="setting"><label for="threshold">Red boundary threshold <span class="value" id="thresholdText">32%</span></label><input id="threshold" type="range" min="15" max="65" step="1" value="32"><span class="small">Higher threshold = narrower detected line.</span></div><div class="setting"><label for="trend">Edge detrending window <span class="value" id="trendText">61 px</span></label><input id="trend" type="range" min="21" max="201" step="10" value="61"><span class="small">Use the same scale across images.</span></div><div class="setting"><label for="scale">Image scale (µm/pixel; optional)</label><input id="scale" type="number" min="0" step="any" placeholder="No scale → width in px"><span class="small">Only calibrated images yield physical width/roughness units.</span></div><div class="setting"><label for="defectPct">Width defect threshold (%)</label><input id="defectPct" type="number" min="5" max="100" value="25"><span class="small">A contiguous region with width change beyond this threshold is counted as a defect.</span></div></div>
+<div class="inline" style="margin-top:16px"><button class="primary" id="analyze">Analyze all lines</button><button id="overlayPng">Download contour overlay</button></div><p class="status" id="status"></p></div>
+</section><section class="column">
+<div class="card"><h2>4 · Individual line readout</h2><p class="help">No sample-to-sample ranking. <b>Width CV</b>, <b>edge Rq</b>, <b>gap fraction</b>, and <b>defect density</b> describe different aspects of line quality. Larger Rq and CV indicate greater contour irregularity.</p><div class="resultcards" id="resultCards"><p class="small">Run the analysis to see individual lines.</p></div></div>
+<div class="card"><h2>5 · Exportable measurement table</h2><div class="tablewrap"><table><thead><tr><th>Sample</th><th>Volume</th><th>Measured length (px)</th><th>Mean width</th><th>Width CV (%)</th><th>Edge Rq</th><th>Relative Rq (%)</th><th>Gap (%)</th><th>Longest gap (%)</th><th>Defects / 100 px</th><th>Defects / 10 mm*</th><th>Coverage (%)</th></tr></thead><tbody id="resultTable"><tr><td colspan="12">Not analyzed yet</td></tr></tbody></table></div><p class="small">*Requires an entered physical line length. Defect count and pixel-density metrics require a consistent imaging scale for comparison.</p><div class="inline" style="margin-top:12px"><button id="summaryCsv">Download results CSV</button><button id="profileCsv">Download row-by-row profiles CSV</button></div></div>
+<div class="card"><h2>6 · Profile of one line</h2><div class="inline" style="margin-bottom:9px"><label for="lineSelect">Line:</label><select id="lineSelect"></select><select id="chartType"><option value="width">Width vs. normalized length</option><option value="edges">Detrended edge deviations</option></select></div><canvas id="chart" class="chart"></canvas><p class="small" id="chartNote">Select a measured line.</p></div>
+<div class="card"><details><summary>Methods, limitations and recommendations</summary>
+<p><b>Mean width</b> = mean separation of left/right optical red boundaries over detected rows. <b>Width CV (%)</b> = 100 × standard deviation of width / mean width. <b>Edge Rq</b> is RMS edge deviation from a centered moving-average trend (optical contour roughness, not contact profilometry). <b>Relative edge Rq (%)</b> = 100 × edge Rq / mean width.</p>
+<p><b>Gap (%)</b> = 100 × undetected rows / expected analysis rows; <b>longest gap (%)</b> = 100 × longest consecutive undetected sequence / expected analysis rows. <b>Defects per 100 px</b> = counted non-gap width-anomaly intervals / analyzed pixel length × 100. With sample length entered in millimeters, <b>defects per 10 mm</b> is additionally shown, normalized to the physical section length.</p>
+<p><b>Different line lengths</b> ON: the Start/End percentage is applied to each sample's own ROI height. OFF: the entire drawn ROI is analyzed. Results are calculated independently in both modes. A checkbox does not make edge Rq numerically invariant to different imaging resolution, noise, or observation length. For QC, use a common image magnification and identical settings, or a fixed calibrated segment length. Inspect overlays, especially where gaps or faint lines occur.</p>
+<p>Automatic sample discovery assumes two approximately vertical pink/red stripes per sample. For rotation, perspective distortion, weak colors, unusual backgrounds or heavy JPEG artifacts, manually draw a tight ROI, adjust contrast threshold, and verify contours. This is a prototype, not a validated QC standard. Images are processed entirely inside the browser.</p></details></div>
+</section></div><div class="footer">Mobile-ready single-page app · Touch-friendly ROI editing · Supports photo library / camera / Files · Local image analysis · No photo uploads to a server · Calibrate using the processed image resolution.</div>
+</main>
+<script>
+'use strict';
+const E=id=>document.getElementById(id), canvas=E('imageCanvas'),ctx=canvas.getContext('2d',{willReadFrequently:true}), rawCanvas=document.createElement('canvas'),rawCtx=rawCanvas.getContext('2d',{willReadFrequently:true});
+const state={img:null,imgName:'',samples:[],measurements:[],chosen:null,drawMode:null,down:null,uid:0};
+const COLORS=['#087aeb','#e67e19','#9963cc','#218b71','#b55579','#177cad','#a77712','#6666b2'];
+const htmlEscape=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+const mean=a=>a.length?a.reduce((v,x)=>v+x,0)/a.length:NaN;
+const sd=a=>{let m=mean(a);return Math.sqrt(mean(a.map(x=>(x-m)**2)))};
+const rms=a=>Math.sqrt(mean(a.map(v=>v*v)));
+const fmt=(v,d=2)=>Number.isFinite(v)?v.toFixed(d):'—';
+const median=a=>{if(!a.length)return NaN;let b=[...a].sort((a,b)=>a-b);let n=b.length;return n%2?b[n>>1]:(b[n/2-1]+b[n/2])/2};
+function moving(a,k){let r=Math.floor(k/2),pre=[0];for(let v of a)pre.push(pre.at(-1)+v);return a.map((v,i)=>{let l=Math.max(0,i-r),u=Math.min(a.length,i+r+1);return (pre[u]-pre[l])/(u-l)})}
+function smooth5(a){return a.map((v,i)=>(a[Math.max(i-2,0)]+2*a[Math.max(i-1,0)]+3*v+2*a[Math.min(i+1,a.length-1)]+a[Math.min(i+2,a.length-1)])/9)}
+function fillInvalid(vals){let out=vals.slice(),idx=[];for(let i=0;i<vals.length;i++)if(Number.isFinite(vals[i]))idx.push(i);if(!idx.length)return out.fill(0);for(let i=0;i<idx[0];i++)out[i]=vals[idx[0]];for(let i=idx.at(-1)+1;i<vals.length;i++)out[i]=vals[idx.at(-1)];for(let j=0;j<idx.length-1;j++){let a=idx[j],b=idx[j+1];for(let i=a+1;i<b;i++)out[i]=vals[a]+(vals[b]-vals[a])*(i-a)/(b-a)}return out}
+function medFilter(a,k=5){let r=Math.floor(k/2),out=a.slice();for(let i=0;i<a.length;i++){if(!Number.isFinite(a[i]))continue;let ar=[];for(let j=Math.max(0,i-r);j<=Math.min(a.length-1,i+r);j++)if(Number.isFinite(a[j]))ar.push(a[j]);out[i]=median(ar)}return out}
+const even=s=>s*2+1;
+let raster=null;
+function score(x,y){let p=4*(y*rawCanvas.width+x),a=raster;return a[p]-(a[p+1]+a[p+2])*.5}
+function scoreAt(x,y){return score(Math.max(0,Math.min(rawCanvas.width-1,Math.round(x))),Math.max(0,Math.min(rawCanvas.height-1,Math.round(y))))}
+function getProjection(x0,x1,y0,y1,ystep=3){let a=new Float32Array(x1-x0),n=0;for(let y=y0;y<y1;y+=ystep){for(let x=x0;x<x1;x++)a[x-x0]+=score(x,y);n++}return Array.from(a,v=>v/Math.max(1,n))}
+function gaussian(a,sigma=4){let rad=Math.max(2,Math.ceil(3*sigma)),kernel=[];for(let j=-rad;j<=rad;j++)kernel.push(Math.exp(-j*j/(2*sigma*sigma)));let sm=kernel.reduce((x,y)=>x+y,0);return a.map((v,i)=>{let s=0;for(let j=-rad;j<=rad;j++)s+=a[Math.max(0,Math.min(a.length-1,i+j))]*kernel[j+rad];return s/sm})}
+function peaks(prof,{height=9,prominence=7,distance=19}={}){
+ const cand=[];let rad=Math.max(9,Math.round(distance*1.8));
+ for(let i=2;i<prof.length-2;i++){
+  if(prof[i]<height||prof[i]<prof[i-1]||prof[i]<prof[i+1])continue;
+  let l=Infinity,r=Infinity;
+  for(let j=Math.max(0,i-rad);j<i;j++)l=Math.min(l,prof[j]);for(let j=i+1;j<=Math.min(prof.length-1,i+rad);j++)r=Math.min(r,prof[j]);
+  if(prof[i]-Math.max(l,r)>=prominence)cand.push({x:i,height:prof[i]});
+ }
+ cand.sort((a,b)=>b.height-a.height);let selected=[];
+ for(let pk of cand){if(selected.every(other=>Math.abs(other.x-pk.x)>=distance))selected.push(pk)}
+ return selected.sort((a,b)=>a.x-b.x).map(p=>p.x)
+}
+function detectedPairs(roi){
+ let {x,y,w,h}=roi,pa=getProjection(x,x+w,Math.round(y+.25*h),Math.round(y+.78*h),3);let smooth=gaussian(pa,Math.max(2,Math.min(5,Math.round(w/38))));
+ let minGap=Math.max(16,Math.round(w*.14));let ps=peaks(smooth,{height:Math.max(7,mean(smooth)+2),prominence:5.7,distance:minGap});
+ if(ps.length<2){let sorted=smooth.map((v,i)=>({x:i,v})).sort((a,b)=>b.v-a.v);for(let p of sorted){if(p.v<8)break;if(ps.every(q=>Math.abs(q-p.x)>minGap))ps.push(p.x);if(ps.length>=2)break}}
+ if(ps.length<2)return null;
+ // For manually drawn sample boxes containing two lines, prefer the strongest pair separated by 15–80% of box width.
+ let best=null;
+ for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){
+  let d=ps[j]-ps[i];if(d<w*.10||d>w*.83)continue;
+  let v=smooth[ps[i]]+smooth[ps[j]]-Math.abs((ps[i]+ps[j])/2-w/2)*.035;
+  if(!best||v>best.v)best={l:ps[i]+x,r:ps[j]+x,v};
+ }
+ if(!best){ps.sort((a,b)=>smooth[b]-smooth[a]);ps=ps.slice(0,2).sort((a,b)=>a-b);best={l:ps[0]+x,r:ps[1]+x}}
+ return [best.l,best.r];
+}
+function autoSamples(){
+ if(!state.img)return;
+ let w=rawCanvas.width,h=rawCanvas.height;
+ let proj=getProjection(0,w,Math.round(h*.34),Math.round(h*.80),3),sm=gaussian(proj,Math.max(3,Math.min(5.5,w/220)));
+ let ps=peaks(sm,{height:8,prominence:7,distance:Math.max(18,Math.round(w*.024))});
+ // Protect against single narrow peaks in the first photo: no sample should contain >2 independent stripe peaks.
+ if(ps.length<2){setStatus('No two lines found. Draw a sample box manually.',true);return}
+ // Group sequential peaks into pairs when the number of peaks is even.
+ if(ps.length%2){let clean=ps.filter(p=>sm[p]>12);if(clean.length>=2&&clean.length%2===0)ps=clean;}
+ if(ps.length%2)ps=ps.slice(0,-1);
+ let arr=[];
+ for(let j=0;j<ps.length;j+=2){let l=ps[j],r=ps[j+1],d=r-l;
+  if(d<15)continue;
+  let pad=Math.min(52,Math.max(26,Math.round(d*.61)));
+  let x=Math.max(0,Math.round(l-pad)), right=Math.min(w,Math.round(r+pad));
+  let yscan0=Math.round(h*.09),yscan1=Math.round(h*.99),ys=[];
+  for(let y=yscan0;y<yscan1;y+=2){let v1=-Infinity,v2=-Infinity;for(let k=-6;k<=6;k+=2){v1=Math.max(v1,scoreAt(l+k,y));v2=Math.max(v2,scoreAt(r+k,y))}
+   if(Math.max(v1,v2)>15)ys.push(y)}
+  let y0=ys.length>h*.15?Math.max(0,ys[0]-2):Math.round(h*.17);
+  let y1=ys.length>h*.15?Math.min(h,ys.at(-1)+3):Math.round(h*.96);
+  if(y1-y0<h*.21){y0=Math.round(h*.17);y1=Math.round(h*.96)}
+  arr.push(newSample({x,y:y0,w:right-x,h:y1-y0},[l,r]));
+ }
+ state.samples=arr;state.chosen=arr.length?arr[0].id:null;state.measurements=[];render();refreshSamples();updateResults();setStatus(`Detected ${arr.length} samples / ${arr.length*2} lines. Check the boxes and run analysis.`);
+}
+function newSample(roi,centers=null){return {id:++state.uid,label:'Sample '+state.uid,roi,centers,lengthmm:null,color:COLORS[(state.uid-1)%COLORS.length]}}
+function setStatus(s,bad=false){E('status').textContent=s;E('status').style.color=bad?'#aa3652':'#197b60'}
+function render(){
+ if(!state.img)return;canvas.width=rawCanvas.width;canvas.height=rawCanvas.height;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(rawCanvas,0,0);
+ let scale=canvas.width/850,fontsize=Math.max(12,17*scale),stroke=Math.max(2,2.5*scale);
+ for(let s of state.samples){let r=s.roi;ctx.save();ctx.lineWidth=s.id===state.chosen?stroke*1.65:stroke;ctx.strokeStyle=s.color;ctx.setLineDash(s.id===state.chosen?[]:[8*scale,5*scale]);ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.setLineDash([]);ctx.font=`bold ${fontsize}px Arial`;let txt=s.label,tw=ctx.measureText(txt).width+12*scale;let ty=Math.max(0,r.y-25*scale);ctx.fillStyle=s.color;ctx.fillRect(r.x,ty,tw,23*scale);ctx.fillStyle='white';ctx.fillText(txt,r.x+6*scale,ty+fontsize+2*scale);ctx.restore();}
+ for(let m of state.measurements){ctx.save();ctx.fillStyle='#00a94d';let step=Math.max(1,Math.round(canvas.height/650));for(let i=0;i<m.Y.length;i+=step){if(!m.valid[i])continue;let y=m.Y[i],left=m.L[i],right=m.R[i];ctx.fillRect(left-1,y,2.7*scale+1,Math.max(1,step));ctx.fillRect(right-1,y,2.7*scale+1,Math.max(1,step))}ctx.restore()}
+ if(state.down){let a=state.down.start,b=state.down.current;ctx.save();ctx.strokeStyle='#ec9d12';ctx.lineWidth=3;ctx.setLineDash([8,6]);ctx.strokeRect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(a.x-b.x),Math.abs(a.y-b.y));ctx.restore()}
+}
+function refreshSamples(){let html='';for(let s of state.samples){let r=s.roi;html+=`<div class="sample ${s.id===state.chosen?'active':''}" data-id="${s.id}"><div><input class="txt sampleName" type="text" value="${htmlEscape(s.label)}" data-id="${s.id}" aria-label="Sample name"><div class="meta">ROI ${r.w} × ${r.h} px · 2 lines · <span class="pill">1 µL left / 2 µL right</span></div></div><div><label>Full length (mm)</label><br><input data-id="${s.id}" class="length sampleMM" type="number" min="0" step="any" placeholder="optional" value="${s.lengthmm||''}"></div><div class="actions"><button data-id="${s.id}" class="pick">Select</button><button data-id="${s.id}" class="erase danger">Delete</button></div></div>`}
+ E('sampleList').innerHTML=html||'<p class="small">No samples. Use Auto-detect or draw a sample ROI.</p>';
+ E('stats').innerHTML=`<span>${state.samples.length} samples</span><span>${state.samples.length*2} lines</span><span>${state.measurements.length} measured</span>`;
+ E('imageInfo').textContent=state.img?`${state.imgName} · ${rawCanvas.width} × ${rawCanvas.height} px · ${state.samples.length} samples · each box may have its own line length`:'No image';
+ E('sampleList').querySelectorAll('.pick').forEach(b=>b.onclick=()=>{state.chosen=+b.dataset.id;refreshSamples();render()});
+ E('sampleList').querySelectorAll('.erase').forEach(b=>b.onclick=()=>removeSample(+b.dataset.id));
+ E('sampleList').querySelectorAll('.sampleName').forEach(i=>i.onchange=()=>{let s=state.samples.find(s=>s.id==i.dataset.id);s.label=i.value.trim()||'Sample '+s.id;refreshSamples();updateResults();render()});
+ E('sampleList').querySelectorAll('.sampleMM').forEach(i=>i.onchange=()=>{let s=state.samples.find(s=>s.id==i.dataset.id);let v=parseFloat(i.value);s.lengthmm=v>0?v:null;for(let m of state.measurements.filter(m=>m.sampleId===s.id)){m.physicalLengthMM=s.lengthmm?m.expectedLength/s.roi.h*s.lengthmm:null;m.defectsPer10mm=m.physicalLengthMM?10*m.defects/m.physicalLengthMM:NaN}updateResults()});
+}
+function removeSample(id){state.samples=state.samples.filter(s=>s.id!==id);state.measurements=state.measurements.filter(m=>m.sampleId!==id);state.chosen=state.samples[0]?.id??null;refreshSamples();updateResults();render()}
+function setLengthUI(){let checked=E('unequal').checked;E('lengthControls').classList.toggle('unavailable',!checked);E('lengthDesc').textContent=checked?'ON: each box has its own 0–100% line coordinate. Start/end % are applied to each sample independently. Enter an actual physical length (mm) for defects per 10 mm.':'OFF: analyze the entire ROI of each sample. You can still draw or resize every sample ROI independently. No between-sample comparison is performed.'}
+E('unequal').onchange=()=>{setLengthUI();state.measurements=[];updateResults();render()};
+for(let id of ['startPct','endPct','threshold','trend','defectPct'])E(id).oninput=()=>{E('thresholdText').textContent=E('threshold').value+'%';E('trendText').textContent=E('trend').value+' px';state.measurements=[];updateResults();render()};
+E('scale').oninput=updateResults;
+E('autodetect').onclick=autoSamples;
+E('addROI').onclick=()=>{state.drawMode='add';canvas.classList.add('draw-enabled');setStatus('Drag a rectangle around BOTH red lines of one sample.')};
+E('editROI').onclick=()=>{if(!state.chosen){setStatus('Select a sample before editing its box.',true);return}state.drawMode='edit';canvas.classList.add('draw-enabled');setStatus('Drag a replacement box around both lines of the selected sample.')};
+E('cancelDraw').onclick=()=>{state.drawMode=null;canvas.classList.remove('draw-enabled');state.down=null;render();setStatus('Drawing cancelled.')};
+E('deleteSelected').onclick=()=>{if(state.chosen)removeSample(state.chosen)};
+E('removeAll').onclick=()=>{state.samples=[];state.measurements=[];state.chosen=null;refreshSamples();updateResults();render()};
+function getPosition(e){let b=canvas.getBoundingClientRect();return{x:Math.max(0,Math.min(canvas.width-1,Math.round((e.clientX-b.left)*canvas.width/b.width))),y:Math.max(0,Math.min(canvas.height-1,Math.round((e.clientY-b.top)*canvas.height/b.height)))}}
+canvas.addEventListener('pointerdown',e=>{if(!state.img)return;let p=getPosition(e);if(!state.drawMode){let hits=state.samples.filter(s=>p.x>=s.roi.x&&p.x<=s.roi.x+s.roi.w&&p.y>=s.roi.y&&p.y<=s.roi.y+s.roi.h);if(hits.length){state.chosen=hits.at(-1).id;refreshSamples();render()}return}state.down={start:p,current:p};canvas.setPointerCapture(e.pointerId);render()});
+canvas.addEventListener('pointermove',e=>{if(!state.down)return;state.down.current=getPosition(e);render()});
+canvas.addEventListener('pointerup',e=>{if(!state.down)return;state.down.current=getPosition(e);let a=state.down.start,b=state.down.current,roi={x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};state.down=null;if(roi.w<30||roi.h<50){setStatus('ROI too small; please draw a larger rectangle.',true);render();return}let centers=detectedPairs(roi);if(state.drawMode==='add'){let s=newSample(roi,centers);state.samples.push(s);state.chosen=s.id}else{let s=state.samples.find(s=>s.id===state.chosen);if(s){s.roi=roi;s.centers=centers}}state.drawMode=null;canvas.classList.remove('draw-enabled');state.measurements=[];refreshSamples();updateResults();render();setStatus('ROI updated. Click Analyze all lines.')});
+function safeRegion(roi){let x=Math.max(0,Math.round(roi.x)),y=Math.max(0,Math.round(roi.y)),w=Math.min(rawCanvas.width-x,Math.round(roi.w)),h=Math.min(rawCanvas.height-y,Math.round(roi.h));return{x,y,w,h}}
+function analyzeStripe(s,vol){
+ let roi=safeRegion(s.roi),centers=detectedPairs(roi)||s.centers;
+ if(!centers)throw Error(`${s.label}: could not find two stripes in the sample box`);
+ let center=centers[vol-1],sep=centers[1]-centers[0];if(sep<15)throw Error(`${s.label}: the two lines are too close to distinguish`);
+ // One line at a time; do not mix with the adjacent stripe.
+ let window=Math.min(52,Math.max(23,Math.floor(sep*.64))),x0=Math.max(roi.x,Math.round(center-window)),x1=Math.min(roi.x+roi.w,Math.round(center+window));
+ let y0=roi.y,y1=roi.y+roi.h;if(E('unequal').checked){let start=+E('startPct').value,end=+E('endPct').value;if(!(start>=0&&end<=100&&start<end))throw Error('Start/end percentages must satisfy 0 ≤ start < end ≤ 100');y0=roi.y+Math.floor(roi.h*start/100);y1=roi.y+Math.ceil(roi.h*end/100)}
+ let n=y1-y0;if(n<30)throw Error(`${s.label}: selected length is too short`);
+ let L=Array(n).fill(NaN),R=Array(n).fill(NaN),Y=Array.from({length:n},(_,j)=>y0+j),valid=Array(n).fill(false);
+ let threshold=+E('threshold').value/100;
+ for(let j=0;j<n;j++){
+  let y=y0+j;let seq=[];for(let x=x0;x<=x1;x++)seq.push((scoreAt(x,Math.max(0,y-1))+2*scoreAt(x,y)+scoreAt(x,Math.min(rawCanvas.height-1,y+1)))/4);
+  let k=seq.length,side=Math.max(3,Math.min(7,Math.floor(k*.13))),bg=median([...seq.slice(0,side),...seq.slice(-side)]);
+  let near=Math.round(center)-x0,pk=-Infinity,idx=-1;
+  for(let i=Math.max(2,near-9);i<=Math.min(k-3,near+9);i++)if(seq[i]>pk){pk=seq[i];idx=i}
+  // If a local bulge shifts the stripe, allow a wider search only when the peak is strong.
+  if(pk-bg<13){pk=-Infinity;for(let i=2;i<k-2;i++)if(seq[i]>pk){pk=seq[i];idx=i}}
+  let contrast=pk-bg;if(contrast<13||idx<2||idx>k-3)continue;
+  let level=bg+Math.max(6.5,threshold*contrast);
+  let left=idx,right=idx;
+  // A pen/red stripe may have pale centre; bridge internal low-valued dips ≤ 4px.
+  function filled(i){if(i<0||i>=k)return false;if(seq[i]>=level)return true;for(let t=1;t<=3;t++)if(i-t>=0&&i+t<k&&seq[i-t]>=level&&seq[i+t]>=level)return true;return false}
+  for(;left>0;left--)if(!filled(left-1))break;
+  for(;right<k-1;right++)if(!filled(right+1))break;
+  if(left<1||right>=k-1||right-left<3)continue;
+  // Subpixel threshold crossings, guards for zero slope.
+  let ll=left-1+(level-seq[left-1])/(seq[left]-seq[left-1]||1),rr=right+(level-seq[right])/(seq[right+1]-seq[right]||1);
+  if(!Number.isFinite(ll)||!Number.isFinite(rr)||rr-ll<3)continue;
+  L[j]=x0+Math.max(0,Math.min(left,ll));R[j]=x0+Math.max(right,Math.min(k-1,rr));valid[j]=true;
+ }
+ let detected=valid.reduce((a,b)=>a+(b?1:0),0);if(detected<Math.max(18,Math.round(n*.18)))throw Error(`${s.label} ${vol} µL: insufficient red line detected (${detected} rows)`);
+ // Smooth only valid regions to suppress single-pixel JPEG noise; retain true gaps.
+ L=medFilter(L,5);R=medFilter(R,5);
+ let widths=L.map((l,i)=>valid[i]?R[i]-l:NaN),ws=widths.filter(Number.isFinite),wMean=mean(ws),wSD=sd(ws),wCV=100*wSD/wMean;
+ let wWin=Math.min(n|1,+E('trend').value|1);if(wWin%2===0)wWin++;let lt=moving(fillInvalid(L),wWin),rt=moving(fillInvalid(R),wWin);
+ let DL=L.map((v,i)=>valid[i]?v-lt[i]:NaN),DR=R.map((v,i)=>valid[i]?v-rt[i]:NaN),leftRq=rms(DL.filter(Number.isFinite)),rightRq=rms(DR.filter(Number.isFinite)),edgeRq=Math.sqrt((leftRq**2+rightRq**2)/2),edgeRa=mean([...DL,...DR].filter(Number.isFinite).map(Math.abs));
+ let gapCount=n-detected,longestGap=0,run=0,gaps=0;
+ for(let b of valid){if(!b){run++;longestGap=Math.max(longestGap,run)}else{if(run>0){gaps++;run=0}}}if(run>0)gaps++;
+ // Width changes relative to a smooth local width baseline. Invalid samples remain invalid in the anomaly detector.
+ let wTrend=moving(fillInvalid(widths),wWin),anom=widths.map((v,i)=>valid[i]&&Math.abs(v-wTrend[i])>Math.max(2,Math.abs(wTrend[i])*(+E('defectPct').value/100)));
+ let defects=0,segmentLen=0;for(let j=0;j<=n;j++){if(j<n&&anom[j]){segmentLen++}else{if(segmentLen>=3)defects++;segmentLen=0}}
+ let frac=n/roi.h,mm=s.lengthmm>0?s.lengthmm*frac:null;
+ return{sampleId:s.id,sample:s.label,volume:vol,side:vol===1?'Left':'Right',center,y0,y1,expectedLength:n,physicalLengthMM:mm,L,R,Y,valid,widths,DL,DR,
+  meanWidth:wMean,widthSD:wSD,widthCV:wCV,edgeRq,edgeRa,leftRq,rightRq,relRq:100*edgeRq/wMean,coverage:detected/n,gapPct:100*gapCount/n,longestGapPct:100*longestGap/n,numberOfGaps:gaps,defects,defectsPer100px:100*defects/n,defectsPer10mm:mm?10*defects/mm:NaN,detected};
+}
+function analyze(){if(!state.img||!state.samples.length){setStatus('First load an image and detect (or draw) samples.',true);return}let results=[],errors=[];for(let s of state.samples)for(let vol of [1,2]){try{results.push(analyzeStripe(s,vol))}catch(err){errors.push(err.message)}}state.measurements=results;refreshSamples();updateResults();render();setStatus(`Measured ${results.length} lines in ${state.samples.length} samples.`+(errors.length?` ${errors.length} detection error(s): ${errors.join(' | ')}`:''),!!errors.length)}
+E('analyze').onclick=analyze;
+function displayUnit(){let v=+E('scale').value;return v>0?{scale:v,unit:'µm'}:{scale:1,unit:'px'}}
+function readoutRows(){let u=displayUnit(),rows=[];for(let m of state.measurements){let s=state.samples.find(s=>s.id===m.sampleId);rows.push([state.imgName,s?.label||m.sample,m.side,m.volume,s?.roi.h||'',m.expectedLength,fmt(s?.lengthmm||NaN,3),fmt(m.physicalLengthMM||NaN,3),fmt(m.meanWidth*u.scale,3),u.unit,fmt(m.widthSD*u.scale,3),fmt(m.widthCV,3),fmt(m.edgeRa*u.scale,3),fmt(m.edgeRq*u.scale,3),fmt(m.leftRq*u.scale,3),fmt(m.rightRq*u.scale,3),fmt(m.relRq,3),fmt(m.gapPct,3),fmt(m.longestGapPct,3),m.numberOfGaps,m.defects,fmt(m.defectsPer100px,3),fmt(m.defectsPer10mm,3),fmt(m.coverage*100,2),E('unequal').checked?'different':'full ROI',E('threshold').value,E('trend').value,E('defectPct').value])}return rows}
+function updateResults(){let u=displayUnit(),cards=[],table=[];for(let m of state.measurements){let s=state.samples.find(s=>s.id===m.sampleId),lab=htmlEscape(s?.label||m.sample),quality=m.coverage<.85?' <span style="color:#b34b39">(low detection)</span>':'';
+ cards.push(`<div class="resultcard"><div class="title">${lab} · ${m.volume} µL (${m.side})</div><div class="sub">Measured section: ${m.expectedLength}px${m.physicalLengthMM?' / '+fmt(m.physicalLengthMM,2)+' mm':''}${quality}</div><div class="big">${fmt(m.meanWidth*u.scale,2)} <span class="unit">${u.unit} width</span></div><div class="kv"><span>Width CV</span><span>${fmt(m.widthCV,2)}%</span></div><div class="kv"><span>Edge Rq</span><span>${fmt(m.edgeRq*u.scale,2)} ${u.unit}</span></div><div class="kv"><span>Relative edge Rq</span><span>${fmt(m.relRq,2)}%</span></div><div class="kv"><span>Gap fraction</span><span>${fmt(m.gapPct,2)}%</span></div><div class="kv"><span>Longest gap</span><span>${fmt(m.longestGapPct,2)}%</span></div><div class="kv"><span>Width defects / 100 px</span><span>${fmt(m.defectsPer100px,2)}</span></div><div class="kv"><span>Width defects / 10 mm</span><span>${fmt(m.defectsPer10mm,2)}</span></div><div class="kv"><span>Coverage</span><span>${fmt(100*m.coverage,1)}%</span></div></div>`);
+ table.push(`<tr><td>${lab}</td><td>${m.volume} µL</td><td>${m.expectedLength}</td><td>${fmt(m.meanWidth*u.scale,2)} ${u.unit}</td><td>${fmt(m.widthCV,2)}</td><td>${fmt(m.edgeRq*u.scale,2)} ${u.unit}</td><td>${fmt(m.relRq,2)}</td><td>${fmt(m.gapPct,2)}</td><td>${fmt(m.longestGapPct,2)}</td><td>${fmt(m.defectsPer100px,2)}</td><td>${fmt(m.defectsPer10mm,2)}</td><td>${fmt(m.coverage*100,1)}</td></tr>`)}
+ E('resultCards').innerHTML=cards.join('')||'<p class="small">Run the analysis to see individual lines.</p>';
+ E('resultTable').innerHTML=table.join('')||'<tr><td colspan="12">Not analyzed yet</td></tr>';
+ let prev=E('lineSelect').value;E('lineSelect').innerHTML=state.measurements.map((m,i)=>`<option value="${i}">${htmlEscape(state.samples.find(s=>s.id===m.sampleId)?.label||m.sample)} · ${m.volume} µL</option>`).join('');if([...E('lineSelect').options].some(o=>o.value===prev))E('lineSelect').value=prev;drawChart();}
+function drawChart(){let can=E('chart'),bw=can.getBoundingClientRect().width||600,ratio=devicePixelRatio||1,C=can.getContext('2d');can.width=Math.round(bw*ratio);can.height=Math.round(235*ratio);C.setTransform(ratio,0,0,ratio,0,0);let w=bw,h=235;C.fillStyle='white';C.fillRect(0,0,w,h);let m=state.measurements[+E('lineSelect').value],unit=displayUnit();if(!m){E('chartNote').textContent='Select a measured line.';return}let ed=E('chartType').value==='edges',datasets=ed?[[m.DL,'#1c71aa'],[m.DR,'#cc5d84']]:[[m.widths,'#1c71aa']];let nums=datasets.flatMap(d=>d[0].filter(Number.isFinite).map(v=>v*unit.scale));if(!nums.length)return;
+ let ymin=Math.min(...nums),ymax=Math.max(...nums);if(ed){let a=Math.max(Math.abs(ymin),Math.abs(ymax),1);ymin=-a;ymax=a}else{ymin=Math.max(0,ymin-(ymax-ymin)*.2);ymax+=(ymax-ymin)*.2}if(ymax-ymin<1){ymax+=.5;ymin-=.5}
+ let l=53,r=16,t=15,b=38,pw=w-l-r,ph=h-t-b;C.strokeStyle='#e2eaf1';C.fillStyle='#55718b';C.font='11px Arial';for(let i=0;i<=4;i++){let y=t+ph*i/4,val=ymax-(ymax-ymin)*i/4;C.beginPath();C.moveTo(l,y);C.lineTo(w-r,y);C.stroke();C.fillText(val.toFixed(1),5,y+4)}for(let i=0;i<=4;i++){let x=l+pw*i/4;C.fillText((i*25)+'%',x-8,h-16)}
+ for(let [arr,color] of datasets){C.beginPath();C.strokeStyle=color;C.lineWidth=1.6;let open=false;for(let i=0;i<arr.length;i++){let v=arr[i];if(!Number.isFinite(v)){open=false;continue}let x=l+pw*i/Math.max(1,arr.length-1),y=t+ph*(ymax-v*unit.scale)/(ymax-ymin);if(!open)C.moveTo(x,y);else C.lineTo(x,y);open=true}C.stroke()}
+ E('chartNote').textContent=(ed?'Blue: left edge; pink: right edge.':'Blue: measured optical width.')+` Horizontal position: ${E('unequal').checked?'0–100% of selected section':'0–100% of sample ROI'}. Vertical unit: ${unit.unit}. Undetected rows are gaps.`
+}
+E('lineSelect').onchange=drawChart;E('chartType').onchange=drawChart;window.addEventListener('resize',drawChart);
+function downloadBlob(blob,name){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000)}
+function csv(rows){return '\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n')}
+E('summaryCsv').onclick=()=>{if(!state.measurements.length){setStatus('Analyze lines before exporting.',true);return}let header=['Image','Sample','Side','Phenol Red (µL)','Sample ROI length (px)','Analyzed section (px)','Full sample length (mm)','Section length (mm)','Mean width','Width unit','Width SD','Width CV (%)','Edge Ra','Edge Rq','Left edge Rq','Right edge Rq','Relative Rq (%)','Gap fraction (%)','Longest gap (%)','Gap count','Width defect count','Width defects per 100px','Width defects per 10mm','Detection coverage (%)','Length mode','Red threshold (%)','Edge window (px)','Defect threshold (%)'];downloadBlob(new Blob([csv([header,...readoutRows()])],{type:'text/csv;charset=utf-8'}),'phenol_red_measurements.csv')};
+E('profileCsv').onclick=()=>{if(!state.measurements.length)return;let rows=[['Image','Sample','Phenol Red (µL)','Row in ROI','Normalized Y (%)','Original image Y (px)','Detected','Width (px)','Left edge x (px)','Right edge x (px)','Detrended left (px)','Detrended right (px)']];for(let m of state.measurements)for(let i=0;i<m.Y.length;i++)rows.push([state.imgName,state.samples.find(s=>s.id===m.sampleId)?.label||m.sample,m.volume,i,fmt(100*i/Math.max(1,m.Y.length-1),2),m.Y[i],m.valid[i]?1:0,fmt(m.widths[i],3),fmt(m.L[i],3),fmt(m.R[i],3),fmt(m.DL[i],3),fmt(m.DR[i],3)]);downloadBlob(new Blob([csv(rows)],{type:'text/csv;charset=utf-8'}),'phenol_red_line_profiles.csv')};
+E('overlayPng').onclick=()=>{if(!state.img)return;render();if(canvas.toBlob)canvas.toBlob(blob=>{if(blob)downloadBlob(blob,'phenol_red_edge_overlay.png')},'image/png');else{let a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='phenol_red_edge_overlay.png';a.click()}};
+function loadImage(uri,label){return new Promise((resolve,reject)=>{
+ let im=new Image();
+ im.onload=()=>{try{
+  const originalW=im.naturalWidth,originalH=im.naturalHeight;
+  if(!originalW||!originalH)throw Error('No valid image dimensions detected.');
+  const maxDim=2350,maxPixels=2800000;
+  const resize=Math.min(1,maxDim/Math.max(originalW,originalH),Math.sqrt(maxPixels/(originalW*originalH)));
+  const w=Math.max(1,Math.round(originalW*resize)),h=Math.max(1,Math.round(originalH*resize));
+  rawCanvas.width=w;rawCanvas.height=h;rawCtx.drawImage(im,0,0,w,h);
+  raster=rawCtx.getImageData(0,0,w,h).data;
+  state.img=im;state.imgName=label;state.samples=[];state.measurements=[];state.uid=0;
+  state.chosen=null;state.drawMode=null;canvas.classList.remove('draw-enabled');
+  E('fileLabel').textContent=`${label} · processed ${w} × ${h} px`+(resize<1?` (original ${originalW} × ${originalH}; resized to ${(resize*100).toFixed(0)}%)`:'');
+  autoSamples();resolve();
+ }catch(err){reject(err)}};
+ im.onerror=()=>reject(Error('Cannot decode this image in your browser. Try sharing it as JPEG or PNG.'));
+ im.src=uri;
+})}
+function syntheticDemo(){
+ const demo=document.createElement('canvas');demo.width=840;demo.height=840;
+ const c=demo.getContext('2d');c.fillStyle='#fafafa';c.fillRect(0,0,840,840);
+ function stripe(cx,top,bottom,width,rough,gap){
+  c.beginPath();for(let y=top;y<=bottom;y+=2){let wobble=rough*(Math.sin(y*.040)+.48*Math.sin(y*.14));let x=cx+Math.sin(y*.004)*2;
+   if(y===top)c.moveTo(x-width/2-wobble,y);else c.lineTo(x-width/2-wobble,y)}
+  for(let y=bottom;y>=top;y-=2){let wobble=rough*(Math.sin(y*.040)+.48*Math.sin(y*.14));let x=cx+Math.sin(y*.004)*2;
+   c.lineTo(x+width/2+wobble,y)}c.closePath();c.fillStyle='#db7494';c.fill();
+  if(gap){c.fillStyle='#fafafa';c.fillRect(cx-width/2-15,gap,width+30,30)}
+ }
+ c.fillStyle='#e6f6f7';c.fillRect(0,0,840,95);c.fillStyle='#21445a';c.font='bold 29px sans-serif';c.fillText('Sample A',130,60);c.fillText('Sample B',545,60);
+ c.strokeStyle='#9da9ae';c.lineWidth=2;c.strokeRect(80,110,275,685);c.strokeRect(480,110,275,685);
+ stripe(165,121,780,12,.7,0);stripe(272,121,780,22,2.5,0);stripe(565,121,780,12,1,0);stripe(671,121,780,22,5,335);
+ return demo.toDataURL('image/png');
+}
+E('loadSyntheticDemo').onclick=async()=>{++uploadRun;uploadMessage('Loading synthetic test image...');try{await loadImage(syntheticDemo(),'synthetic_demo.png');uploadMessage('Synthetic test image loaded.');analyze()}catch(e){uploadMessage(e.message,true)}};
+function uploadMessage(message,error=false){let el=E('uploadStatus');el.textContent=message;el.classList.toggle('error',error)}
+function readAsDataURL(file){return new Promise((resolve,reject)=>{let reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Your browser could not read the file. Please try a JPEG or PNG.'));reader.readAsDataURL(file)})}
+let uploadRun=0;
+async function processSelectedFile(file){
+ if(!file)return;
+ let run=++uploadRun;
+ const name=file.name||'pasted-image.png';
+ if(!(file.type.startsWith('image/')||/\.(jpe?g|png|gif|webp|bmp|avif|tiff?|heic|heif)$/i.test(name))){uploadMessage('Not an image. Please select a photo (JPEG, PNG, WebP or BMP).',true);return;}
+ uploadMessage('Reading '+name+' …');setStatus('Loading your image…');
+ try{
+   let uri=null;
+   try{uri=URL.createObjectURL(file);if(run!==uploadRun)return;await loadImage(uri,name)}
+   catch(err){if(run!==uploadRun)return;let data=await readAsDataURL(file);await loadImage(data,name)}
+   finally{if(uri)URL.revokeObjectURL(uri)}
+   if(run!==uploadRun)return;
+   uploadMessage('Loaded: '+name+' ('+rawCanvas.width+' × '+rawCanvas.height+' processed pixels).');
+   if(state.samples.length){analyze();}else{setStatus('Photo loaded. Tap Auto-detect or draw a sample box.');}
+ }catch(err){
+   if(run!==uploadRun)return;
+   uploadMessage('Could not open '+name+'. '+err.message+' Try JPEG/PNG. If you are in an in-app file preview, open this HTML in Chrome, Edge or Safari.',true);
+   setStatus('Image import failed: '+err.message,true);
+ }
+}
+for(const id of ['upload','cameraUpload'])E(id).addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file){e.target.value='';processSelectedFile(file)}});
+const zone=E('dropZone');
+zone.addEventListener('dragenter',e=>{e.preventDefault();zone.classList.add('drag-over')});
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over')});
+zone.addEventListener('dragleave',e=>{if(!zone.contains(e.relatedTarget))zone.classList.remove('drag-over')});
+zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');const file=[...(e.dataTransfer?.files||[])].find(f=>f.type.startsWith('image/')||/\.(jpe?g|png|webp|bmp|gif|avif|tiff?|heic|heif)$/i.test(f.name));if(file)processSelectedFile(file);else uploadMessage('No supported image found in the dropped files.',true)});
+document.addEventListener('paste',e=>{let tgt=e.target;if(tgt&&(/INPUT|TEXTAREA/.test(tgt.tagName)||tgt.isContentEditable))return;const file=[...(e.clipboardData?.items||[])].filter(it=>it.kind==='file').map(it=>it.getAsFile()).find(x=>x&&x.type.startsWith('image/'));if(file){e.preventDefault();processSelectedFile(file)}});
+
+setLengthUI();render();refreshSamples();updateResults();
+
+E('runtimeNotice').className='mobile-runtime runtime-ready';E('runtimeNotice').textContent='✅ App ready — choose a photo or take one with your camera.';
+
+</script></body></html>

@@ -1,0 +1,619 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f5f6f8"><title>Phenol Red · v7.5</title><style>
+:root{--bg:#f5f6f8;--card:#fff;--ink:#19232e;--muted:#6b7785;--line:#e2e6eb;--blue:#245dd5;--green:#15815d}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}button,select{border:1px solid var(--line);border-radius:9px;background:white;color:var(--ink);padding:8px 11px;min-height:36px}button{cursor:pointer;font-weight:600}button:hover{background:#eef3fc}button:disabled{opacity:.4;cursor:default}.primary{background:var(--blue);border-color:var(--blue);color:white}.primary:hover{background:#174ab3}input[type=checkbox]{width:16px;height:16px;accent-color:var(--blue);margin:0}input[type=range]{accent-color:var(--blue);min-width:0}input[type=number],input[type=text]{border:1px solid var(--line);border-radius:8px;padding:7px;max-width:100%;min-width:0;background:white}label{font-size:12px;color:var(--muted)}h1,h2,h3,p{margin:0}h1{font-size:19px;letter-spacing:-.5px}h2{font-size:15px}header{height:62px;display:flex;align-items:center;justify-content:space-between;max-width:1280px;margin:auto;padding:0 20px}.brand{display:flex;align-items:center;gap:10px}.brandmark{width:28px;height:28px;display:flex;gap:4px;align-items:center;justify-content:center;border-radius:8px;background:#fae8ee}.brandmark:before,.brandmark:after{content:'';height:18px;background:#b32e61;border-radius:2px}.brandmark:before{width:3px}.brandmark:after{width:6px}.version{font-size:10px;font-weight:600;color:var(--muted);margin-left:6px}.runtime{font-size:11px;color:var(--green);background:#eaf5ef;padding:4px 9px;border-radius:20px}main{max-width:1280px;margin:0 auto 40px;padding:0 20px}.uploadbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}.upload-button{display:inline-flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:38px;padding:8px 15px;border-radius:9px;background:var(--blue);color:white;font-size:13px;font-weight:650;cursor:pointer}.upload-button.secondary{background:white;color:var(--ink);border:1px solid var(--line)}.upload-button input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}.file-name{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:360px;flex:1}.upload-status{font-size:12px;color:var(--green);width:100%}.has-image .upload-status:not(.error){display:none}.upload-status.error{color:#b33846}.drag-over{outline:2px dashed var(--blue);outline-offset:4px}.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}.image-preview{position:sticky;top:10px;min-width:0}.image-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:9px}.image-toolbar select{max-width:145px;min-width:90px;font-size:12px}.zoom-tools{display:flex;align-items:center;gap:5px;flex:1;justify-content:flex-end}.zoom-tools button{padding:5px 9px}.zoom-tools label{white-space:nowrap;min-width:27px;text-align:center}.zoom-tools input{width:65px;flex:0 1 80px}.imagebox{height:min(65vh,620px);overflow:auto;position:relative;border:1px solid var(--line);border-radius:10px;background:#f0f2f5;overscroll-behavior:contain;scroll-behavior:auto}#imageCanvas{display:block;max-width:none;margin:auto;touch-action:auto;cursor:default}#imageCanvas.zoomed{cursor:grab}#imageCanvas.panning{cursor:grabbing}#imageCanvas.draw-enabled{touch-action:none;cursor:crosshair}.empty-image{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;color:#8793a1;font-size:13px;pointer-events:none}.empty-image span{font-size:30px;font-weight:200;color:#b2bdca}.has-image .empty-image{display:none}body:not(.has-image) #imageCanvas{visibility:hidden}.image-bottom{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:9px}.checkrow{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.checkrow.edge{color:#15815d}.checkrow.guide{color:var(--blue)}#imageInfo{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%}.nearby-settings{min-width:0}.control-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.value{color:var(--blue);font-weight:750;font-variant-numeric:tabular-nums}.boundary-control{margin-bottom:16px}.boundary-control label{display:flex;justify-content:space-between;font-size:13px;color:var(--ink);font-weight:600}.boundary-control input{width:100%;margin:10px 0 0}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions button{font-size:12px;flex:1}.actions .danger{color:#b1434e}.status{font-size:11px;color:var(--muted);margin-top:9px;min-height:16px;overflow-wrap:anywhere}.advanced{border-top:1px solid var(--line);margin-top:13px;padding-top:11px}summary{cursor:pointer;font-weight:600;font-size:12px;color:#586777;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px}summary::-webkit-details-marker{display:none}summary:after{content:'+';font-size:17px;font-weight:400;color:#8b97a5}details[open]>summary:after{content:'−'}details[open]>summary{margin-bottom:12px}.settings{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.setting label{display:block;margin-bottom:4px}.setting input[type=number],.setting select{width:100%;font-size:12px}.setting input[type=range]{width:100%}.two-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.unavailable{opacity:.4;pointer-events:none}.advanced .checkrow{font-size:12px;color:var(--ink)}#lengthDesc{font-size:11px;color:var(--muted);margin:5px 0}.advanced-note{font-size:11px;color:var(--muted);line-height:1.5}.sample-tools{border-top:1px solid var(--line);margin-top:11px;padding-top:11px}.samplelist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sample{border:1px solid var(--line);border-radius:9px;padding:10px;display:grid;grid-template-columns:1fr auto;gap:6px;min-width:0}.sample.active{border-color:#9bb6f2;background:#f5f8ff}.sample .txt{width:100%;font-weight:600;font-size:12px}.sample .meta{font-size:10px;color:var(--muted);margin-top:3px}.sample .actions{display:flex;flex-wrap:nowrap}.sample .actions button{font-size:11px;padding:5px 7px;min-height:30px}.sample .length{width:75px;font-size:11px}.pill{font-size:10px;color:var(--blue)}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:23px 0 10px}.stats{display:flex;gap:8px;color:var(--muted);font-size:11px;flex-wrap:wrap}.export-menu{position:relative}.export-menu>summary{padding:7px 12px;background:white;border:1px solid var(--line);border-radius:8px;color:var(--ink)}.export-menu[open]>summary{margin:0}.export-items{position:absolute;right:0;top:40px;background:white;z-index:8;box-shadow:0 7px 30px #24344820;padding:7px;border:1px solid var(--line);border-radius:10px;display:grid;gap:5px;width:160px}.export-items button{font-size:12px;text-align:left;border:0}.resultcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.resultcard{background:white;border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}.result-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}.result-header .title{font-size:12px;font-weight:650}.result-header .sub{font-size:11px;color:var(--muted)}.dose{color:var(--blue);background:#eef3ff;padding:2px 7px;border-radius:5px;margin-left:6px;font-size:11px}.metric-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.metric label{font-size:10px;color:var(--muted);display:block;margin-bottom:3px}.metric strong{font-size:21px;font-weight:650;letter-spacing:-.5px}.metric small{font-size:10px;color:var(--muted);margin-left:3px}.resultcard details{margin-top:12px;border-top:1px solid #edf0f3;padding-top:8px}.resultcard summary{font-size:10px;font-weight:500}.kv{display:flex;justify-content:space-between;gap:10px;font-size:11px;padding:4px 0;color:var(--muted)}.kv span:last-child{color:var(--ink)}.coverage-warning{color:#af7031!important}.empty-results{color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1}.secondary-panel{margin-top:14px}.secondary-panel>summary{font-size:13px;color:var(--ink)}.chart{width:100%;height:235px;border:1px solid var(--line);border-radius:8px}.inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.small{font-size:11px;color:var(--muted)}.tablewrap{max-height:420px;overflow:auto}table{border-collapse:collapse;width:100%;white-space:nowrap;font-size:11px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}th{background:#f1f4f8;position:sticky;top:0;font-weight:600}.methods p{font-size:12px;color:var(--muted);margin:10px 0}.footer{color:#8a95a2;text-align:center;font-size:10px;margin-top:18px}.editor-label{font-size:11px;color:var(--muted);margin:10px 0 5px}#cancelDraw{color:#8a6071}
+@media(max-width:760px){header{height:52px;padding:0 13px}h1{font-size:17px}.runtime{font-size:10px}main{padding:0 10px}.uploadbar{gap:6px;margin-bottom:10px}.upload-button{padding:7px 12px;min-height:35px}.file-name{order:5;flex-basis:100%;max-width:100%;font-size:10px}.panel{padding:10px;border-radius:12px;margin-bottom:10px}.workspace{grid-template-columns:minmax(0,1fr);gap:11px}.image-preview{top:0;z-index:3;background:white;padding-bottom:4px}.imagebox{height:38vh;min-height:210px}.image-toolbar{gap:5px}.image-toolbar select{max-width:118px;font-size:11px;padding:6px;min-height:32px}.zoom-tools{gap:4px}.zoom-tools button{min-height:32px;padding:5px 8px;font-size:11px}.zoom-tools input{display:none}.zoom-tools label{font-size:11px}.image-bottom{gap:12px;padding-top:7px}#imageInfo{max-width:100%;margin-left:0;font-size:10px;flex-basis:100%}.nearby-settings{display:grid;grid-template-columns:minmax(0,1fr);gap:0}.control-head{display:none}.boundary-control{margin-bottom:10px}.boundary-control input{margin-top:6px}.actions button{min-height:34px}.advanced{margin-top:10px;padding-top:9px}.advanced .settings{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.advanced .full{grid-column:1/-1}.status{margin-top:5px;min-height:0}.section-head{margin-top:16px}.resultcards{grid-template-columns:minmax(0,1fr);gap:8px}.resultcard{padding:11px}.result-header{margin-bottom:9px}.metric strong{font-size:20px}.samplelist{grid-template-columns:minmax(0,1fr)}.version{display:none}}
+.screening-reference{margin:12px 0 18px;padding:12px;background:#f5f7fb;border:1px solid #e2e8f0;border-radius:12px}.screening-reference summary{cursor:pointer;font-weight:600}.screening-scroll{overflow-x:auto}.screening-scroll table{min-width:470px;width:100%;border-collapse:collapse;font-size:13px}.screening-scroll th,.screening-scroll td{text-align:left;padding:9px 8px;white-space:nowrap;border-bottom:1px solid #dfe5ee}.screening-scroll th{color:#375477}.screening-reference p{margin:10px 0 0}</style></head><body>
+<header><div class="brand"><div class="brandmark" aria-hidden="true"></div><h1>Phenol Red <span class="version">v7.5</span></h1></div><span id="runtimeNotice" class="runtime" role="status">Starting…</span></header>
+<main>
+<div class="uploadbar" id="dropZone"><label class="upload-button">Upload photo<input id="upload" type="file" accept="image/*" aria-label="Upload photo"></label><label class="upload-button secondary">Camera<input id="cameraUpload" type="file" accept="image/*" capture="environment" aria-label="Take photo"></label><button id="loadSyntheticDemo" type="button">Demo</button><span class="file-name" id="fileLabel">No photo selected</span><div id="uploadStatus" class="upload-status" role="status" aria-live="polite"></div></div>
+<section class="panel workspace">
+<div class="image-preview"><div class="image-toolbar"><select id="sampleSelect" aria-label="Selected sample"><option>No samples</option></select><button id="zoomSample" title="Zoom to the selected sample">Zoom selected sample</button><div class="zoom-tools" role="group" aria-label="Zoom"><button id="zoomOut" aria-label="Zoom out">−</button><label for="imageZoom"><output id="zoomText">1×</output></label><input id="imageZoom" type="range" min="1" max="8" step="0.25" value="1" aria-label="Image zoom"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomFit">Fit</button></div></div>
+<div class="imagebox" id="imageViewport" tabindex="0" aria-label="Image preview; scroll or drag to pan"><canvas id="imageCanvas" aria-label="Sample image with detected edges and reference lines"></canvas><div class="empty-image"><span>＋</span>Upload a photo to begin</div></div>
+<div class="image-bottom"><label class="checkrow edge"><input type="checkbox" id="showEdges" checked>Edges</label><label class="checkrow guide"><input type="checkbox" id="showReferences" checked>Guides</label><label class="checkrow guide"><input type="checkbox" id="showCenter" title="Yellow dashed line: center estimated from the original red body" checked>Center</label><span id="imageInfo">No image</span></div></div>
+<aside class="nearby-settings"><div class="control-head"><h2>Adjust</h2><span class="small">Live preview</span></div><div class="boundary-control"><label for="threshold">Boundary <span class="value" id="thresholdText">60%</span></label><input id="threshold" type="range" min="15" max="90" step="1" value="60"></div>
+<div class="actions"><button class="primary" id="autodetect">Detect</button><button id="analyze">Analyze</button></div><p id="status" class="status" role="status" aria-live="polite"></p>
+<details class="advanced"><summary>Advanced</summary><div class="settings">
+<div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div>
+<div class="setting"><label for="boundaryMethod">Boundary signal</label><select id="boundaryMethod"><option value="dark" selected>Dark-red contrast</option><option value="legacy">Legacy redness</option></select></div>
+<div class="setting"><label for="trend">Roughness window <span class="value" id="trendText">121 px</span></label><input id="trend" type="range" min="21" max="201" step="10" value="121"></div>
+<div class="setting"><label for="scale">Scale · µm/px</label><input id="scale" type="number" min="0" step="any" placeholder="Optional"></div>
+<div class="setting"><label for="defectPct">Width defect · %</label><input id="defectPct" type="number" min="5" max="100" value="25"></div>
+<label class="checkrow"><input id="autoTilt" type="checkbox" checked>Auto tilt correction</label>
+<div class="full"><label class="checkrow"><input id="unequal" type="checkbox" checked>Relative analysis section</label><p id="lengthDesc"></p><div id="lengthControls" class="two-fields"><div class="setting"><label for="startPct">Start · %</label><input id="startPct" type="number" value="2" min="0" max="95" step="1"></div><div class="setting"><label for="endPct">End · %</label><input id="endPct" type="number" value="98" min="5" max="100" step="1"></div></div></div>
+<p class="advanced-note full">Keep the same signal, level and image scale when comparing samples.</p></div></details>
+<details class="sample-tools"><summary>Edit samples</summary><div class="actions"><button id="addROI">Add box</button><button id="editROI">Redraw</button><button id="cancelDraw">Cancel</button></div><p class="editor-label">Draw around both lines.</p></details></aside></section>
+<details class="panel secondary-panel" id="samplesPanel"><summary>Samples <span id="stats" class="stats"></span></summary><div id="sampleList" class="samplelist"></div><div class="actions" style="margin-top:9px"><button id="deleteSelected" class="danger">Remove selected</button><button id="removeAll" class="danger">Remove all</button></div></details>
+<div class="section-head"><h2>Results</h2><details class="export-menu"><summary>Export</summary><div class="export-items"><button id="summaryCsv">Results CSV</button><button id="profileCsv">Profiles CSV</button><button id="overlayPng">Overlay image</button></div></details></div>
+<details class="screening-reference"><summary>Screening reference</summary>
+<p class="small">Trial ranges · Dark contrast · Boundary 60% · Window 121 px · Original test-photo scale.</p>
+<div class="screening-scroll"><table><thead><tr><th>Metric</th><th>Lower concern</th><th>Review</th><th>Higher concern</th></tr></thead><tbody>
+<tr><td>Width CV</td><td>≤ 5%</td><td>&gt; 5% to &lt; 8%</td><td>≥ 8%</td></tr>
+<tr><td>Local Rq</td><td>≤ 0.30 px</td><td>&gt; 0.30 to &lt; 0.45 px</td><td>≥ 0.45 px</td></tr>
+<tr><td>Guide RMS</td><td>≤ 0.50 px</td><td>&gt; 0.50 to &lt; 0.70 px</td><td>≥ 0.70 px</td></tr>
+</tbody></table></div>
+<p class="small">All three low → lower concern. Any high → inspect. Otherwise → review. Coverage below 98% → check missing edges first.</p>
+<p class="small">Local Rq is under More. This table uses pixels, even if results show µm. Trial ranges from six photos with the earlier detector; recheck for this revision. Not pass/fail limits. Changed settings, image scale or blur need reassessment. Check green edges first.</p>
+</details>
+<div id="resultCards" class="resultcards"><p class="empty-results">Measurements appear after upload.</p></div>
+<details class="panel secondary-panel" id="profilePanel"><summary>Width & edge profiles</summary><div class="inline" style="margin-bottom:10px"><select id="lineSelect" aria-label="Measured line"></select><select id="chartType" aria-label="Profile type"><option value="width">Width</option><option value="parallel">Guide deviation</option><option value="edges">Local roughness</option><option value="straight">Straight-line deviation</option></select></div><canvas id="chart" class="chart"></canvas><p id="chartNote" class="small"></p></details>
+<details class="panel secondary-panel"><summary>Full data</summary><div class="tablewrap"><table><thead><tr><th>Sample</th><th>Volume</th><th>Length · px</th><th>Width</th><th>CV · %</th><th>Local Rq</th><th>Relative Rq · %</th><th>Undetected · %</th><th>Longest gap · %</th><th>Defects / 100 px</th><th>Defects / 10 mm</th><th>Coverage · %</th><th>Straightness RMS</th><th>Center RMS</th><th>Angle · °</th></tr></thead><tbody id="resultTable"><tr><td colspan="15">No measurements</td></tr></tbody></table></div></details>
+<details class="panel secondary-panel methods"><summary>How to read the results</summary><p><b>CV</b>: width consistency. <b>Guide RMS / P95</b>: deviation from the fitted parallel guides. Lower values indicate less deviation under matched imaging conditions; they are not pass/fail grades. Green edges must be correct before interpreting any measurement.</p>
+<p><b>Center-constrained detection:</b> a low-threshold whole-body redness profile first estimates the stripe axis independently of the dark-rim signal and final high-level edges. Left and right threshold crossings must lie on opposite sides of this initial axis; each side uses its own local peak so unequal rim darkness does not force both crossings onto one rim. Failed rows are re-tested on the original cross-section without vertical averaging, using the same boundary level and opposite-side constraint. Confirmed edges are included in width and roughness measurements and tagged as re-detected in the profile export. No interpolated coordinates enter the measurements. Measured edge arrays are never filled. The overlay connects consecutive confirmed edges. Unsupported gaps stay visible. If the line shifts across the initial axis or an edge cannot be confirmed, that row is marked uncertain. The yellow dashed center is estimated from the original whole red body, separately for each stripe, and is not the midpoint of the fitted blue guides. Green edges must straddle this yellow axis. Accepted green edges must also straddle the midpoint of the fitted blue guides as a second check. Points that fail this second guard are rejected and the guides refitted. Blue parallel guides are fitted to the accepted measurements, so this is a two-stage estimate, not an independent ground-truth reference. High settings and interpolation can change measured widths and roughness; inspect contours and use matched settings.</p><p><b>Parallel references:</b> each measured stripe receives its own two straight, mutually parallel reference lines. A common slope and separate left/right offsets minimize summed horizontal squared deviations on valid rows. Their spacing is estimated from that stripe; there is no preset width and no shared width between 1 µL and 2 µL. The dashed blue overlay is an idealized reference, not a replacement for detected edges. Parallel-reference RMS and P95 use perpendicular distances to these lines. Missing rows are excluded from fitting and deviation statistics. There is no automatic pass/fail threshold. The reference does not validate an incorrectly detected boundary.</p><p><b>Boundary signal:</b> Dark-red contrast uses a logarithmic red/green channel ratio with a small offset, followed by local background subtraction. It emphasizes relative green absorption rather than absolute red brightness. It is an image contrast measure, not calibrated optical density. Legacy redness uses red minus the mean of green and blue. The boundary level is a fraction between local background and a robust signal peak. A percentage does not define a physical material boundary; verify the contour against the original image. Signals and thresholds are not interchangeable: use the same method, level, imaging scale and lighting for comparisons.</p><p><b>Quality target:</b> each stripe should have straight, parallel dark-red outer boundaries and constant width. The 1 µL and 2 µL stripes are evaluated separately; their widths need not match. <b>Edge straightness RMS</b> fits each edge with one straight line and combines the perpendicular residual RMS values. This removes overall tilt while retaining bending. <b>Centerline bending RMS</b> measures wandering of the midpoint. <b>Overall edge angle difference</b> measures taper only; width CV also detects local loss of parallelism. A zero angle difference alone does not imply good quality. Compare equal analysis lengths and calibrated resolution. Lower values are not trustworthy where detection coverage is poor.</p><p><b>Mean width</b> = mean separation of the detected dark-red boundaries. With tilt correction enabled and accepted, cross-sections are perpendicular to one estimated sample direction. One rigid rotation is used for both stripes; individual rows are not straightened. Width is still an optical estimate, not a physical edge standard. <b>Width CV (%)</b> = 100 × standard deviation of width / mean width. <b>Edge Rq</b> is RMS edge deviation from a centered moving-average trend (optical contour roughness, not contact profilometry). <b>Relative edge Rq (%)</b> = 100 × edge Rq / mean width.</p>
+<p><b>Undetected (%)</b> = 100 × undetected rows / expected analysis rows; <b>longest gap (%)</b> = 100 × longest consecutive undetected sequence / expected analysis rows. <b>Defects per 100 px</b> = counted non-gap width-anomaly intervals / analyzed pixel length × 100. With sample length entered in millimeters, <b>defects per 10 mm</b> is additionally shown, normalized to the physical section length.</p>
+<p><b>Different line lengths</b> ON: the Start/End percentage is applied to each sample's own ROI height. OFF: the entire drawn ROI is analyzed. Results are calculated independently in both modes. A checkbox does not make edge Rq numerically invariant to different imaging resolution, noise, or observation length. For QC, use a common image magnification and identical settings, or a fixed calibrated segment length. Inspect overlays, especially where gaps or faint lines occur.</p>
+<p>Automatic sample discovery assumes two approximately vertical pink/red stripes per sample. For rotation, perspective distortion, weak colors, unusual backgrounds or heavy JPEG artifacts, manually draw a tight ROI, adjust contrast threshold, and verify contours. When printed frames are present, tolerant discovery requires long neutral vertical sides and horizontal closure to locate sample boxes independently of dye intensity. Remaining unframed regions use red-signal discovery. Frame detection assumes approximately axis-aligned rectangular panels. Tolerant sample discovery uses lower projection and continuity thresholds, narrower peak spacing, and less required simultaneous stripe support; Strict restores the previous filters. Switching discovery mode does not change boundary measurements. Review candidate boxes because tolerant mode may include extra red marks. Automatic sample bounds require sustained evidence of both stripes; isolated spots and short label fragments are excluded. Detected dark horizontal frame borders constrain the range. The entire interval between accepted endpoints is retained, including internal gaps. These heuristics can still fail on unfamiliar layouts: inspect or redraw boxes before measuring. Tilt is estimated robustly from red-signal centroids over the middle 76% of each sample. Weak, inconsistent, or >25° estimates are left uncorrected and labelled uncertain. Crop tightly around both full stripes, excluding unrelated red marks. Perspective, lens distortion and out-of-plane deformation are not corrected. Bilinear resampling can affect pixel-scale roughness; use consistent resolution and settings. This is a prototype, not a validated QC standard. Images are processed entirely inside the browser.</p></details>
+<div class="footer">Photos stay on your device · v7.5</div>
+</main><script>
+'use strict';
+const E=id=>document.getElementById(id), canvas=E('imageCanvas'),ctx=canvas.getContext('2d',{willReadFrequently:true}), rawCanvas=document.createElement('canvas'),rawCtx=rawCanvas.getContext('2d',{willReadFrequently:true});
+const state={img:null,imgName:'',samples:[],measurements:[],chosen:null,drawMode:null,down:null,uid:0,zoom:1,pan:null};
+const COLORS=['#087aeb','#e67e19','#9963cc','#218b71','#b55579','#177cad','#a77712','#6666b2'];
+const htmlEscape=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+const mean=a=>a.length?a.reduce((v,x)=>v+x,0)/a.length:NaN;
+const sd=a=>{let m=mean(a);return Math.sqrt(mean(a.map(x=>(x-m)**2)))};
+const rms=a=>Math.sqrt(mean(a.map(v=>v*v)));
+const fmt=(v,d=2)=>Number.isFinite(v)?v.toFixed(d):'—';
+const median=a=>{if(!a.length)return NaN;let b=[...a].sort((a,b)=>a-b);let n=b.length;return n%2?b[n>>1]:(b[n/2-1]+b[n/2])/2};
+function moving(a,k){let r=Math.floor(k/2),pre=[0];for(let v of a)pre.push(pre.at(-1)+v);return a.map((v,i)=>{let l=Math.max(0,i-r),u=Math.min(a.length,i+r+1);return (pre[u]-pre[l])/(u-l)})}
+function smooth5(a){return a.map((v,i)=>(a[Math.max(i-2,0)]+2*a[Math.max(i-1,0)]+3*v+2*a[Math.min(i+1,a.length-1)]+a[Math.min(i+2,a.length-1)])/9)}
+function fillInvalid(vals){let out=vals.slice(),idx=[];for(let i=0;i<vals.length;i++)if(Number.isFinite(vals[i]))idx.push(i);if(!idx.length)return out.fill(0);for(let i=0;i<idx[0];i++)out[i]=vals[idx[0]];for(let i=idx.at(-1)+1;i<vals.length;i++)out[i]=vals[idx.at(-1)];for(let j=0;j<idx.length-1;j++){let a=idx[j],b=idx[j+1];for(let i=a+1;i<b;i++)out[i]=vals[a]+(vals[b]-vals[a])*(i-a)/(b-a)}return out}
+function medFilter(a,k=5){let r=Math.floor(k/2),out=a.slice();for(let i=0;i<a.length;i++){if(!Number.isFinite(a[i]))continue;let ar=[];for(let j=Math.max(0,i-r);j<=Math.min(a.length-1,i+r);j++)if(Number.isFinite(a[j]))ar.push(a[j]);out[i]=median(ar)}return out}
+const even=s=>s*2+1;
+let raster=null;
+function score(x,y){let p=4*(y*rawCanvas.width+x),a=raster;return a[p]-(a[p+1]+a[p+2])*.5}
+function scoreAt(x,y){return score(Math.max(0,Math.min(rawCanvas.width-1,Math.round(x))),Math.max(0,Math.min(rawCanvas.height-1,Math.round(y))))}
+function getProjection(x0,x1,y0,y1,ystep=3){let a=new Float32Array(x1-x0),n=0;for(let y=y0;y<y1;y+=ystep){for(let x=x0;x<x1;x++)a[x-x0]+=score(x,y);n++}return Array.from(a,v=>v/Math.max(1,n))}
+function gaussian(a,sigma=4){let rad=Math.max(2,Math.ceil(3*sigma)),kernel=[];for(let j=-rad;j<=rad;j++)kernel.push(Math.exp(-j*j/(2*sigma*sigma)));let sm=kernel.reduce((x,y)=>x+y,0);return a.map((v,i)=>{let s=0;for(let j=-rad;j<=rad;j++)s+=a[Math.max(0,Math.min(a.length-1,i+j))]*kernel[j+rad];return s/sm})}
+function peaks(prof,{height=9,prominence=7,distance=19}={}){
+ const cand=[];let rad=Math.max(9,Math.round(distance*1.8));
+ for(let i=2;i<prof.length-2;i++){
+  if(prof[i]<height||prof[i]<prof[i-1]||prof[i]<prof[i+1])continue;
+  let l=Infinity,r=Infinity;
+  for(let j=Math.max(0,i-rad);j<i;j++)l=Math.min(l,prof[j]);for(let j=i+1;j<=Math.min(prof.length-1,i+rad);j++)r=Math.min(r,prof[j]);
+  if(prof[i]-Math.max(l,r)>=prominence)cand.push({x:i,height:prof[i]});
+ }
+ cand.sort((a,b)=>b.height-a.height);let selected=[];
+ for(let pk of cand){if(selected.every(other=>Math.abs(other.x-pk.x)>=distance))selected.push(pk)}
+ return selected.sort((a,b)=>a.x-b.x).map(p=>p.x)
+}
+function detectedPairs(roi,project=getProjection){
+ let {x,y,w,h}=roi,pa=project(x,x+w,Math.round(y+.25*h),Math.round(y+.78*h),3);let smooth=gaussian(pa,Math.max(2,Math.min(5,Math.round(w/38))));
+ let minGap=Math.max(16,Math.round(w*.14));let ps=peaks(smooth,{height:Math.max(7,mean(smooth)+2),prominence:5.7,distance:minGap});
+ if(ps.length<2){let sorted=smooth.map((v,i)=>({x:i,v})).sort((a,b)=>b.v-a.v);for(let p of sorted){if(p.v<8)break;if(ps.every(q=>Math.abs(q-p.x)>minGap))ps.push(p.x);if(ps.length>=2)break}}
+ if(ps.length<2)return null;
+ // For manually drawn sample boxes containing two lines, prefer the strongest pair separated by 15–80% of box width.
+ let best=null;
+ for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){
+  let d=ps[j]-ps[i];if(d<w*.10||d>w*.83)continue;
+  let v=smooth[ps[i]]+smooth[ps[j]]-Math.abs((ps[i]+ps[j])/2-w/2)*.035;
+  if(!best||v>best.v)best={l:ps[i]+x,r:ps[j]+x,v};
+ }
+ if(!best){ps.sort((a,b)=>smooth[b]-smooth[a]);ps=ps.slice(0,2).sort((a,b)=>a-b);best={l:ps[0]+x,r:ps[1]+x}}
+ return [best.l,best.r];
+}
+// Use sustained paired stripe evidence, not the first isolated red pixel.
+function sampleExtent(l,r,height,mode='strict'){
+ const tolerant=mode==='tolerant';
+ const step=2,sep=r-l,half=Math.max(5,Math.min(16,Math.round(sep*.17)));
+ const rows=[];
+ for(let y=1;y<height-1;y+=step){
+  const present=[l,r].map(cx=>{
+   const values=[];for(let dx=-half;dx<=half;dx++)values.push(scoreAt(cx+dx,y));
+   const bg=Math.min(scoreAt(cx-half-5,y),scoreAt(cx+half+5,y));
+   const level=tolerant?Math.max(8,bg+6):Math.max(18,bg+14);
+   return values.filter(v=>v>level).length>=(tolerant?2:3);
+  });
+  rows.push({y,either:present[0]||present[1],both:present[0]&&present[1]});
+ }
+ const radius=4;
+ const stable=rows.map((row,i)=>{
+  const a=rows.slice(Math.max(0,i-radius),Math.min(rows.length,i+radius+1));
+  return a.filter(v=>v.either).length>=Math.ceil(a.length*(tolerant?.55:.75));
+ });
+ // Only bridge very short interruptions for finding the enclosing range.
+ // The image and the measurement validity mask are never filled or changed.
+ const maxHole=Math.max(2,Math.round(height*(tolerant?.015:.008)/step));
+ for(let i=0;i<stable.length;){if(stable[i]){i++;continue;}let j=i;while(j<stable.length&&!stable[j])j++;if(i>0&&j<stable.length&&j-i<=maxHole)for(let k=i;k<j;k++)stable[k]=true;i=j;}
+ const components=[];
+ for(let i=0;i<stable.length;){if(!stable[i]){i++;continue;}let j=i;while(j<stable.length&&stable[j])j++;
+  const both=rows.slice(i,j).filter(v=>v.both).length;
+  if((j-i)*step>=Math.max(tolerant?20:24,height*(tolerant?.035:.055))&&both*step>=Math.max(tolerant?4:12,height*(tolerant?.006:.025)))components.push({a:i,b:j-1,length:j-i,both});i=j;
+ }
+ if(!components.length)return null;
+ const main=components.reduce((a,b)=>a.length>b.length?a:b);
+ // A printed horizontal frame is a hard limit. Ignore text-sized dark patches.
+ const borders=[];
+ if(raster){
+  const x0=Math.max(0,Math.round(l-sep*.35)),x1=Math.min(rawCanvas.width-1,Math.round(r+sep*.35));
+  for(let y=1;y<height-1;y++){
+   let dark=0,total=0;for(let x=x0;x<=x1;x+=2){let k=4*(y*rawCanvas.width+x);const lum=.2126*raster[k]+.7152*raster[k+1]+.0722*raster[k+2];if(lum<95&&scoreAt(x,y)<18)dark++;total++;}
+   if(total&&dark/total>.72)borders.push(y);
+  }
+ }
+ const anchorY=rows[Math.round((main.a+main.b)/2)].y;
+ const top=borders.filter(y=>y<anchorY).at(-1)??0;
+ const bottom=borders.find(y=>y>anchorY)??height-1;
+ const candidates=components.map(c=>({...c,a:Math.max(c.a,Math.floor(top/step)+1),b:Math.min(c.b,Math.ceil(bottom/step)-1)})).filter(c=>c.b>=c.a&&(c.b-c.a+1)*step>=20);
+ if(!candidates.length)return null;
+ const first=Math.min(...candidates.map(c=>rows[c.a].y));
+ const last=Math.max(...candidates.map(c=>rows[c.b].y));
+ // Stay inside the physical frame, with only two pixels of endpoint padding.
+ return {y:Math.max(top+1,first-2),end:Math.min(bottom,last+3),framed:top>0||bottom<height-1};
+}
+// Printed sample frames are stronger evidence than faint dye peaks. Require
+// long neutral vertical sides AND horizontal closure above/below the probe.
+function framedSamples(){
+ if(!raster)return [];
+ const w=rawCanvas.width,h=rawCanvas.height,dx=Math.max(4,Math.round(w*.005)),dy=Math.max(3,Math.round(h*.005));
+ const lum=(x,y)=>{const i=4*(y*w+x);return .2126*raster[i]+.7152*raster[i+1]+.0722*raster[i+2]};
+ const neutral=(x,y)=>Math.abs(score(x,y))<12;
+ const y0=Math.round(h*.4),y1=Math.round(h*.7),xs=[];
+ for(let x=dx;x<w-dx;x++){
+  let hits=0,n=0;
+  for(let y=y0;y<y1;y+=2){if(neutral(x,y)&&(lum(x-dx,y)+lum(x+dx,y))/2-lum(x,y)>25)hits++;n++;}
+  if(n&&hits/n>.94)xs.push(x);
+ }
+ const groups=[];for(const x of xs){if(!groups.length||x>groups.at(-1).at(-1)+2)groups.push([x]);else groups.at(-1).push(x);}
+ const sides=groups.map(g=>Math.round(mean(g))),found=[];
+ for(let i=0;i<sides.length-1;i++){
+  const left=sides[i],right=sides[i+1],width=right-left;
+  if(width<Math.max(35,w*.04)||width>w*.5)continue;
+  const borders=[];
+  for(let y=dy;y<h-dy;y++){
+   let hits=0,n=0;
+   for(let x=left+3;x<right-2;x+=2){if(neutral(x,y)&&(lum(x,y-dy)+lum(x,y+dy))/2-lum(x,y)>20)hits++;n++;}
+   if(n&&hits/n>.65)borders.push(y);
+  }
+  const anchor=h*.55,top=borders.filter(y=>y<anchor).at(-1),bottom=borders.find(y=>y>anchor);
+  if(top===undefined||bottom===undefined||bottom-top<Math.max(60,h*.15))continue;
+  const roi={x:left+3,y:top+3,w:width-5,h:bottom-top-5};
+  let centers=detectedPairs(roi);
+  if(!centers){
+   const projection=gaussian(getProjection(roi.x,roi.x+roi.w,roi.y,roi.y+roi.h,3),2);
+   let peaksFound=peaks(projection,{height:3,prominence:2,distance:Math.max(10,Math.round(roi.w*.14))});
+   if(peaksFound.length>=2){peaksFound.sort((a,b)=>projection[b]-projection[a]);centers=peaksFound.slice(0,2).sort((a,b)=>a-b).map(x=>x+roi.x);}
+  }
+  if(!centers)continue;
+  const sample=newSample(roi,centers);sample.discoveryMode='framed';found.push(sample);i++;
+ }
+ return found;
+}
+function autoSamples(){
+ if(!state.img)return;
+ let w=rawCanvas.width,h=rawCanvas.height;
+ const mode=E('sampleDiscovery').value,tolerant=mode==='tolerant';
+ const frames=tolerant?framedSamples():[];
+ let proj=getProjection(0,w,Math.round(h*.34),Math.round(h*.80),3),sm=gaussian(proj,tolerant?Math.max(2,Math.min(4,w/300)):Math.max(3,Math.min(5.5,w/220)));
+ let ps=peaks(sm,{height:tolerant?4:8,prominence:tolerant?3:7,distance:Math.max(tolerant?12:18,Math.round(w*(tolerant?.016:.024)))});
+ // Protect against single narrow peaks in the first photo: no sample should contain >2 independent stripe peaks.
+ if(ps.length<2&&!frames.length){setStatus('No pair found. Try Tolerant discovery or draw a sample box manually.',true);return}
+ // Group sequential peaks into pairs when the number of peaks is even.
+ if(ps.length%2&&!tolerant){let clean=ps.filter(p=>sm[p]>12);if(clean.length>=2&&clean.length%2===0)ps=clean;}
+ const unpaired=ps.length%2;
+ // With an odd count, leave out the weakest peak, not automatically the
+ // rightmost stripe. Never discard all faint stripes just to make an even count.
+ if(unpaired&&tolerant){let weakest=ps.reduce((a,b)=>sm[a]<sm[b]?a:b);ps=ps.filter(p=>p!==weakest);}
+ else if(unpaired)ps=ps.slice(0,-1);
+ let arr=[...frames],rejected=0;
+ for(let j=0;j<ps.length;j+=2){let l=ps[j],r=ps[j+1],d=r-l;
+  if(d<(tolerant?12:15)){rejected++;continue;}
+  if(frames.some(s=>l>=s.roi.x&&r<=s.roi.x+s.roi.w))continue;
+  let pad=Math.min(52,Math.max(26,Math.round(d*.61)));
+  let x=Math.max(0,Math.round(l-pad)), right=Math.min(w,Math.round(r+pad));
+  const extent=sampleExtent(l,r,h,mode);
+  if(!extent){rejected++;continue;}
+  if(frames.some(s=>Math.min(r+8,s.roi.x+s.roi.w)-Math.max(l-8,s.roi.x)>0))continue;
+  const y0=extent.y,y1=extent.end;
+  let candidate=newSample({x,y:y0,w:right-x,h:y1-y0},[l,r]);candidate.discoveryMode=mode;arr.push(candidate);
+ }
+ arr.sort((a,b)=>a.roi.x-b.roi.x);arr.forEach((sample,i)=>{sample.label='Sample '+(i+1)});
+ state.samples=arr;state.chosen=arr.length?arr[0].id:null;state.measurements=[];render();refreshSamples();updateResults();setStatus(`${arr.length} samples · ${arr.length*2} candidate lines.`+(rejected?` ${rejected} candidate pair(s) could not be confirmed.`:'')+(unpaired?' One unpaired peak was excluded.':'')+' Check boxes before comparing.',!!rejected||!!unpaired);
+}
+function newSample(roi,centers=null){return {id:++state.uid,label:'Sample '+state.uid,roi,centers,lengthmm:null,color:COLORS[(state.uid-1)%COLORS.length]}}
+function setStatus(s,bad=false){E('status').textContent=s;E('status').style.color=bad?'#aa3652':'#197b60'}
+function imageFitScale(){
+ const box=E('imageViewport');
+ return Math.min(box.clientWidth/Math.max(1,canvas.width),box.clientHeight/Math.max(1,canvas.height));
+}
+function viewCenter(){
+ const b=E('imageViewport').getBoundingClientRect(),c=canvas.getBoundingClientRect();
+ return {x:Math.max(0,Math.min(canvas.width,(b.left+E('imageViewport').clientWidth/2-c.left)*canvas.width/Math.max(1,c.width))),y:Math.max(0,Math.min(canvas.height,(b.top+E('imageViewport').clientHeight/2-c.top)*canvas.height/Math.max(1,c.height)))};
+}
+function applyImageView(){
+ const scale=imageFitScale()*state.zoom;
+ canvas.style.width=(canvas.width*scale)+'px';canvas.style.height=(canvas.height*scale)+'px';
+ canvas.classList.toggle('zoomed',state.zoom>1);
+ E('imageZoom').value=state.zoom;E('zoomText').textContent=Number(state.zoom.toFixed(2))+'×';
+ E('zoomOut').disabled=state.zoom<=1;E('zoomIn').disabled=state.zoom>=8;
+}
+function zoomImage(value,point=null){
+ if(!state.img)return;
+ const target=point||viewCenter(),box=E('imageViewport');
+ state.zoom=Math.max(1,Math.min(8,value));applyImageView();
+ const scale=imageFitScale()*state.zoom;
+ box.scrollLeft=target.x*scale-box.clientWidth/2;box.scrollTop=target.y*scale-box.clientHeight/2;
+}
+E('zoomIn').onclick=()=>zoomImage(state.zoom+.5);
+E('zoomOut').onclick=()=>zoomImage(state.zoom-.5);
+E('imageZoom').oninput=()=>zoomImage(+E('imageZoom').value);
+E('zoomFit').onclick=()=>zoomImage(1,{x:canvas.width/2,y:canvas.height/2});
+E('zoomSample').onclick=()=>{
+ const sample=state.samples.find(s=>s.id===state.chosen);
+ if(!sample){setStatus('Select a sample first, then zoom in.');return;}
+ const r=sample.roi,box=E('imageViewport');
+ zoomImage(.8*box.clientWidth/(r.w*imageFitScale()),{x:r.x+r.w/2,y:r.y+r.h/2});
+};
+window.addEventListener('resize',()=>{if(state.img)zoomImage(state.zoom)});
+function render(){
+ document.body.classList.toggle('has-image',!!state.img);
+ if(!state.img)return;canvas.width=rawCanvas.width;canvas.height=rawCanvas.height;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(rawCanvas,0,0);applyImageView();
+ let scale=canvas.width/850,fontsize=Math.max(12,17*scale),stroke=Math.max(2,2.5*scale);
+ for(let s of state.samples){let r=s.roi;ctx.save();ctx.lineWidth=s.id===state.chosen?stroke*1.65:stroke;ctx.strokeStyle=s.color;ctx.setLineDash(s.id===state.chosen?[]:[8*scale,5*scale]);ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.setLineDash([]);ctx.font=`bold ${fontsize}px Arial`;let txt=s.label,tw=ctx.measureText(txt).width+12*scale;let ty=Math.max(0,r.y-25*scale);ctx.fillStyle=s.color;ctx.fillRect(r.x,ty,tw,23*scale);ctx.fillStyle='white';ctx.fillText(txt,r.x+6*scale,ty+fontsize+2*scale);ctx.restore();}
+ for(const m of (E('showEdges').checked?state.measurements:[])){
+  ctx.save();const bounds=m.frame.bounds;
+  if(bounds){ctx.beginPath();ctx.rect(bounds.x,bounds.y,bounds.w,bounds.h);ctx.clip();}
+  ctx.lineWidth=1;ctx.lineJoin='round';ctx.lineCap='round';
+  for(const edge of [m.L,m.R]){
+   ctx.strokeStyle='#00a94d';ctx.beginPath();let open=false;
+   for(let i=0;i<m.Y.length;i++){
+    if(!m.valid[i]){open=false;continue;}
+    const p=imagePoint(m.frame,edge[i],m.Y[i]);
+    if(open)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);open=true;
+   }ctx.stroke();
+  }ctx.restore();
+ }
+ if(E('showReferences').checked)for(const m of state.measurements){
+  const q=m.ideal;if(!q||q.first===undefined)continue;
+  ctx.save();const bounds=m.frame.bounds;
+  if(bounds){ctx.beginPath();ctx.rect(bounds.x,bounds.y,bounds.w,bounds.h);ctx.clip();}
+  ctx.strokeStyle='#1257f5';ctx.lineWidth=1.25;ctx.setLineDash([6,4]);
+  for(const reference of [q.refLeft,q.refRight]){
+   const a=imagePoint(m.frame,reference[q.first],m.Y[q.first]),b=imagePoint(m.frame,reference[q.last],m.Y[q.last]);
+   ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+  }
+  ctx.restore();
+ }
+
+ if(E('showCenter').checked)for(const m of state.measurements){
+  const q=m.ideal;if(!q||q.first===undefined)continue;ctx.save();
+  const bounds=m.frame.bounds;if(bounds){ctx.beginPath();ctx.rect(bounds.x,bounds.y,bounds.w,bounds.h);ctx.clip();}
+  ctx.strokeStyle='#ffd400';ctx.lineWidth=1.25;ctx.setLineDash([6,4]);
+  const a=imagePoint(m.frame,m.initialGuideCenter,m.Y[q.first]);
+  const b=imagePoint(m.frame,m.initialGuideCenter,m.Y[q.last]);
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore();
+ }
+
+ if(state.down){let a=state.down.start,b=state.down.current;ctx.save();ctx.strokeStyle='#ec9d12';ctx.lineWidth=3;ctx.setLineDash([8,6]);ctx.strokeRect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(a.x-b.x),Math.abs(a.y-b.y));ctx.restore()}
+}
+function refreshSamples(){let html='';for(let s of state.samples){let r=s.roi;html+=`<div class="sample ${s.id===state.chosen?'active':''}" data-id="${s.id}"><div><input class="txt sampleName" type="text" value="${htmlEscape(s.label)}" data-id="${s.id}" aria-label="Sample name"><div class="meta">${r.w} × ${r.h} px</div></div><div><label for="mm-${s.id}">Length · mm</label><br><input id="mm-${s.id}" data-id="${s.id}" class="length sampleMM" type="number" min="0" step="any" placeholder="Optional" value="${s.lengthmm||''}"></div><div class="actions"><button data-id="${s.id}" class="pick">Select</button><button data-id="${s.id}" class="erase danger">Remove</button></div></div>`}
+ E('sampleList').innerHTML=html||'<p class="small">No samples. Use Auto-detect or draw a sample ROI.</p>';
+ E('stats').innerHTML=`<span>${state.samples.length} samples · ${state.measurements.length} lines measured</span>`;
+ E('sampleSelect').innerHTML=state.samples.map(s=>`<option value="${s.id}">${htmlEscape(s.label)}</option>`).join('')||'<option>No samples</option>';if(state.samples.length)E('sampleSelect').value=state.chosen??'';
+ E('imageInfo').textContent=state.img?`${rawCanvas.width} × ${rawCanvas.height} px · ${state.samples.length} samples`:'No image';
+ E('sampleList').querySelectorAll('.pick').forEach(b=>b.onclick=()=>{state.chosen=+b.dataset.id;refreshSamples();render()});
+ E('sampleList').querySelectorAll('.erase').forEach(b=>b.onclick=()=>removeSample(+b.dataset.id));
+ E('sampleList').querySelectorAll('.sampleName').forEach(i=>i.onchange=()=>{let s=state.samples.find(s=>s.id==i.dataset.id);s.label=i.value.trim()||'Sample '+s.id;refreshSamples();updateResults();render()});
+ E('sampleList').querySelectorAll('.sampleMM').forEach(i=>i.onchange=()=>{let s=state.samples.find(s=>s.id==i.dataset.id);let v=parseFloat(i.value);s.lengthmm=v>0?v:null;for(let m of state.measurements.filter(m=>m.sampleId===s.id)){m.physicalLengthMM=s.lengthmm?m.expectedLength/s.roi.h*s.lengthmm:null;m.defectsPer10mm=m.physicalLengthMM?10*m.defects/m.physicalLengthMM:NaN}updateResults()});
+}
+function removeSample(id){state.samples=state.samples.filter(s=>s.id!==id);state.measurements=state.measurements.filter(m=>m.sampleId!==id);state.chosen=state.samples[0]?.id??null;refreshSamples();updateResults();render()}
+function setLengthUI(){let checked=E('unequal').checked;E('lengthControls').classList.toggle('unavailable',!checked);E('lengthDesc').textContent=checked?'Applied to each sample.':'Full sample box.'}
+let previewTimer=null;
+function queuePreview(){
+ clearTimeout(previewTimer);
+ state.measurements=[];updateResults();render();
+ if(!state.img||!state.samples.length)return;
+ setStatus('Updating preview…');
+ previewTimer=setTimeout(()=>{previewTimer=null;analyze()},180);
+}
+E('autoTilt').onchange=queuePreview;
+E('boundaryMethod').onchange=queuePreview;
+E('unequal').onchange=()=>{setLengthUI();queuePreview()};
+for(let id of ['startPct','endPct','threshold','trend','defectPct'])E(id).oninput=()=>{E('thresholdText').textContent=E('threshold').value+'%';E('trendText').textContent=E('trend').value+' px';queuePreview()};
+E('scale').oninput=updateResults;
+E('autodetect').onclick=()=>{autoSamples();if(state.samples.length)analyze()};
+E('sampleDiscovery').onchange=()=>setStatus('Tap Detect to apply search mode.');
+E('addROI').onclick=()=>{state.drawMode='add';canvas.classList.add('draw-enabled');setStatus('Drag a rectangle around BOTH red lines of one sample.')};
+E('editROI').onclick=()=>{if(!state.chosen){setStatus('Select a sample before editing its box.',true);return}state.drawMode='edit';canvas.classList.add('draw-enabled');setStatus('Drag a replacement box around both lines of the selected sample.')};
+E('cancelDraw').onclick=()=>{state.drawMode=null;canvas.classList.remove('draw-enabled');state.down=null;render();setStatus('Drawing cancelled.')};
+E('deleteSelected').onclick=()=>{if(state.chosen)removeSample(state.chosen)};
+E('removeAll').onclick=()=>{state.samples=[];state.measurements=[];state.chosen=null;refreshSamples();updateResults();render()};
+function getPosition(e){let b=canvas.getBoundingClientRect();return{x:Math.max(0,Math.min(canvas.width-1,Math.round((e.clientX-b.left)*canvas.width/b.width))),y:Math.max(0,Math.min(canvas.height-1,Math.round((e.clientY-b.top)*canvas.height/b.height)))}}
+canvas.addEventListener('pointerdown',e=>{if(!state.img)return;let p=getPosition(e);if(!state.drawMode&&state.zoom>1&&e.pointerType==='mouse'){state.pan={x:e.clientX,y:e.clientY,left:E('imageViewport').scrollLeft,top:E('imageViewport').scrollTop,moved:false};canvas.setPointerCapture(e.pointerId);canvas.classList.add('panning');return;}if(!state.drawMode){let hits=state.samples.filter(s=>p.x>=s.roi.x&&p.x<=s.roi.x+s.roi.w&&p.y>=s.roi.y&&p.y<=s.roi.y+s.roi.h);if(hits.length){state.chosen=hits.at(-1).id;refreshSamples();render()}return}state.down={start:p,current:p};canvas.setPointerCapture(e.pointerId);render()});
+canvas.addEventListener('pointermove',e=>{if(state.pan){const dx=e.clientX-state.pan.x,dy=e.clientY-state.pan.y;if(Math.abs(dx)+Math.abs(dy)>3)state.pan.moved=true;E('imageViewport').scrollLeft=state.pan.left-dx;E('imageViewport').scrollTop=state.pan.top-dy;return;}if(!state.down)return;state.down.current=getPosition(e);render()});
+canvas.addEventListener('pointerup',e=>{if(state.pan){const moved=state.pan.moved;state.pan=null;canvas.classList.remove('panning');if(!moved){const p=getPosition(e),hit=state.samples.filter(s=>p.x>=s.roi.x&&p.x<=s.roi.x+s.roi.w&&p.y>=s.roi.y&&p.y<=s.roi.y+s.roi.h).at(-1);if(hit){state.chosen=hit.id;refreshSamples();render()}}return;}if(!state.down)return;state.down.current=getPosition(e);let a=state.down.start,b=state.down.current,roi={x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};state.down=null;if(roi.w<30||roi.h<50){setStatus('ROI too small; please draw a larger rectangle.',true);render();return}let centers=detectedPairs(roi);if(state.drawMode==='add'){let s=newSample(roi,centers);state.samples.push(s);state.chosen=s.id}else{let s=state.samples.find(s=>s.id===state.chosen);if(s){s.roi=roi;s.centers=centers}}state.drawMode=null;canvas.classList.remove('draw-enabled');state.measurements=[];refreshSamples();updateResults();render();setStatus('ROI updated. Click Analyze all lines.')});
+canvas.addEventListener('pointercancel',()=>{state.pan=null;state.down=null;canvas.classList.remove('panning')});
+function safeRegion(roi){let x=Math.max(0,Math.round(roi.x)),y=Math.max(0,Math.round(roi.y)),w=Math.min(rawCanvas.width-x,Math.round(roi.w)),h=Math.min(rawCanvas.height-y,Math.round(roi.h));return{x,y,w,h}}
+// Estimate one global direction per sample; never follow local bending.
+function tiltFrame(roi,enabled){
+ const cx=roi.x+roi.w/2,cy=roi.y+roi.h/2;
+ const identity={bounds:roi,angle:0,cx,cy,cos:1,sin:0,status:enabled?'uncertain: not corrected':'off'};
+ if(!enabled)return identity;
+ const points=[];
+ for(let j=0;j<55;j++){
+  const y=Math.round(roi.y+roi.h*(.12+.76*j/54));
+  const row=[];for(let x=roi.x;x<roi.x+roi.w;x+=2)row.push({x,v:scoreAt(x,y)});
+  const sorted=row.map(p=>p.v).sort((a,b)=>a-b),bg=sorted[Math.floor(sorted.length*.1)],pk=sorted[Math.floor(sorted.length*.98)];
+  if(pk-bg<15)continue;
+  const level=bg+.5*(pk-bg);let sum=0,weighted=0;
+  for(const p of row){const weight=Math.max(0,p.v-level);sum+=weight;weighted+=p.x*weight;}
+  if(sum>0)points.push({y,x:weighted/sum});
+ }
+ if(points.length<22)return identity;
+ const slopes=[];
+ for(let i=0;i<points.length;i++)for(let j=i+1;j<points.length;j++)if(points[j].y-points[i].y>roi.h*.25)slopes.push((points[j].x-points[i].x)/(points[j].y-points[i].y));
+ if(!slopes.length)return identity;
+ const slope=median(slopes),intercept=median(points.map(p=>p.x-slope*(p.y-cy)));
+ const scatter=median(points.map(p=>Math.abs(p.x-intercept-slope*(p.y-cy))));
+ const angle=Math.atan(slope);
+ if(Math.abs(angle)>25*Math.PI/180||scatter>Math.max(4,roi.w*.08))return identity;
+ return {bounds:roi,angle:angle*180/Math.PI,cx,cy,cos:Math.cos(angle),sin:Math.sin(angle),status:'corrected'};
+}
+function imagePoint(frame,x,y){
+ const u=x-frame.cx,v=y-frame.cy;
+ return {x:frame.cx+u*frame.cos+v*frame.sin,y:frame.cy-u*frame.sin+v*frame.cos};
+}
+// Relative red/green contrast emphasizes dark magenta rims that can have
+// the same absolute redness as much brighter pink. It is not calibrated OD.
+function darkPixelScore(x,y){
+ const i=4*(y*rawCanvas.width+x),r=raster[i],g=raster[i+1];
+ return 100*Math.log((r+12)/(g+12));
+}
+function frameScore(frame,x,y,signal=score){
+ const p=imagePoint(frame,x,y);
+ const b=frame.bounds;
+ if(b&&(p.x<b.x||p.y<b.y||p.x>=b.x+b.w||p.y>=b.y+b.h))return NaN;
+ if(p.x<0||p.y<0||p.x>=rawCanvas.width-1||p.y>=rawCanvas.height-1)return NaN;
+ const ix=Math.floor(p.x),iy=Math.floor(p.y),dx=p.x-ix,dy=p.y-iy;
+ return (1-dy)*((1-dx)*signal(ix,iy)+dx*signal(ix+1,iy))+dy*((1-dx)*signal(ix,iy+1)+dx*signal(ix+1,iy+1));
+}
+function frameProjection(frame,x0,x1,y0,y1,step=3,signal=score){
+ const out=Array(x1-x0).fill(0),counts=Array(x1-x0).fill(0);
+ for(let y=y0;y<y1;y+=step)for(let x=x0;x<x1;x++){const v=frameScore(frame,x,y,signal);if(Number.isFinite(v)){out[x-x0]+=v;counts[x-x0]++;}}
+ return out.map((v,i)=>counts[i]?v/counts[i]:0);
+}
+// Joint fit: one shared direction and two independently estimated offsets.
+// The reference spacing is learned from this stripe, never shared across doses.
+function parallelReferences(left,right,valid){
+ const rows=left.map((_,i)=>i).filter(i=>valid[i]&&Number.isFinite(left[i])&&Number.isFinite(right[i]));
+ const yMean=mean(rows),leftMean=mean(rows.map(i=>left[i])),rightMean=mean(rows.map(i=>right[i]));
+ const denominator=2*rows.reduce((sum,i)=>sum+(i-yMean)**2,0);
+ const slope=denominator?rows.reduce((sum,i)=>sum+(i-yMean)*(left[i]-leftMean+right[i]-rightMean),0)/denominator:0;
+ const normal=Math.sqrt(1+slope*slope);
+ const refLeft=left.map((_,i)=>leftMean+slope*(i-yMean));
+ const refRight=right.map((_,i)=>rightMean+slope*(i-yMean));
+ const errorLeft=left.map((x,i)=>valid[i]?(x-refLeft[i])/normal:NaN);
+ const errorRight=right.map((x,i)=>valid[i]?(x-refRight[i])/normal:NaN);
+ const errors=[...errorLeft,...errorRight].filter(Number.isFinite);
+ const absolute=errors.map(Math.abs).sort((a,b)=>a-b);
+ return {slope,refLeft,refRight,errorLeft,errorRight,width:(rightMean-leftMean)/normal,rms:rms(errors),p95:absolute[Math.max(0,Math.ceil(.95*absolute.length)-1)],first:rows[0],last:rows.at(-1)};
+}
+function straightFit(values,valid){
+ const points=values.map((x,y)=>({x,y})).filter(p=>valid[p.y]&&Number.isFinite(p.x));
+ const my=mean(points.map(p=>p.y)),mx=mean(points.map(p=>p.x));
+ const den=points.reduce((sum,p)=>sum+(p.y-my)**2,0);
+ const slope=den?points.reduce((sum,p)=>sum+(p.y-my)*(p.x-mx),0)/den:0;
+ const residual=values.map((x,y)=>valid[y]?(x-mx-slope*(y-my))/Math.sqrt(1+slope*slope):NaN);
+ return {slope,residual,rms:rms(residual.filter(Number.isFinite))};
+}
+function analyzeStripe(s,vol){
+ let roi=safeRegion(s.roi);
+ const frame=tiltFrame(roi,E('autoTilt').checked);
+ const method=E('boundaryMethod').value;
+ const signal=method==='dark'?darkPixelScore:score;
+ const project=(x0,x1,y0,y1,step=3)=>frameProjection(frame,x0,x1,y0,y1,step,signal);
+ const sampleScore=(x,y)=>frameScore(frame,x,y,signal);
+ let centers=detectedPairs(roi,project)||(frame.status==='corrected'?null:s.centers);
+ if(!centers)throw Error(`${s.label}: could not find two stripes in the sample box`);
+ let center=centers[vol-1],sep=centers[1]-centers[0];if(sep<15)throw Error(`${s.label}: the two lines are too close to distinguish`);
+ // One line at a time; do not mix with the adjacent stripe.
+ let window=Math.min(52,Math.max(23,Math.floor(sep*.64))),x0=Math.max(roi.x,Math.round(center-window)),x1=Math.min(roi.x+roi.w-1,Math.round(center+window));
+ // Keep the two stripes in separate search domains.
+ const split=(centers[0]+centers[1])/2;
+ if(vol===1)x1=Math.min(x1,Math.floor(split-1));else x0=Math.max(x0,Math.ceil(split+1));
+ let y0=roi.y,y1=roi.y+roi.h;if(E('unequal').checked){let start=+E('startPct').value,end=+E('endPct').value;if(!(start>=0&&end<=100&&start<end))throw Error('Start/end percentages must satisfy 0 ≤ start < end ≤ 100');y0=roi.y+Math.floor(roi.h*start/100);y1=roi.y+Math.ceil(roi.h*end/100)}
+ let n=y1-y0;if(n<30)throw Error(`${s.label}: selected length is too short`);
+ let L=Array(n).fill(NaN),R=Array(n).fill(NaN),Y=Array.from({length:n},(_,j)=>y0+j),valid=Array(n).fill(false);
+ let threshold=+E('threshold').value/100;
+ // A longitudinal reference identifies the two OUTER core boundaries, even
+ // when a pale centre splits the red body into two disconnected bands.
+ const reference=gaussian(project(x0,x1+1,y0,y1,2),1);
+ const refBG=median([...reference.slice(0,5),...reference.slice(-5)]);
+ const refPeak=Math.max(...reference);
+ // Estimate the guide axis from a lower-threshold longitudinal profile first.
+ // It must not be fitted from the same high-threshold rim we are validating.
+ const refLevel=refBG+Math.max(6.5,Math.min(.40,threshold)*(refPeak-refBG));
+ const support=reference.map((v,i)=>v>=refLevel?i:-1).filter(i=>i>=0);
+ if(support.length<3)throw Error(`${s.label}: dark core is not distinguishable`);
+ const refLeft=support[0],refRight=support.at(-1),refWidth=refRight-refLeft;
+ // Locate the WHOLE pink/red body independently of the dark-rim signal.
+ const body=gaussian(frameProjection(frame,x0,x1+1,y0,y1,2,score),1.5);
+ const bodyBG=median([...body.slice(0,5),...body.slice(-5)]),bodyPeak=Math.max(...body);
+ const bodyLevel=bodyBG+Math.max(4,.22*(bodyPeak-bodyBG));
+ const bodySupport=body.map((v,i)=>v>=bodyLevel?i:-1).filter(i=>i>=0);
+ if(bodyPeak-bodyBG<8||bodySupport.length<3)throw Error(`${s.label}: stripe body center is uncertain; redraw a tighter sample box`);
+ const guideCenter=(bodySupport[0]+bodySupport.at(-1))/2;
+ const uncertain=Array(n).fill(false);
+ let previous=null;
+
+ const recovered=Array(n).fill(false);
+ function detectRow(y,raw,previous){
+let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y-1)+2*sampleScore(x,y)+sampleScore(x,y+1))/4);
+  const pixelValid=seq.map(Number.isFinite),finiteSeq=seq.filter(Number.isFinite);
+  if(finiteSeq.length<12){return null;}
+  let k=seq.length,side=Math.max(3,Math.min(7,Math.floor(finiteSeq.length*.13))),bg=median([...finiteSeq.slice(0,side),...finiteSeq.slice(-side)]);
+  // Outside-box pixels cannot form crossings; missing background must not
+  // discard an otherwise valid cross-section through the stripe body.
+  seq=seq.map(v=>Number.isFinite(v)?v:bg);
+  const sorted=[...seq].sort((a,b)=>a-b);
+  // A high percentile is less sensitive than a single maximum to dark specks.
+  const pk=sorted[Math.floor((k-1)*.97)],contrast=pk-bg;
+  if(contrast<13){return null;}
+  // Each side gets its own local peak: a weaker left rim must not disappear
+  // just because the right rim is darker. The chosen percentage is unchanged.
+  const leftValues=seq.filter((v,i)=>pixelValid[i]&&i>=Math.min(refLeft,bodySupport[0])-3&&i<guideCenter);
+  const rightValues=seq.filter((v,i)=>pixelValid[i]&&i>guideCenter&&i<=Math.max(refRight,bodySupport.at(-1))+3);
+  const leftPeak=leftValues.length?Math.max(...leftValues):-Infinity;
+  const rightPeak=rightValues.length?Math.max(...rightValues):-Infinity;
+  if(leftPeak-bg<8||rightPeak-bg<8){return null;}
+
+  const leftLevel=bg+Math.max(6.5,threshold*(leftPeak-bg));
+  const rightLevel=bg+Math.max(6.5,threshold*(rightPeak-bg));
+  const rising=[],falling=[];
+  for(let i=0;i<k-1;i++){
+   if(!pixelValid[i]||!pixelValid[i+1])continue;
+   const delta=seq[i+1]-seq[i];
+   if(seq[i]<leftLevel&&seq[i+1]>=leftLevel)rising.push({x:i+(leftLevel-seq[i])/delta,g:delta});
+   if(seq[i]>=rightLevel&&seq[i+1]<rightLevel)falling.push({x:i+(rightLevel-seq[i])/delta,g:-delta});
+  }
+  let best=null;
+  // Score the left and right boundaries together. An internal highlight may
+  // generate extra crossings, but it must not become a narrow measured stripe.
+  for(const l of rising)for(const r of falling){
+   const width=r.x-l.x;
+   // A real left crossing and right crossing must straddle the initial axis.
+   // No boundary is moved or filled in merely to satisfy this constraint.
+   if(!(l.x<guideCenter-.25&&r.x>guideCenter+.25))continue;
+   if(width<Math.max(3,refWidth*.25)||width>refWidth*2.2)continue;
+   const distance=(Math.abs(l.x-refLeft)+Math.abs(r.x-refRight))/Math.max(4,refWidth);
+   const tracking=previous?(Math.abs(l.x-previous[0])+Math.abs(r.x-previous[1]))/Math.max(4,refWidth):0;
+   const cost=distance+.35*tracking-.08*Math.log1p(Math.min(l.g,r.g));
+   if(!best||cost<best.cost)best={l:l.x,r:r.x,cost};
+  }
+  return best;
+ }
+ for(let j=0;j<n;j++){
+  let best=detectRow(y0+j,false,previous);
+  if(!best){best=detectRow(y0+j,true,previous);recovered[j]=!!best;}
+  if(!best){uncertain[j]=true;previous=null;continue;}
+  L[j]=x0+best.l;R[j]=x0+best.r;valid[j]=true;
+  previous=[best.l,best.r];
+ }
+ // Fit the blue pair, then enforce the displayed midpoint as a second guard.
+ // Reject unsupported points rather than moving them onto a desired contour.
+ for(let pass=0;pass<n;pass++){
+  if(valid.filter(Boolean).length<18)break;
+  const q=parallelReferences(L,R,valid);let changed=false;
+  for(let i=0;i<n;i++)if(valid[i]){
+   const midpoint=(q.refLeft[i]+q.refRight[i])/2;
+   if(!(L[i]<midpoint-.25&&R[i]>midpoint+.25)){
+    valid[i]=false;L[i]=R[i]=NaN;uncertain[i]=true;recovered[i]=false;changed=true;
+   }
+  }
+  if(!changed)break;
+ }
+ let detected=valid.reduce((a,b)=>a+(b?1:0),0);if(detected<Math.max(18,Math.round(n*.18)))throw Error(`${s.label} ${vol} µL: insufficient red line detected (${detected} rows)`);
+ // Smooth only valid regions to suppress single-pixel JPEG noise; retain true gaps.
+ // Keep measured boundary positions unsmoothed so true edge roughness is retained.
+ let widths=L.map((l,i)=>valid[i]?R[i]-l:NaN),ws=widths.filter(Number.isFinite),wMean=mean(ws),wSD=sd(ws),wCV=100*wSD/wMean;
+ let wWin=Math.min(n|1,+E('trend').value|1);if(wWin%2===0)wWin++;let lt=moving(fillInvalid(L),wWin),rt=moving(fillInvalid(R),wWin);
+ let DL=L.map((v,i)=>valid[i]?v-lt[i]:NaN),DR=R.map((v,i)=>valid[i]?v-rt[i]:NaN),leftRq=rms(DL.filter(Number.isFinite)),rightRq=rms(DR.filter(Number.isFinite)),edgeRq=Math.sqrt((leftRq**2+rightRq**2)/2),edgeRa=mean([...DL,...DR].filter(Number.isFinite).map(Math.abs));
+ const ideal=parallelReferences(L,R,valid);
+ const straightL=straightFit(L,valid),straightR=straightFit(R,valid);
+ const straightCenter=straightFit(L.map((l,i)=>(l+R[i])/2),valid);
+ const straightness=Math.sqrt((straightL.rms**2+straightR.rms**2)/2);
+ const parallelAngle=Math.abs(Math.atan(straightL.slope)-Math.atan(straightR.slope))*180/Math.PI;
+ let gapCount=n-detected,longestGap=0,run=0,gaps=0;
+ for(let b of valid){if(!b){run++;longestGap=Math.max(longestGap,run)}else{if(run>0){gaps++;run=0}}}if(run>0)gaps++;
+ // Width changes relative to a smooth local width baseline. Invalid samples remain invalid in the anomaly detector.
+ let wTrend=moving(fillInvalid(widths),wWin),anom=widths.map((v,i)=>valid[i]&&Math.abs(v-wTrend[i])>Math.max(2,Math.abs(wTrend[i])*(+E('defectPct').value/100)));
+ let defects=0,segmentLen=0;for(let j=0;j<=n;j++){if(j<n&&anom[j]){segmentLen++}else{if(segmentLen>=3)defects++;segmentLen=0}}
+ let frac=n/roi.h,mm=s.lengthmm>0?s.lengthmm*frac:null;
+ return{recovered,recoveredPct:100*recovered.filter(Boolean).length/n,initialGuideCenter:x0+guideCenter,uncertain,uncertainPct:100*uncertain.filter(Boolean).length/n,ideal,boundaryMethod:method,boundaryLevel:threshold*100,frame,tiltAngle:frame.angle,tiltStatus:frame.status,sampleId:s.id,sample:s.label,volume:vol,side:vol===1?'Left':'Right',center,y0,y1,expectedLength:n,physicalLengthMM:mm,L,R,Y,valid,widths,DL,DR,
+  straightness,centerBend:straightCenter.rms,parallelAngle,SL:straightL.residual,SR:straightR.residual,relativeStraightness:100*straightness/wMean,meanWidth:wMean,widthSD:wSD,widthCV:wCV,edgeRq,edgeRa,leftRq,rightRq,relRq:100*edgeRq/wMean,coverage:detected/n,gapPct:100*gapCount/n,longestGapPct:100*longestGap/n,numberOfGaps:gaps,defects,defectsPer100px:100*defects/n,defectsPer10mm:mm?10*defects/mm:NaN,detected};
+}
+function analyze(){if(!state.img||!state.samples.length){setStatus('First load an image and detect (or draw) samples.',true);return}let results=[],errors=[];for(let s of state.samples)for(let vol of [1,2]){try{results.push(analyzeStripe(s,vol))}catch(err){errors.push(err.message)}}state.measurements=results;refreshSamples();updateResults();render();setStatus(`${state.samples.length} samples · ${results.length} lines measured.`+(errors.length?` ${errors.length} detection error(s): ${errors.join(' | ')}`:''),!!errors.length)}
+E('analyze').onclick=analyze;
+function displayUnit(){let v=+E('scale').value;return v>0?{scale:v,unit:'µm'}:{scale:1,unit:'px'}}
+function readoutRows(){let u=displayUnit(),rows=[];for(let m of state.measurements){let s=state.samples.find(s=>s.id===m.sampleId);rows.push([state.imgName,s?.label||m.sample,m.side,m.volume,s?.roi.h||'',m.expectedLength,fmt(s?.lengthmm||NaN,3),fmt(m.physicalLengthMM||NaN,3),fmt(m.meanWidth*u.scale,3),u.unit,fmt(m.widthSD*u.scale,3),fmt(m.widthCV,3),fmt(m.edgeRa*u.scale,3),fmt(m.edgeRq*u.scale,3),fmt(m.leftRq*u.scale,3),fmt(m.rightRq*u.scale,3),fmt(m.relRq,3),fmt(m.gapPct,3),fmt(m.longestGapPct,3),m.numberOfGaps,m.defects,fmt(m.defectsPer100px,3),fmt(m.defectsPer10mm,3),fmt(m.coverage*100,2),E('unequal').checked?'different':'full ROI',E('threshold').value,E('trend').value,E('defectPct').value,fmt(m.straightness*u.scale,3),fmt(m.relativeStraightness,3),fmt(m.centerBend*u.scale,3),fmt(m.parallelAngle,4),'v7.4-body-and-blue-center-constrained',fmt(m.tiltAngle,3),m.tiltStatus,m.boundaryMethod,fmt(m.ideal.width*u.scale,3),fmt(m.ideal.rms*u.scale,3),fmt(m.ideal.p95*u.scale,3),fmt(m.uncertainPct,3)])}return rows}
+function updateResults(){let u=displayUnit(),cards=[],table=[];for(let m of state.measurements){let s=state.samples.find(s=>s.id===m.sampleId),lab=htmlEscape(s?.label||m.sample),quality=m.coverage<.85?' <span style="color:#b34b39">(low detection)</span>':'';
+ cards.push(`<article class="resultcard"><div class="result-header"><div class="title">${lab}<span class="dose">${m.volume} µL</span></div><span class="sub ${m.coverage<.85?'coverage-warning':''}">${m.coverage<.85?'Check contour':fmt(m.meanWidth*u.scale,1)+' '+u.unit+' width'}</span></div><div class="metric-row"><div class="metric"><label>Width CV</label><strong>${fmt(m.widthCV,1)}</strong><small>%</small></div><div class="metric"><label>Guide RMS</label><strong>${fmt(m.ideal.rms*u.scale,2)}</strong><small>${u.unit}</small></div><div class="metric"><label>Guide P95</label><strong>${fmt(m.ideal.p95*u.scale,2)}</strong><small>${u.unit}</small></div></div><details><summary>More</summary><div class="kv"><span>Local edge Rq</span><span>${fmt(m.edgeRq*u.scale,2)} ${u.unit}</span></div><div class="kv"><span>Mean width</span><span>${fmt(m.meanWidth*u.scale,2)} ${u.unit}</span></div><div class="kv"><span>Coverage</span><span>${fmt(m.coverage*100,1)}%</span></div><div class="kv"><span>Undetected</span><span>${fmt(m.gapPct,2)}%</span></div><div class="kv"><span>Re-detected rows</span><span>${fmt(m.recoveredPct,2)}%</span></div><div class="kv"><span>Uncertain edges</span><span>${fmt(m.uncertainPct,2)}%</span></div><div class="kv"><span>Tilt correction</span><span>${m.tiltStatus==='corrected'?fmt(m.tiltAngle,2)+'°':m.tiltStatus}</span></div><div class="kv"><span>Boundary</span><span>${m.boundaryMethod==='dark'?'Dark contrast':'Legacy'} · ${fmt(m.boundaryLevel,0)}%</span></div></details></article>`);
+ table.push(`<tr><td>${lab}</td><td>${m.volume} µL</td><td>${m.expectedLength}</td><td>${fmt(m.meanWidth*u.scale,2)} ${u.unit}</td><td>${fmt(m.widthCV,2)}</td><td>${fmt(m.edgeRq*u.scale,2)} ${u.unit}</td><td>${fmt(m.relRq,2)}</td><td>${fmt(m.gapPct,2)}</td><td>${fmt(m.longestGapPct,2)}</td><td>${fmt(m.defectsPer100px,2)}</td><td>${fmt(m.defectsPer10mm,2)}</td><td>${fmt(m.coverage*100,1)}</td><td>${fmt(m.straightness*u.scale,2)} ${u.unit}</td><td>${fmt(m.centerBend*u.scale,2)} ${u.unit}</td><td>${fmt(m.parallelAngle,3)}</td></tr>`)}
+ for(const id of ['summaryCsv','profileCsv'])E(id).disabled=!state.measurements.length;E('overlayPng').disabled=!state.img;
+ E('resultCards').innerHTML=cards.join('')||'<p class="empty-results">Measurements appear after upload.</p>';
+ E('resultTable').innerHTML=table.join('')||'<tr><td colspan="15">Not analyzed yet</td></tr>';
+ let prev=E('lineSelect').value;E('lineSelect').innerHTML=state.measurements.map((m,i)=>`<option value="${i}">${htmlEscape(state.samples.find(s=>s.id===m.sampleId)?.label||m.sample)} · ${m.volume} µL</option>`).join('');if([...E('lineSelect').options].some(o=>o.value===prev))E('lineSelect').value=prev;drawChart();}
+function drawChart(){let can=E('chart'),bw=can.getBoundingClientRect().width||600,ratio=devicePixelRatio||1,C=can.getContext('2d');can.width=Math.round(bw*ratio);can.height=Math.round(235*ratio);C.setTransform(ratio,0,0,ratio,0,0);let w=bw,h=235;C.fillStyle='white';C.fillRect(0,0,w,h);let m=state.measurements[+E('lineSelect').value],unit=displayUnit();if(!m){E('chartNote').textContent='Select a measured line.';return}let mode=E('chartType').value,ed=mode!=='width',datasets=ed?[[mode==='parallel'?m.ideal.errorLeft:mode==='straight'?m.SL:m.DL,'#1c71aa'],[mode==='parallel'?m.ideal.errorRight:mode==='straight'?m.SR:m.DR,'#cc5d84']]:[[m.widths,'#1c71aa']];let nums=datasets.flatMap(d=>d[0].filter(Number.isFinite).map(v=>v*unit.scale));if(!nums.length)return;
+ let ymin=Math.min(...nums),ymax=Math.max(...nums);if(ed){let a=Math.max(Math.abs(ymin),Math.abs(ymax),1);ymin=-a;ymax=a}else{ymin=Math.max(0,ymin-(ymax-ymin)*.2);ymax+=(ymax-ymin)*.2}if(ymax-ymin<1){ymax+=.5;ymin-=.5}
+ let l=53,r=16,t=15,b=38,pw=w-l-r,ph=h-t-b;C.strokeStyle='#e2eaf1';C.fillStyle='#55718b';C.font='11px Arial';for(let i=0;i<=4;i++){let y=t+ph*i/4,val=ymax-(ymax-ymin)*i/4;C.beginPath();C.moveTo(l,y);C.lineTo(w-r,y);C.stroke();C.fillText(val.toFixed(1),5,y+4)}for(let i=0;i<=4;i++){let x=l+pw*i/4;C.fillText((i*25)+'%',x-8,h-16)}
+ for(let [arr,color] of datasets){C.beginPath();C.strokeStyle=color;C.lineWidth=1.6;let open=false;for(let i=0;i<arr.length;i++){let v=arr[i];if(!Number.isFinite(v)){open=false;continue}let x=l+pw*i/Math.max(1,arr.length-1),y=t+ph*(ymax-v*unit.scale)/(ymax-ymin);if(!open)C.moveTo(x,y);else C.lineTo(x,y);open=true}C.stroke()}
+ E('chartNote').textContent=(ed?'Blue: left edge; pink: right edge.':'Blue: measured optical width.')+` Horizontal position: ${E('unequal').checked?'0–100% of selected section':'0–100% of sample ROI'}. Vertical unit: ${unit.unit}. Undetected rows can be true gaps or uncertain detection; inspect the overlay.`
+}
+E('lineSelect').onchange=drawChart;E('chartType').onchange=drawChart;window.addEventListener('resize',drawChart);
+function downloadBlob(blob,name){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000)}
+function csv(rows){return '\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n')}
+E('summaryCsv').onclick=()=>{if(!state.measurements.length){setStatus('Analyze lines before exporting.',true);return}let header=['Image','Sample','Side','Phenol Red (µL)','Sample ROI length (px)','Analyzed section (px)','Full sample length (mm)','Section length (mm)','Mean width','Width unit','Width SD','Width CV (%)','Edge Ra','Edge Rq','Left edge Rq','Right edge Rq','Relative Rq (%)','Undetected fraction (%)','Longest gap (%)','Gap count','Width defect count','Width defects per 100px','Width defects per 10mm','Detection coverage (%)','Length mode','Dark-core boundary level (%)','Edge window (px)','Defect threshold (%)','Edge straightness RMS','Relative straightness (%)','Centerline bending RMS','Overall edge angle difference (deg)','Algorithm','Sample tilt (deg from vertical)','Tilt correction status','Boundary signal','Fitted parallel width','Parallel-reference RMS','Parallel-reference P95','Uncertain edges (%)'];downloadBlob(new Blob([csv([header,...readoutRows()])],{type:'text/csv;charset=utf-8'}),'phenol_red_measurements.csv')};
+E('profileCsv').onclick=()=>{if(!state.measurements.length)return;let rows=[['Image','Sample','Phenol Red (µL)','Cross-section index','Normalized axial position (%)','Rectified Y (px)','Detected','Width (px)','Left edge x (px)','Right edge x (px)','Detrended left (px)','Detrended right (px)','Original left X (px)','Original left Y (px)','Original right X (px)','Original right Y (px)','Sample tilt (deg)','Parallel left X (rectified px)','Parallel right X (rectified px)','Left deviation from parallel (px)','Right deviation from parallel (px)','Uncertain edge row','Initial body center X (rectified px)','Re-detected from unsmoothed row','Blue guide midpoint X (rectified px)']];for(let m of state.measurements)for(let i=0;i<m.Y.length;i++)rows.push([state.imgName,state.samples.find(s=>s.id===m.sampleId)?.label||m.sample,m.volume,i,fmt(100*i/Math.max(1,m.Y.length-1),2),m.Y[i],m.valid[i]?1:0,fmt(m.widths[i],3),fmt(m.L[i],3),fmt(m.R[i],3),fmt(m.DL[i],3),fmt(m.DR[i],3),fmt(imagePoint(m.frame,m.L[i],m.Y[i]).x,3),fmt(imagePoint(m.frame,m.L[i],m.Y[i]).y,3),fmt(imagePoint(m.frame,m.R[i],m.Y[i]).x,3),fmt(imagePoint(m.frame,m.R[i],m.Y[i]).y,3),fmt(m.tiltAngle,3),fmt(m.ideal.refLeft[i],3),fmt(m.ideal.refRight[i],3),fmt(m.ideal.errorLeft[i],3),fmt(m.ideal.errorRight[i],3),m.uncertain[i]?1:0,fmt(m.initialGuideCenter,3),m.recovered[i]?1:0,fmt((m.ideal.refLeft[i]+m.ideal.refRight[i])/2,3)]);downloadBlob(new Blob([csv(rows)],{type:'text/csv;charset=utf-8'}),'phenol_red_line_profiles.csv')};
+E('overlayPng').onclick=()=>{if(!state.img)return;render();if(canvas.toBlob)canvas.toBlob(blob=>{if(blob)downloadBlob(blob,'phenol_red_edge_overlay.png')},'image/png');else{let a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='phenol_red_edge_overlay.png';a.click()}};
+function loadImage(uri,label){return new Promise((resolve,reject)=>{
+ let im=new Image();
+ im.onload=()=>{try{
+  const originalW=im.naturalWidth,originalH=im.naturalHeight;
+  if(!originalW||!originalH)throw Error('No valid image dimensions detected.');
+  const maxDim=2350,maxPixels=2800000;
+  const resize=Math.min(1,maxDim/Math.max(originalW,originalH),Math.sqrt(maxPixels/(originalW*originalH)));
+  const w=Math.max(1,Math.round(originalW*resize)),h=Math.max(1,Math.round(originalH*resize));
+  rawCanvas.width=w;rawCanvas.height=h;rawCtx.drawImage(im,0,0,w,h);
+  raster=rawCtx.getImageData(0,0,w,h).data;
+  state.img=im;state.imgName=label;state.samples=[];state.measurements=[];state.uid=0;
+  state.chosen=null;state.drawMode=null;state.zoom=1;state.pan=null;E('imageViewport').scrollLeft=0;E('imageViewport').scrollTop=0;canvas.classList.remove('draw-enabled');
+  E('fileLabel').textContent=`${label} · processed ${w} × ${h} px`+(resize<1?` (original ${originalW} × ${originalH}; resized to ${(resize*100).toFixed(0)}%)`:'');
+  autoSamples();resolve();
+ }catch(err){reject(err)}};
+ im.onerror=()=>reject(Error('Cannot decode this image in your browser. Try sharing it as JPEG or PNG.'));
+ im.src=uri;
+})}
+function syntheticDemo(){
+ const demo=document.createElement('canvas');demo.width=840;demo.height=840;
+ const c=demo.getContext('2d');c.fillStyle='#fafafa';c.fillRect(0,0,840,840);
+ function stripe(cx,top,bottom,width,rough,gap){
+  c.beginPath();for(let y=top;y<=bottom;y+=2){let wobble=rough*(Math.sin(y*.040)+.48*Math.sin(y*.14));let x=cx+Math.sin(y*.004)*2;
+   if(y===top)c.moveTo(x-width/2-wobble,y);else c.lineTo(x-width/2-wobble,y)}
+  for(let y=bottom;y>=top;y-=2){let wobble=rough*(Math.sin(y*.040)+.48*Math.sin(y*.14));let x=cx+Math.sin(y*.004)*2;
+   c.lineTo(x+width/2+wobble,y)}c.closePath();c.fillStyle='#db7494';c.fill();
+  if(gap){c.fillStyle='#fafafa';c.fillRect(cx-width/2-15,gap,width+30,30)}
+ }
+ c.fillStyle='#e6f6f7';c.fillRect(0,0,840,95);c.fillStyle='#21445a';c.font='bold 29px sans-serif';c.fillText('Sample A',130,60);c.fillText('Sample B',545,60);
+ c.strokeStyle='#9da9ae';c.lineWidth=2;c.strokeRect(80,110,275,685);c.strokeRect(480,110,275,685);
+ stripe(165,121,780,12,.7,0);stripe(272,121,780,22,2.5,0);stripe(565,121,780,12,1,0);stripe(671,121,780,22,5,335);
+ return demo.toDataURL('image/png');
+}
+E('loadSyntheticDemo').onclick=async()=>{++uploadRun;uploadMessage('Loading synthetic test image...');try{await loadImage(syntheticDemo(),'synthetic_demo.png');uploadMessage('Synthetic test image loaded.');analyze()}catch(e){uploadMessage(e.message,true)}};
+function uploadMessage(message,error=false){let el=E('uploadStatus');el.textContent=message;el.classList.toggle('error',error)}
+function readAsDataURL(file){return new Promise((resolve,reject)=>{let reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Your browser could not read the file. Please try a JPEG or PNG.'));reader.readAsDataURL(file)})}
+let uploadRun=0;
+async function processSelectedFile(file){
+ if(!file)return;
+ let run=++uploadRun;
+ const name=file.name||'pasted-image.png';
+ if(!(file.type.startsWith('image/')||/\.(jpe?g|png|gif|webp|bmp|avif|tiff?|heic|heif)$/i.test(name))){uploadMessage('Not an image. Please select a photo (JPEG, PNG, WebP or BMP).',true);return;}
+ uploadMessage('Reading '+name+' …');setStatus('Loading your image…');
+ try{
+   let uri=null;
+   try{uri=URL.createObjectURL(file);if(run!==uploadRun)return;await loadImage(uri,name)}
+   catch(err){if(run!==uploadRun)return;let data=await readAsDataURL(file);await loadImage(data,name)}
+   finally{if(uri)URL.revokeObjectURL(uri)}
+   if(run!==uploadRun)return;
+   uploadMessage('Loaded: '+name+' ('+rawCanvas.width+' × '+rawCanvas.height+' processed pixels).');
+   if(state.samples.length){analyze();}else{setStatus('Photo loaded. Tap Auto-detect or draw a sample box.');}
+ }catch(err){
+   if(run!==uploadRun)return;
+   uploadMessage('Could not open '+name+'. '+err.message+' Try JPEG/PNG. If you are in an in-app file preview, open this HTML in Chrome, Edge or Safari.',true);
+   setStatus('Image import failed: '+err.message,true);
+ }
+}
+for(const id of ['upload','cameraUpload'])E(id).addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file){e.target.value='';processSelectedFile(file)}});
+const zone=E('dropZone');
+zone.addEventListener('dragenter',e=>{e.preventDefault();zone.classList.add('drag-over')});
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over')});
+zone.addEventListener('dragleave',e=>{if(!zone.contains(e.relatedTarget))zone.classList.remove('drag-over')});
+zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');const file=[...(e.dataTransfer?.files||[])].find(f=>f.type.startsWith('image/')||/\.(jpe?g|png|webp|bmp|gif|avif|tiff?|heic|heif)$/i.test(f.name));if(file)processSelectedFile(file);else uploadMessage('No supported image found in the dropped files.',true)});
+document.addEventListener('paste',e=>{let tgt=e.target;if(tgt&&(/INPUT|TEXTAREA/.test(tgt.tagName)||tgt.isContentEditable))return;const file=[...(e.clipboardData?.items||[])].filter(it=>it.kind==='file').map(it=>it.getAsFile()).find(x=>x&&x.type.startsWith('image/'));if(file){e.preventDefault();processSelectedFile(file)}});
+
+E('sampleSelect').onchange=()=>{state.chosen=+E('sampleSelect').value;refreshSamples();render();const selected=state.samples.find(s=>s.id===state.chosen);if(selected&&state.zoom>1)zoomImage(state.zoom,{x:selected.roi.x+selected.roi.w/2,y:selected.roi.y+selected.roi.h/2})};
+E('profilePanel').addEventListener('toggle',()=>{if(E('profilePanel').open)drawChart()});
+E('showEdges').onchange=render;E('showCenter').onchange=render;
+E('showReferences').onchange=render;
+setLengthUI();render();refreshSamples();updateResults();
+
+E('runtimeNotice').className='runtime';E('runtimeNotice').textContent='On-device analysis';
+
+</script></body></html>

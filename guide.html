@@ -1,0 +1,135 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Phenol Red · 圖解教學</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f5f6f8;color:#203148;font:15px/1.7 -apple-system,Arial,sans-serif}main{max-width:1000px;margin:auto;padding:20px}header{display:flex;justify-content:space-between;gap:15px;align-items:center}h1{font-size:25px;margin:8px 0}h2{font-size:20px;margin:0 0 8px}h3{font-size:16px}p{margin:8px 0}a{color:#245dd5}section{background:white;border:1px solid #e0e6ee;border-radius:14px;padding:20px;margin:18px 0}button,select{font:inherit;background:#fff;border:1px solid #d9e1ec;border-radius:8px;padding:7px 11px;cursor:pointer}button[aria-pressed=true]{background:#245dd5;color:white}.presets,.legend{display:flex;gap:8px 16px;flex-wrap:wrap;margin:12px 0}.legend{font-size:12px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px}label{display:block;font-size:13px}input[type=range]{width:100%;accent-color:#245dd5}canvas{display:block;width:100%;border:1px solid #e0e6ee;border-radius:10px;background:#fff}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.metric{background:#f3f6fc;border-radius:8px;padding:10px}.metric span{display:block;font-size:12px;color:#5c6f85}.metric b{font-size:20px;color:#245dd5}small,.small{font-size:12px;color:#64748a}.note{background:#fff5db;padding:12px;border-radius:8px}.formula{padding:10px 13px;background:#edf3fb;border-radius:8px;overflow-wrap:anywhere}.terms{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px}.term{border-top:1px solid #e4e8ee;padding:9px 0}.term b{display:block}.term p{margin:3px 0;font-size:14px}summary{cursor:pointer;font-weight:600}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:9px;border-bottom:1px solid #e3e9ef}.scroll{overflow:auto}@media(max-width:600px){main{padding:12px}section{padding:14px}.metrics{grid-template-columns:1fr 1fr}.terms{grid-template-columns:1fr}h1{font-size:21px}.controls{gap:10px}.metric b{font-size:18px}header{flex-wrap:wrap}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}</style></head><body><main>
+<header><h1>Phenol Red · 圖解教學</h1><nav><a href="index.html">v8 分析</a> · <a href="phenol-red-v7.5.html">v7.5 分析</a></nav></header><p>用同一條 Demo 畫線，看懂「整體均勻度」、「局部毛躁」與「持續缺陷」。</p>
+<section><h2>1．先認識線條與顏色</h2><p>每個樣本的 1 µL、2 µL 畫線各自分析，寬度不必相同。下方只畫其中一條，橫向呈現以方便閱讀。</p><div class="legend"><span style="color:#aa2459">■ 粉紅：原始畫線</span><span style="color:#008b49">━ 綠色：偵測邊界</span><span style="color:#245dd5">┄ 藍色：擬合平行參考線</span><span style="color:#a67b00">┄ 黃色：原圖紅色區域估計中心</span><span style="color:#c06d0b">━ 橘色：局部平均走勢／最差視窗</span></div><p class="small">藍線由綠色邊界擬合，並非事先已知的正確邊界。黃色中心在實際軟體中由原圖的紅色區域另行估計；本 Demo 的中心由合成圖形直接給定。</p>
+<div class="presets" aria-label="Demo scenarios"><button data-case="straight">均勻直線</button><button data-case="width">局部收縮／膨大</button><button data-case="rough">局部毛躁</button><button data-case="bend">等寬波浪</button><button data-case="gap">真實缺口示意</button></div>
+<div class="controls"><label>粗細變化 <output id="widthOut"></output><input id="width" type="range" min="0" max="100" value="45"></label><label>局部毛躁 <output id="roughOut"></output><input id="rough" type="range" min="0" max="100" value="25"></label><label>中心彎曲 <output id="bendOut"></output><input id="bend" type="range" min="0" max="100" value="0"></label><label>Rq 平均視窗 <output id="trendOut"></output><input id="trend" type="range" min="21" max="201" step="10" value="121"></label></div>
+<p><label for="view">圖中參考方式</label><select id="view"><option value="parallel">藍線偏差：比較直線</option><option value="rough">局部 Rq：比較平均走勢</option><option value="local">最差 5%：觀察持續區段</option></select></p>
+<canvas id="drawing" height="300" aria-label="Interactive synthetic red stripe with detected edges, references and worst window"></canvas><p id="demoDescription" class="small" aria-live="polite"></p>
+<div id="metrics" class="metrics" aria-live="polite"></div><p class="note">這是教學用合成畫線，不是照片偵測驗證。形狀控制值是示意強度，沒有生產單位。數字使用網頁相同的擬合、移動平均及最差 5% RMS 計算；Demo 邊界由合成形狀直接取得。</p></section>
+<section><h2>2．CV、Rq、藍線 RMS／P95 有何不同？</h2><div class="terms"><div class="term"><b>Mean width · 平均寬度</b><p>兩側綠色邊界之間的平均距離。每條線獨立估計，不指定 1／2 µL 必須多寬。</p></div><div class="term"><b>Width CV · 粗細均勻度</b><p>100 × 寬度標準差 ÷ 平均寬度。整體粗細變化越大，通常越高。等寬但兩側一起彎曲時，CV 仍可接近 0。</p></div><div class="term"><b>Local edge Rq · 局部粗糙度</b><p>先用移動平均得到橘色走勢，再計算綠邊偏離這個走勢的 RMS，合併左右邊。較慢的彎曲可能被走勢吸收，因此 Rq 不一定高。</p></div><div class="term"><b>Guide RMS · 藍線偏差</b><p>綠邊到對應藍色直線的垂直距離之 RMS，左右邊合併。會反映彎曲、局部寬度變化及毛躁；整體斜拍角度可由直線方向吸收。</p></div><div class="term"><b>Guide P95 · 偏差第 95 百分位</b><p>約 95% 的有效邊界點，其絕對偏差不超過這個值。它不是最大值，極短缺陷可能落在剩下 5% 裡。</p></div><div class="term"><b>RMS · 平方平均後開根號</b><p>把每個偏差平方，取平均，再開根號。較大的偏差權重較高，但仍受其持續長度影響。單位依指標而定。</p></div></div><p class="formula">Rq：參考「局部平均走勢」；Guide RMS：參考「擬合直線」。兩者使用不同參考，不能當成同一數字。</p></section>
+<section><h2>3．v8：最差連續 5% 區段</h2><p>把分析長度的 5% 當作一個移動視窗，每次往前移一個位置。分別取各指標的最高視窗 RMS；三個最差視窗可以位於不同位置。</p><div class="terms"><div class="term"><b>Width variation · 最差局部寬度變化 %</b><p>視窗內寬度相對整條線中位寬度的偏差 RMS，再除以中位寬度 ×100。不是相對視窗自己的平均寬度，以免持續收縮被消除。</p></div><div class="term"><b>Edge deformation · 最差局部邊界變形 %</b><p>視窗內左右綠邊到藍色參考線的垂直偏差，平方後等權合併算 RMS，再除以中位寬度 ×100。</p></div><div class="term"><b>Local unevenness · 最差局部毛躁 %</b><p>視窗內左右綠邊到局部平均走勢的偏差，平方後等權合併算 RMS，再除以中位寬度 ×100。</p></div><div class="term"><b>Window · 觀察範圍</b><p>實際視窗點數＝分析點數 ×5%，向上取整數。例：1,000 點用 50 點；101 點用 6 點。它不是「缺陷至少要超過 5% 才計算」的硬門檻。</p></div></div>
+<div class="scroll"><table><thead><tr><th>50 點視窗中的寬度偏差</th><th>視窗 RMS</th></tr></thead><tbody><tr><td>1 點偏差 50%，其餘 0</td><td>7.1%</td></tr><tr><td>25 點偏差 50%，其餘 0</td><td>35.4%</td></tr><tr><td>50 點都偏差 50%</td><td>50.0%</td></tr></tbody></table></div><p>小尖峰仍有影響，但不再直接等同整條線的最差分數。極端尖峰仍可能拉高 RMS。5% 是試用尺度，尚非經驗證的通用最佳值；目前不合成好壞分數。</p><p class="small">只有整個視窗都成功量測才計算。遇到漏偵測就排除該視窗，不補成零。沒有有效視窗時顯示「—」。</p></section>
+<section><h2>4．Boundary 為什麼會改變綠邊的位置？</h2><p>Boundary 是影像訊號門檻，不是品質分數。下圖示意一個橫截面的雙側深紅訊號：</p><label>Boundary <output id="boundaryOut">60%</output><input id="boundary" type="range" min="15" max="90" value="60"></label><canvas id="signal" height="240" aria-label="Conceptual cross-section signal and threshold crossings"></canvas><p class="small">橫軸是跨越畫線的位置，縱軸是相對深紅對比訊號。綠色垂線為示意門檻交點。這是概念圖，未重現完整照片偵測、背景估計及中心限制流程。</p><p class="note">較高 Boundary 通常選擇更深、更內側的輪廓，但不一定更正確。應先核對綠邊是否落在真正要量測的深紅外側；兩條綠邊框住同一側深紅帶時，品質數字也可能失真。</p></section>
+<section><h2>5．其他設定怎麼用？</h2><div class="terms"><div class="term"><b>Boundary signal</b><p>Dark-red contrast 使用紅／綠通道的對數比值，強調深紅對比；Legacy 使用 R−(G+B)/2。訊號定義不同，同一 Boundary 百分比不可當成相同物理邊界。</p></div><div class="term"><b>Roughness window · 121 px</b><p>一維 box filter：每點平均前 60 點、自己及後 60 點，形成橘色走勢。仍逐點量測。視窗越大，通常會把更長尺度的起伏納入 Rq；比較時要固定。端點視窗會縮短。</p></div><div class="term"><b>Auto tilt correction</b><p>估計樣本整體方向，再沿垂直於該方向的橫截面量寬。不是把局部彎曲拉直。不能校正透視、鏡頭畸變或紙面翹曲；不確定時保留未校正狀態。</p></div><div class="term"><b>Scale · µm/px</b><p>需由已知尺度標定。例：1 px＝2 µm，0.3 px 就是 0.6 µm。未填時顯示 px；改單位不會增加量測準確度。v8 局部百分比以線寬正規化。</p></div><div class="term"><b>Relative analysis section · Start／End</b><p>開啟時，依每個樣本自己的長度取區段。2–98% 是去除兩端各約 2%；關閉時量整個樣本框。5% 視窗是相對這個已選分析區段，不是相對整張照片。</p></div><div class="term"><b>Sample length · mm</b><p>選填完整樣本框的實體長度，用於換算選定區段長度及每 10 mm 缺陷次數。它與 µm/px 是不同輸入，不能視為自動相互標定。</p></div><div class="term"><b>Sample search · Tolerant／Strict</b><p>控制如何找樣本框。Tolerant 較容易保留淡線候選；Strict 過濾較多。它不等於 Boundary，也不代表品質好壞。請檢查每框是否含左 1 µL、右 2 µL。</p></div><div class="term"><b>Width defect threshold · 25%</b><p>舊版缺陷計數：比較寬度與局部平均寬度，超過 max(2 px，平均寬度 ×門檻) 且連續至少 3 點才計一次。這不是 v8 的最差 5% RMS，也不是其品質限度。</p></div><div class="term"><b>Zoom／Fit／Zoom selected sample</b><p>只影響觀看倍率與位置，不改變分析像素或量測結果。放大可檢查綠邊是否框對位置。</p></div><div class="term"><b>Profile comparisons</b><p>可看同樣本 1＋2 µL、所有 1 µL 或所有 2 µL，並勾選樣本。橫軸以各線自己的 0–100% 對齊，不表示相同實體距離；只改圖表，不刪量測資料。</p></div></div></section>
+<section><h2>6．完整資料與可信度</h2><details><summary>展開其他數值定義</summary><div class="terms"><div class="term"><b>Width SD／Edge Ra／Relative Rq</b><p>SD 是寬度標準差；Ra 是綠邊相對局部走勢的絕對偏差平均；Relative Rq＝100×Rq÷平均寬度。Relative Rq 與 v8 以中位寬度正規化的局部 RMS 不同。</p></div><div class="term"><b>Straightness RMS／Center RMS</b><p>前者分別對左右邊擬合直線，合併垂直殘差 RMS；後者對兩邊中點形成的中心軌跡擬合直線，描述整體彎曲。</p></div><div class="term"><b>Angle difference／Fitted width</b><p>角度差是左右邊各自擬合直線的夾角，主要反映錐形趨勢，不保證局部等寬。Fitted width 是兩條平行藍線的垂直間距。</p></div><div class="term"><b>Raw peaks／Raw contraction & expansion</b><p>單一有效位置最嚴重的偏差，仍保留供追溯。小範圍雜訊或追錯邊可能放大峰值，不能與視窗 RMS 混為一談。</p></div><div class="term"><b>Coverage／Undetected／Longest gap</b><p>Coverage＝成功量測位置比例；Undetected＝未量測比例；Longest gap＝最長未量測連續段比例。缺口可能是紅線真斷，也可能是漏偵測，不能直接當產品斷線率。</p></div><div class="term"><b>Re-detected／Uncertain／Valid windows</b><p>重偵測是失敗位置以原始橫截面再嘗試後確認的點；Uncertain 是無法確認的點。Valid windows 是整段均有效的視窗數。完整覆蓋不等於綠邊必然正確。</p></div><div class="term"><b>Defects / 100 px／Defects / 10 mm</b><p>舊版寬度缺陷計數除以分析長度後換算的次數密度，不是不良長度比例。</p></div><div class="term"><b>CSV 與算法版本</b><p>Legacy results CSV 保留整體指標；Defect CSV 在新版匯出最差視窗、原始峰值、設定與有效性；Profiles CSV 是逐點資料。請一起保存版本、Boundary、視窗、圖片尺度與選定區段。</p></div></div></details><p class="note">沒有原圖時，先看量測有效性，再比較匹配條件下的數字。低覆蓋、追錯邊界或不同圖片尺度，都可能讓低數值看似良好。圖解不提供未驗證的生產允收門檻。</p></section><p class="small">圖解對應 v8 最差 5% 視窗方案；v7.5 保留整體指標。Demo 為教學合成資料，非真實樣本。</p></main><script>
+const mean=a=>a.length?a.reduce((v,x)=>v+x,0)/a.length:NaN;
+const sd=a=>{let m=mean(a);return Math.sqrt(mean(a.map(x=>(x-m)**2)))};
+const rms=a=>Math.sqrt(mean(a.map(v=>v*v)));
+const fmt=(v,d=2)=>Number.isFinite(v)?v.toFixed(d):'—';
+const median=a=>{if(!a.length)return NaN;let b=[...a].sort((a,b)=>a-b);let n=b.length;return n%2?b[n>>1]:(b[n/2-1]+b[n/2])/2};
+function moving(a,k){let r=Math.floor(k/2),pre=[0];for(let v of a)pre.push(pre.at(-1)+v);return a.map((v,i)=>{let l=Math.max(0,i-r),u=Math.min(a.length,i+r+1);return (pre[u]-pre[l])/(u-l)})}
+function smooth5(a){return a.map((v,i)=>(a[Math.max(i-2,0)]+2*a[Math.max(i-1,0)]+3*v+2*a[Math.min(i+1,a.length-1)]+a[Math.min(i+2,a.length-1)])/9)}
+function fillInvalid(vals){let out=vals.slice(),idx=[];for(let i=0;i<vals.length;i++)if(Number.isFinite(vals[i]))idx.push(i);if(!idx.length)return out.fill(0);for(let i=0;i<idx[0];i++)out[i]=vals[idx[0]];for(let i=idx.at(-1)+1;i<vals.length;i++)out[i]=vals[idx.at(-1)];for(let j=0;j<idx.length-1;j++){let a=idx[j],b=idx[j+1];for(let i=a+1;i<b;i++)out[i]=vals[a]+(vals[b]-vals[a])*(i-a)/(b-a)}return out}
+function medFilter(a,k=5){let r=Math.floor(k/2),out=a.slice();for(let i=0;i<a.length;i++){if(!Number.isFinite(a[i]))continue;let ar=[];for(let j=Math.max(0,i-r);j<=Math.min(a.length-1,i+r);j++)if(Number.isFinite(a[j]))ar.push(a[j]);out[i]=median(ar)}return out}
+
+function parallelReferences(left,right,valid){
+ const rows=left.map((_,i)=>i).filter(i=>valid[i]&&Number.isFinite(left[i])&&Number.isFinite(right[i]));
+ const yMean=mean(rows),leftMean=mean(rows.map(i=>left[i])),rightMean=mean(rows.map(i=>right[i]));
+ const denominator=2*rows.reduce((sum,i)=>sum+(i-yMean)**2,0);
+ const slope=denominator?rows.reduce((sum,i)=>sum+(i-yMean)*(left[i]-leftMean+right[i]-rightMean),0)/denominator:0;
+ const normal=Math.sqrt(1+slope*slope);
+ const refLeft=left.map((_,i)=>leftMean+slope*(i-yMean));
+ const refRight=right.map((_,i)=>rightMean+slope*(i-yMean));
+ const errorLeft=left.map((x,i)=>valid[i]?(x-refLeft[i])/normal:NaN);
+ const errorRight=right.map((x,i)=>valid[i]?(x-refRight[i])/normal:NaN);
+ const errors=[...errorLeft,...errorRight].filter(Number.isFinite);
+ const absolute=errors.map(Math.abs).sort((a,b)=>a-b);
+ return {slope,refLeft,refRight,errorLeft,errorRight,width:(rightMean-leftMean)/normal,rms:rms(errors),p95:absolute[Math.max(0,Math.ceil(.95*absolute.length)-1)],first:rows[0],last:rows.at(-1)};
+}
+
+function localDefects(m){
+ const values=m.widths.filter((v,i)=>m.valid[i]&&Number.isFinite(v)).sort((a,b)=>a-b);
+ const baseline=values.length?(values[Math.floor((values.length-1)/2)]+values[Math.ceil((values.length-1)/2)])/2:NaN;
+ const n=m.Y.length,k=Math.max(1,Math.ceil(n*.05));
+ const peaks={width:{value:0,index:null,side:'width'},edge:{value:0,index:null,side:null},rough:{value:0,index:null,side:null}};
+ const rows=Array(n).fill(null),sums={width:[0],edge:[0],rough:[0]},counts=[0];
+ let contraction=0,expansion=0;
+ for(let i=0;i<n;i++){
+  if(m.valid[i]&&baseline>0){
+   const width=100*(m.widths[i]-baseline)/baseline;
+   const el=100*m.ideal.errorLeft[i]/baseline,er=100*m.ideal.errorRight[i]/baseline;
+   const rl=100*m.DL[i]/baseline,rr=100*m.DR[i]/baseline;
+   if([width,el,er,rl,rr].every(Number.isFinite)){
+    const v={width:Math.abs(width),edge:Math.max(Math.abs(el),Math.abs(er)),rough:Math.max(Math.abs(rl),Math.abs(rr))};
+    rows[i]={...v,widthSigned:width,edgeLeft:el,edgeRight:er,roughLeft:rl,roughRight:rr};
+    contraction=Math.max(contraction,-width);expansion=Math.max(expansion,width);
+    for(const kind of ['width','edge','rough'])if(peaks[kind].index===null||v[kind]>peaks[kind].value)peaks[kind]={value:v[kind],index:i,side:kind==='width'?'width':kind==='edge'?(Math.abs(el)>=Math.abs(er)?'left':'right'):(Math.abs(rl)>=Math.abs(rr)?'left':'right')};
+   }
+  }
+  const r=rows[i];counts.push(counts[i]+(r?1:0));
+  sums.width.push(sums.width[i]+(r?r.widthSigned**2:0));
+  sums.edge.push(sums.edge[i]+(r?(r.edgeLeft**2+r.edgeRight**2)/2:0));
+  sums.rough.push(sums.rough[i]+(r?(r.roughLeft**2+r.roughRight**2)/2:0));
+ }
+ const worst={width:null,edge:null,rough:null};let eligible=0;
+ for(let start=0;start+k<=n;start++){
+  const end=start+k;if(counts[end]-counts[start]!==k)continue;eligible++;
+  for(const kind of ['width','edge','rough']){
+   const value=Math.sqrt(Math.max(0,sums[kind][end]-sums[kind][start])/k);
+   if(!worst[kind]||value>worst[kind].value)worst[kind]={value,start,endExclusive:end,rows:k};
+  }
+ }
+ const validity=counts[n]===n?'complete-detection-unverified':'incomplete-or-invalid-detection';
+ return {version:'worst-window-rms-v1',baseline,windowPct:5,windowRows:k,effectiveWindowPct:100*k/n,eligibleWindows:eligible,totalWindows:Math.max(0,n-k+1),worst,peaks,rows,contraction,expansion,validity,status:eligible?'descriptive-only':'insufficient-continuous-data'};
+}
+
+let demoGap=false;
+const D=id=>document.getElementById(id);
+function demoMeasurement(widthAmount,roughAmount,bendAmount,trend=121,gap=false){
+ const n=1000,Y=Array.from({length:n},(_,i)=>i),L=[],R=[],valid=[];
+ for(let i=0;i<n;i++){
+  const t=i/(n-1),bump=Math.exp(-Math.pow((t-.48)/.065,2)),wide=40*(1+.5*widthAmount/100*(bump-.7*Math.exp(-Math.pow((t-.28)/.035,2)))),center=100+20*bendAmount/100*Math.sin(2*Math.PI*t);
+  const jag=4*roughAmount/100*Math.sin(i*.72)*Math.exp(-Math.pow((t-.72)/.10,2));
+  const ok=!(gap&&t>.38&&t<.44);valid.push(ok);L.push(ok?center-wide/2+jag:NaN);R.push(ok?center+wide/2-jag*.8:NaN);
+ }
+ const ideal=parallelReferences(L,R,valid),lt=moving(fillInvalid(L),trend),rt=moving(fillInvalid(R),trend);
+ const widths=L.map((x,i)=>valid[i]?R[i]-x:NaN),DL=L.map((x,i)=>valid[i]?x-lt[i]:NaN),DR=R.map((x,i)=>valid[i]?x-rt[i]:NaN),wv=widths.filter(Number.isFinite);
+ const q={Y,L,R,valid,widths,DL,DR,ideal,frame:{cx:0,cy:0,cos:1,sin:0}};
+ q.meanWidth=mean(wv);q.widthCV=100*sd(wv)/q.meanWidth;q.edgeRq=Math.sqrt((rms(DL.filter(Number.isFinite))**2+rms(DR.filter(Number.isFinite))**2)/2);q.local=localDefects(q);
+ return q;
+}
+function plotContext(id,height){const can=D(id),w=Math.max(300,can.getBoundingClientRect().width),ratio=window.devicePixelRatio||1;can.width=w*ratio;can.height=height*ratio;const c=can.getContext('2d');c.setTransform(ratio,0,0,ratio,0,0);c.clearRect(0,0,w,height);return {c,w,h:height};}
+function updateDemo(){
+ const width=+D('width').value,rough=+D('rough').value,bend=+D('bend').value,trend=+D('trend').value;
+ for(const id of ['width','rough','bend'])D(id+'Out').textContent=D(id).value+'/100';D('trendOut').textContent=trend+' px';
+ const m=demoMeasurement(width,rough,bend,trend,demoGap),{c,w}=plotContext('drawing',300),left=35,span=w-65;
+ const x=i=>left+i/999*span,y=value=>120+(value-80)*1.6;
+ // Fill each continuous red segment separately.
+ for(let a=0;a<1000;){if(!m.valid[a]){a++;continue;}let b=a;while(b<1000&&m.valid[b])b++;c.beginPath();for(let j=a;j<b;j++){if(j===a)c.moveTo(x(j),y(m.L[j]));else c.lineTo(x(j),y(m.L[j]));}for(let j=b-1;j>=a;j--)c.lineTo(x(j),y(m.R[j]));c.closePath();c.fillStyle='#eca2bc';c.fill();a=b;}
+ function trace(values,color,dash=[],thick=1.7){c.beginPath();c.setLineDash(dash);c.lineWidth=thick;c.strokeStyle=color;let open=false;values.forEach((v,i)=>{if(!Number.isFinite(v)){open=false;return;}if(open)c.lineTo(x(i),y(v));else c.moveTo(x(i),y(v));open=true;});c.stroke();c.setLineDash([]);}
+ trace(m.L,'#8e214c',[],5);trace(m.R,'#8e214c',[],5);trace(m.L,'#00a457');trace(m.R,'#00a457');
+ // Body axis known from the synthetic original, independent of fitted guides.
+ trace(Array(1000).fill(100),'#d8ad00',[6,4]);
+ const mode=D('view').value;
+ if(mode==='rough'){trace(moving(fillInvalid(m.L),trend),'#dd8811',[],2);trace(moving(fillInvalid(m.R),trend),'#dd8811',[],2);}
+ else{trace(m.ideal.refLeft,'#245dd5',[6,4]);trace(m.ideal.refRight,'#245dd5',[6,4]);}
+ if(mode==='local'){
+  for(const [k,v] of Object.entries(m.local.worst)){if(!v)continue;const xx=x(v.start),ww=x(v.endExclusive-1)-xx;c.fillStyle=k==='width'?'#e89c1930':k==='edge'?'#245dd520':'#8a54b520';c.fillRect(xx,80,Math.max(ww,2),140);c.fillStyle='#805219';c.font='11px Arial';c.fillText(k,xx,65+Object.keys(m.local.worst).indexOf(k)*12);}
+ }
+ const ref=mode==='rough'?moving(fillInvalid(m.L),trend):m.ideal.refLeft;
+ c.strokeStyle='#d55a83';c.lineWidth=1;for(let i=30;i<1000;i+=75)if(m.valid[i]){c.beginPath();c.moveTo(x(i),y(m.L[i]));c.lineTo(x(i),y(ref[i]));c.stroke();}
+ c.fillStyle='#66778a';c.font='12px Arial';c.fillText('0%',left,270);c.fillText('100%',w-48,270);c.fillText('Analyzed length →',Math.max(left,w/2-55),270);
+ const f=(v,n=2)=>Number.isFinite(v)?v.toFixed(n):'—';
+ const items=[['Mean width',f(m.meanWidth)+' px'],['Width CV',f(m.widthCV)+'%'],['Local edge Rq',f(m.edgeRq)+' px'],['Guide RMS',f(m.ideal.rms)+' px'],['Guide P95',f(m.ideal.p95)+' px'],['Worst 5% · Width',f(m.local.worst.width?.value)+'%'],['Worst 5% · Edge',f(m.local.worst.edge?.value)+'%'],['Worst 5% · Unevenness',f(m.local.worst.rough?.value)+'%']];
+ D('metrics').innerHTML=items.map(([label,value])=>`<div class="metric"><span>${label}</span><b>${value}</b></div>`).join('');
+ D('demoDescription').textContent=`Demo 有 1,000 個分析橫截面；v8 視窗固定為 50 點。有效覆蓋 ${(100*m.valid.filter(Boolean).length/1000).toFixed(1)}%，有效視窗 ${m.local.eligibleWindows}/${m.local.totalWindows}。${mode==='rough'?'粉紅細線表示到橘色走勢的偏差。':'藍線隨整體方向擬合，粉紅細線示意邊界偏差。'} 圖上間距為示意，RMS 數字採軟體的垂直距離定義。`;
+}
+function drawSignal(){
+ const {c,w}=plotContext('signal',240),level=+D('boundary').value/100;D('boundaryOut').textContent=(level*100).toFixed(0)+'%';
+ const fn=t=>.16*Math.exp(-Math.pow((t-.5)/.22,2))+.85*Math.exp(-Math.pow((t-.33)/.055,2))+.85*Math.exp(-Math.pow((t-.67)/.055,2));
+ const peak=Math.max(...Array.from({length:401},(_,i)=>fn(i/400))),threshold=peak*level,x=t=>30+t*(w-60),y=v=>190-v/peak*140;
+ c.strokeStyle='#dce4ef';c.beginPath();c.moveTo(30,35);c.lineTo(30,190);c.lineTo(w-30,190);c.stroke();
+ c.strokeStyle='#ad2d5b';c.lineWidth=2;c.beginPath();for(let i=0;i<=400;i++){if(!i)c.moveTo(x(0),y(fn(0)));else c.lineTo(x(i/400),y(fn(i/400)));}c.stroke();
+ c.strokeStyle='#ed9c23';c.setLineDash([5,3]);c.beginPath();c.moveTo(30,y(threshold));c.lineTo(w-30,y(threshold));c.stroke();c.setLineDash([]);
+ const support=Array.from({length:401},(_,i)=>i).filter(i=>fn(i/400)>=threshold);
+ for(const i of [support[0],support.at(-1)]){c.strokeStyle='#00a457';c.beginPath();c.moveTo(x(i/400),190);c.lineTo(x(i/400),y(fn(i/400)));c.stroke();}
+ c.fillStyle='#62758a';c.font='12px Arial';c.fillText('Background',30,214);c.fillText('Cross-section →',Math.max(35,w/2-50),214);c.fillText('Dark-red signal',36,22);
+}
+for(const id of ['width','rough','bend','trend','view'])D(id).addEventListener('input',updateDemo);D('boundary').addEventListener('input',drawSignal);
+document.querySelectorAll('[data-case]').forEach(button=>button.addEventListener('click',()=>{
+ const name=button.dataset.case,presets={straight:[0,0,0],width:[80,0,0],rough:[0,80,0],bend:[0,0,80],gap:[0,0,0]},v=presets[name];['width','rough','bend'].forEach((id,i)=>D(id).value=v[i]);demoGap=name==='gap';document.querySelectorAll('[data-case]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));updateDemo();
+}));
+window.addEventListener('resize',()=>{updateDemo();drawSignal();});updateDemo();drawSignal();
+
+</script></body></html>

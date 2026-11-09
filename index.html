@@ -662,13 +662,26 @@ function defectCard(m){
  const q=m.local,labels=defectLabels;
  const metricRow=(title,values)=>`<div class="defect-head"><span>${title}</span></div><div class="defect-three">${Object.keys(labels).map(k=>`<div><label>${labels[k]}</label><b>${values[k]==null?'—':fmt(values[k],1)+'%'}</b></div>`).join('')}</div>`;
  const peaks=Object.fromEntries(Object.entries(q.peaks).map(([k,p])=>[k,p.index===null?null:p.value]));
- const windows=Object.fromEntries(Object.entries(q.worst).map(([k,w])=>[k,w?.value]));
+ const windows=Object.values(q.worst).filter(Boolean).sort((a,b)=>a.start-b.start);
+ const n=m.Y.length;
+ let markedRows=0,end=0;
+ for(const w of windows){
+  markedRows+=Math.max(0,w.endExclusive-Math.max(end,w.start));
+  end=Math.max(end,w.endExclusive);
+ }
+ const position=i=>fmt(100*i/Math.max(1,n-1),1)+'%';
  return `<div class="defect-summary">${metricRow('Peak · single cross-section',peaks)}
- ${metricRow(`Worst ${q.windowPct}% window · RMS`,windows)}
+ <div class="defect-head"><span>Worst ${q.windowPct}% window · RMS</span></div>
+ <div class="defect-three">${Object.entries(labels).map(([k,label])=>{
+  const w=q.worst[k];
+  return `<div><label>${label}</label><b>${w?fmt(w.value,1)+'%':'—'}</b>
+  <div class="small">${w?position(w.start)+'–'+position(w.endExclusive-1)+' along line':'No valid window'}</div>
+  ${w?`<div class="small">Span ${fmt(100*w.rows/n,2)}% · ${w.rows} rows</div>`:''}</div>`;
+ }).join('')}</div>
+ ${windows.length?`<p class="small"><strong>Total marked length ${fmt(100*markedRows/n,2)}%</strong> · overlap counted once. Marks show the worst windows.</p>`:''}
  <details><summary>Locations &amp; coverage</summary>${Object.keys(labels).map(k=>{
-  const peak=defectLocation(m,q.peaks[k]),w=q.worst[k];
-  return `<div class="kv"><span>${labels[k]} peak</span><span>${peak?fmt(peak.axialPct,1)+'% along line'+(k==='width'?' · '+(q.rows[peak.row].widthSigned<0?'narrower':q.rows[peak.row].widthSigned>0?'wider':'no change'):' · '+peak.side):'—'}</span></div>
-  <div class="kv"><span>${labels[k]} window</span><span>${w?fmt(100*w.start/Math.max(1,m.Y.length-1),1)+'–'+fmt(100*(w.endExclusive-1)/Math.max(1,m.Y.length-1),1)+'% along line':'No valid window'}</span></div>`;
+  const peak=defectLocation(m,q.peaks[k]);
+  return `<div class="kv"><span>${labels[k]} peak</span><span>${peak?fmt(peak.axialPct,1)+'% along line'+(k==='width'?' · '+(q.rows[peak.row].widthSigned<0?'narrower':q.rows[peak.row].widthSigned>0?'wider':'no change'):' · '+peak.side):'—'}</span></div>`;
  }).join('')}<div class="kv"><span>Window</span><span>${q.windowRows} rows · ${fmt(q.effectiveWindowPct,2)}%</span></div><div class="kv"><span>Valid windows</span><span>${q.eligibleWindows} / ${q.totalWindows}</span></div>${q.validity==='incomplete-or-invalid-detection'?'<p class="small">Some rows could not be measured. Defects in those rows may be missed.</p>':''}</details></div>`;
 }
 function refreshLocalDefects(){

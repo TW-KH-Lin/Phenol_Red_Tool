@@ -6,6 +6,11 @@
 .defect-tooltip table{width:auto;margin:4px 0 0;font-size:inherit}
 .defect-tooltip th,.defect-tooltip td{padding:2px 6px;text-align:right;white-space:nowrap}
 .defect-tooltip th:first-child{text-align:left;padding-left:0}
+
+.defect-summary .membrane-contraction,.defect-summary .membrane-roughness{border-radius:6px;padding:5px 8px}
+.defect-summary .membrane-contraction{display:inline-flex;align-items:baseline;gap:8px;margin:0 0 6px;background:#eaf2ff;color:#174e9b}
+.defect-summary .membrane-roughness{background:#f2eafb;color:#642b94}
+.defect-summary .membrane-contraction b,.defect-summary .membrane-roughness b,.defect-summary .membrane-roughness label{color:inherit}
 </style></head><body>
 <header><div class="brand"><div class="brandmark" aria-hidden="true"></div><h1>Phenol Red <span class="version">v8.5 Experimental</span></h1></div><span id="runtimeNotice" class="runtime" role="status">Starting…</span></header>
 <main><div style="text-align:right;margin:0 0 8px"><a href="guide.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5">Help · 圖解教學 ↗</a> <a href="guide-en.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5;margin-left:10px">English ↗</a></div><div class="experiment-banner">Experimental · Local defects <a href="phenol-red-v7.5.html">Open preserved v7.5</a></div>
@@ -660,8 +665,8 @@ for(const type of ['pointerleave','pointerdown','pointercancel'])canvas.addEvent
 E('imageViewport').addEventListener('scroll',()=>{E('defectTooltip').hidden=true;});
 function defectCard(m){
  const q=m.local,labels=defectLabels;
- const metricRow=(title,values)=>`<div class="defect-head"><span>${title}</span></div><div class="defect-three">${Object.keys(labels).map(k=>`<div><label>${labels[k]}</label><b>${values[k]==null?'—':fmt(values[k],1)+'%'}</b></div>`).join('')}</div>`;
  const peaks=Object.fromEntries(Object.entries(q.peaks).map(([k,p])=>[k,p.index===null?null:p.value]));
+ const peakText=value=>value==null?'—':fmt(value,1)+'%';
  const windows=Object.values(q.worst).filter(Boolean).sort((a,b)=>a.start-b.start);
  const n=m.Y.length;
  let markedRows=0,end=0;
@@ -670,7 +675,13 @@ function defectCard(m){
   end=Math.max(end,w.endExclusive);
  }
  const position=i=>fmt(100*i/Math.max(1,n-1),1)+'%';
- return `<div class="defect-summary">${metricRow('Peak · single cross-section',peaks)}
+ return `<div class="defect-summary">
+ ${m.volume===1?`<div class="membrane-contraction"><span>Max local narrowing</span><b>${peakText(peaks.width===null?null:q.contraction)}</b></div>`:''}
+ <div class="defect-head"><span>Peak · single cross-section</span></div>
+ <div class="defect-three">${Object.entries(labels).map(([k,label])=>{
+  const highlight=m.volume===2&&k==='rough';
+  return `<div${highlight?' class="membrane-roughness"':''}><label>${highlight?'Local unevenness peak':label}</label><b>${peakText(peaks[k])}</b></div>`;
+ }).join('')}</div>
  <div class="defect-head"><span>Worst ${q.windowPct}% window · RMS</span></div>
  <div class="defect-three">${Object.entries(labels).map(([k,label])=>{
   const w=q.worst[k];

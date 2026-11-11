@@ -597,8 +597,11 @@ function localDefects(m,windowPct=5){
    if(!worst[kind]||value>worst[kind].value)worst[kind]={value,start,endExclusive:end,rows:k};
   }
  }
+ const sumSides=key=>sides.left[key]&&sides.right[key]
+  ?sides.left[key].value+sides.right[key].value:null;
+ const roughnessSum={peakPct:sumSides('peak'),worstWindowRmsPct:sumSides('worst')};
  const validity=counts[n]===n?'complete-detection-unverified':'incomplete-or-invalid-detection';
- return {version:'worst-window-rms-v2',baseline,windowPct,windowRows:k,effectiveWindowPct:100*k/n,eligibleWindows:eligible,totalWindows:Math.max(0,n-k+1),worst,peaks,sides,rows,contraction,expansion,validity,status:eligible?'descriptive-only':'insufficient-continuous-data'};
+ return {version:'worst-window-rms-v2',baseline,windowPct,windowRows:k,effectiveWindowPct:100*k/n,eligibleWindows:eligible,totalWindows:Math.max(0,n-k+1),worst,peaks,sides,roughnessSum,rows,contraction,expansion,validity,status:eligible?'descriptive-only':'insufficient-continuous-data'};
 }
 function defectLocation(m,p){
  if(!p||p.index===null||p.index===undefined)return null;
@@ -699,13 +702,18 @@ function defectCard(m){
   <div class="small">${w?position(w.start)+'–'+position(w.endExclusive-1)+' along line':'No valid window'}</div>
   ${w?`<div class="small">Span ${fmt(100*w.rows/n,2)}% · ${w.rows} rows</div>`:''}</div>`;
  }).join('')}</div>
- <div class="defect-head"><span>Local unevenness · by edge</span></div>
+ <div class="defect-head"><span>Local unevenness · left + right</span></div>
  <div class="defect-three">${Object.entries(q.sides).map(([side,{peak,worst}])=>`<div>
   <label>${side==='left'?'Left edge':'Right edge'}</label>
   <div>Peak <strong>${peakText(peak?.value)}</strong></div>
   <div>Worst ${q.windowPct}% RMS <strong>${peakText(worst?.value)}</strong></div>
   <div class="small">${worst?position(worst.start)+'–'+position(worst.endExclusive-1)+' along line':'No valid window'}</div>
- </div>`).join('')}</div>
+ </div>`).join('')}
+ <div class="membrane-roughness"><label>Total · L + R</label>
+  <div>Peak <strong>${peakText(q.roughnessSum.peakPct)}</strong></div>
+  <div>Worst ${q.windowPct}% RMS <strong>${peakText(q.roughnessSum.worstWindowRmsPct)}</strong></div>
+ </div></div>
+ <p class="small">Each side can peak or have its worst window at a different location.</p>
  ${windows.length?`<p class="small"><strong>Total marked length ${fmt(100*markedRows/n,2)}%</strong> · overlap counted once. Orange marks include the combined unevenness window.</p>`:''}
  <details><summary>Locations &amp; coverage</summary><div class="kv"><span>Combined unevenness RMS</span><span>${peakText(q.worst.rough?.value)}</span></div>${Object.keys(labels).map(k=>{
   const peak=defectLocation(m,q.peaks[k]);
@@ -721,6 +729,7 @@ function defectAudit(m){
  appVersion:'v8.5-experimental',metricVersion:q.version,detectorVersion:'v7.4-body-and-blue-center-constrained',status:q.status,validity:q.validity,contourVerified:false,
  nominalWindowPct:q.windowPct,windowRows:q.windowRows,effectiveWindowPct:q.effectiveWindowPct,eligibleWindows:q.eligibleWindows,totalWindows:q.totalWindows,normalWidthPx:q.baseline,
  worstWindowRmsPct:Object.fromEntries(Object.entries(q.worst).map(([k,w])=>[k,w?.value??null])),worstWindows:Object.fromEntries(Object.entries(q.worst).map(([k,w])=>[k,windowLocation(m,w)])),
+ roughnessSum:q.roughnessSum,
  roughnessByEdge:Object.fromEntries(Object.entries(q.sides).map(([side,{peak,worst}])=>[side,{
   peakPct:peak?.value??null,peakLocation:defectLocation(m,peak),
   worstWindowRmsPct:worst?.value??null,worstWindow:windowLocation(m,worst)
@@ -733,8 +742,8 @@ function defectAudit(m){
 }
 function exportDefectResults(){
  if(!state.measurements.length)return;
- const rows=[['Image','Sample','Side','Volume uL','Worst window width RMS (%)','Worst window edge RMS (%)','Worst window unevenness RMS (%)','Nominal window (%)','Window rows','Effective window (%)','Eligible windows','Total windows','Measurement validity','Contour verified','Normal width px','Raw width peak (%)','Raw edge peak (%)','Raw unevenness peak (%)','Raw contraction (%)','Raw expansion (%)','Coverage (%)','App version','Metric version','Audit JSON']];
- for(const m of state.measurements){const a=defectAudit(m);rows.push([state.imgName,state.samples.find(s=>s.id===m.sampleId)?.label||m.sample,m.side,m.volume,a.worstWindowRmsPct.width,a.worstWindowRmsPct.edge,a.worstWindowRmsPct.rough,a.nominalWindowPct,a.windowRows,a.effectiveWindowPct,a.eligibleWindows,a.totalWindows,a.validity,false,a.normalWidthPx,a.rawPeaks.width.valuePct,a.rawPeaks.edge.valuePct,a.rawPeaks.rough.valuePct,a.rawContractionPct,a.rawExpansionPct,a.coveragePct,a.appVersion,a.metricVersion,JSON.stringify(a)]);}
+ const rows=[['Image','Sample','Side','Volume uL','Worst window width RMS (%)','Worst window edge RMS (%)','Worst window unevenness RMS (%)','Nominal window (%)','Window rows','Effective window (%)','Eligible windows','Total windows','Measurement validity','Contour verified','Normal width px','Raw width peak (%)','Raw edge peak (%)','Raw unevenness peak (%)','Raw contraction (%)','Raw expansion (%)','Coverage (%)','App version','Metric version','Unevenness peak sum L+R (%)','Worst window unevenness RMS sum L+R (%)','Audit JSON']];
+ for(const m of state.measurements){const a=defectAudit(m);rows.push([state.imgName,state.samples.find(s=>s.id===m.sampleId)?.label||m.sample,m.side,m.volume,a.worstWindowRmsPct.width,a.worstWindowRmsPct.edge,a.worstWindowRmsPct.rough,a.nominalWindowPct,a.windowRows,a.effectiveWindowPct,a.eligibleWindows,a.totalWindows,a.validity,false,a.normalWidthPx,a.rawPeaks.width.valuePct,a.rawPeaks.edge.valuePct,a.rawPeaks.rough.valuePct,a.rawContractionPct,a.rawExpansionPct,a.coveragePct,a.appVersion,a.metricVersion,a.roughnessSum.peakPct,a.roughnessSum.worstWindowRmsPct,JSON.stringify(a)]);}
  downloadBlob(new Blob([csv(rows)],{type:'text/csv;charset=utf-8'}),'phenol_red_window_rms_experimental.csv');
 }
 

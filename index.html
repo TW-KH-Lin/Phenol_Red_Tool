@@ -560,7 +560,8 @@ function localDefects(m,windowPct=5){
  const baseline=values.length?(values[Math.floor((values.length-1)/2)]+values[Math.ceil((values.length-1)/2)])/2:NaN;
  const n=m.Y.length,k=Math.max(1,Math.ceil(n*windowPct/100));
  const peaks={width:{value:0,index:null,side:'width'},edge:{value:0,index:null,side:null},rough:{value:0,index:null,side:null}};
- const rows=Array(n).fill(null),sums={width:[0],edge:[0],rough:[0]},counts=[0];
+ const sides={left:{peak:null,worst:null},right:{peak:null,worst:null}};
+ const rows=Array(n).fill(null),sums={width:[0],edge:[0],rough:[0],roughLeft:[0],roughRight:[0]},counts=[0];
  let contraction=0,expansion=0;
  for(let i=0;i<n;i++){
   if(m.valid[i]&&baseline>0){
@@ -578,17 +579,26 @@ function localDefects(m,windowPct=5){
   sums.width.push(sums.width[i]+(r?r.widthSigned**2:0));
   sums.edge.push(sums.edge[i]+(r?(r.edgeLeft**2+r.edgeRight**2)/2:0));
   sums.rough.push(sums.rough[i]+(r?(r.roughLeft**2+r.roughRight**2)/2:0));
+  for(const [side,key] of [['left','roughLeft'],['right','roughRight']]){
+   const value=r?Math.abs(r[key]):0;
+   sums[key].push(sums[key][i]+value**2);
+   if(r&&(!sides[side].peak||value>sides[side].peak.value))sides[side].peak={value,index:i,side};
+  }
  }
  const worst={width:null,edge:null,rough:null};let eligible=0;
  for(let start=0;start+k<=n;start++){
   const end=start+k;if(counts[end]-counts[start]!==k)continue;eligible++;
+  for(const [side,key] of [['left','roughLeft'],['right','roughRight']]){
+   const value=Math.sqrt(Math.max(0,sums[key][end]-sums[key][start])/k);
+   if(!sides[side].worst||value>sides[side].worst.value)sides[side].worst={value,start,endExclusive:end,rows:k};
+  }
   for(const kind of ['width','edge','rough']){
    const value=Math.sqrt(Math.max(0,sums[kind][end]-sums[kind][start])/k);
    if(!worst[kind]||value>worst[kind].value)worst[kind]={value,start,endExclusive:end,rows:k};
   }
  }
  const validity=counts[n]===n?'complete-detection-unverified':'incomplete-or-invalid-detection';
- return {version:'worst-window-rms-v2',baseline,windowPct,windowRows:k,effectiveWindowPct:100*k/n,eligibleWindows:eligible,totalWindows:Math.max(0,n-k+1),worst,peaks,rows,contraction,expansion,validity,status:eligible?'descriptive-only':'insufficient-continuous-data'};
+ return {version:'worst-window-rms-v2',baseline,windowPct,windowRows:k,effectiveWindowPct:100*k/n,eligibleWindows:eligible,totalWindows:Math.max(0,n-k+1),worst,peaks,sides,rows,contraction,expansion,validity,status:eligible?'descriptive-only':'insufficient-continuous-data'};
 }
 function defectLocation(m,p){
  if(!p||p.index===null||p.index===undefined)return null;
@@ -683,14 +693,21 @@ function defectCard(m){
   return `<div${highlight?' class="membrane-roughness"':''}><label>${highlight?'Local unevenness peak':label}</label><b>${peakText(peaks[k])}</b></div>`;
  }).join('')}</div>
  <div class="defect-head"><span>Worst ${q.windowPct}% window · RMS</span></div>
- <div class="defect-three">${Object.entries(labels).map(([k,label])=>{
+ <div class="defect-three">${Object.entries(labels).filter(([k])=>k!=='rough').map(([k,label])=>{
   const w=q.worst[k];
   return `<div><label>${label}</label><b>${w?fmt(w.value,1)+'%':'—'}</b>
   <div class="small">${w?position(w.start)+'–'+position(w.endExclusive-1)+' along line':'No valid window'}</div>
   ${w?`<div class="small">Span ${fmt(100*w.rows/n,2)}% · ${w.rows} rows</div>`:''}</div>`;
  }).join('')}</div>
- ${windows.length?`<p class="small"><strong>Total marked length ${fmt(100*markedRows/n,2)}%</strong> · overlap counted once. Marks show the worst windows.</p>`:''}
- <details><summary>Locations &amp; coverage</summary>${Object.keys(labels).map(k=>{
+ <div class="defect-head"><span>Local unevenness · by edge</span></div>
+ <div class="defect-three">${Object.entries(q.sides).map(([side,{peak,worst}])=>`<div>
+  <label>${side==='left'?'Left edge':'Right edge'}</label>
+  <div>Peak <strong>${peakText(peak?.value)}</strong></div>
+  <div>Worst ${q.windowPct}% RMS <strong>${peakText(worst?.value)}</strong></div>
+  <div class="small">${worst?position(worst.start)+'–'+position(worst.endExclusive-1)+' along line':'No valid window'}</div>
+ </div>`).join('')}</div>
+ ${windows.length?`<p class="small"><strong>Total marked length ${fmt(100*markedRows/n,2)}%</strong> · overlap counted once. Orange marks include the combined unevenness window.</p>`:''}
+ <details><summary>Locations &amp; coverage</summary><div class="kv"><span>Combined unevenness RMS</span><span>${peakText(q.worst.rough?.value)}</span></div>${Object.keys(labels).map(k=>{
   const peak=defectLocation(m,q.peaks[k]);
   return `<div class="kv"><span>${labels[k]} peak</span><span>${peak?fmt(peak.axialPct,1)+'% along line'+(k==='width'?' · '+(q.rows[peak.row].widthSigned<0?'narrower':q.rows[peak.row].widthSigned>0?'wider':'no change'):' · '+peak.side):'—'}</span></div>`;
  }).join('')}<div class="kv"><span>Window</span><span>${q.windowRows} rows · ${fmt(q.effectiveWindowPct,2)}%</span></div><div class="kv"><span>Valid windows</span><span>${q.eligibleWindows} / ${q.totalWindows}</span></div>${q.validity==='incomplete-or-invalid-detection'?'<p class="small">Some rows could not be measured. Defects in those rows may be missed.</p>':''}</details></div>`;
@@ -704,6 +721,10 @@ function defectAudit(m){
  appVersion:'v8.5-experimental',metricVersion:q.version,detectorVersion:'v7.4-body-and-blue-center-constrained',status:q.status,validity:q.validity,contourVerified:false,
  nominalWindowPct:q.windowPct,windowRows:q.windowRows,effectiveWindowPct:q.effectiveWindowPct,eligibleWindows:q.eligibleWindows,totalWindows:q.totalWindows,normalWidthPx:q.baseline,
  worstWindowRmsPct:Object.fromEntries(Object.entries(q.worst).map(([k,w])=>[k,w?.value??null])),worstWindows:Object.fromEntries(Object.entries(q.worst).map(([k,w])=>[k,windowLocation(m,w)])),
+ roughnessByEdge:Object.fromEntries(Object.entries(q.sides).map(([side,{peak,worst}])=>[side,{
+  peakPct:peak?.value??null,peakLocation:defectLocation(m,peak),
+  worstWindowRmsPct:worst?.value??null,worstWindow:windowLocation(m,worst)
+ }])),
  rawPeaks:Object.fromEntries(Object.entries(q.peaks).map(([k,p])=>[k,{valuePct:p.index===null?null:p.value,location:defectLocation(m,p)}])),rawContractionPct:q.contraction,rawExpansionPct:q.expansion,
  coveragePct:100*m.coverage,boundarySignal:m.boundaryMethod,boundaryLevelPct:m.boundaryLevel,roughnessWindowPx:Number(E('trend').value),imageWidthPx:rawCanvas.width,imageHeightPx:rawCanvas.height,
  analysisStartPct:Number(E('startPct').value),analysisEndPct:Number(E('endPct').value),relativeSection:E('unequal').checked,tiltCorrectionEnabled:E('autoTilt').checked,tiltStatus:m.tiltStatus,imageScaleUmPerPx:Number(E('scale').value)||null,

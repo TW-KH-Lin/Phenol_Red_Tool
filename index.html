@@ -21,6 +21,7 @@
 <div class="image-bottom"><label class="checkrow edge"><input type="checkbox" id="showEdges" checked>Edges</label><label class="checkrow guide"><input type="checkbox" id="showReferences" checked>Guides</label><label class="checkrow guide"><input type="checkbox" id="showCenter" title="Yellow dashed line: center estimated from the original red body" checked>Center</label><label class="checkrow" style="color:#c77117"><input type="checkbox" id="showDefects" checked>Defect marks</label><span id="imageInfo">No image</span></div></div>
 <aside class="nearby-settings"><div class="control-head"><h2>Adjust</h2><span class="small">Live preview</span></div><div class="boundary-control"><label for="threshold">Boundary <span class="value" id="thresholdText">60%</span></label><input id="threshold" type="range" min="15" max="90" step="1" value="60"></div>
 <div class="boundary-control"><label for="localWindow">Defect window <span class="value" id="localWindowText">5%</span></label><input id="localWindow" type="range" min="0.5" max="25" step="0.5" value="5"></div>
+<div class="setting"><label for="edgeDisplay">Edge metrics</label><select id="edgeDisplay"><option value="sum" selected>Left + right sum</option><option value="legacy">Legacy pooled</option></select></div>
 <div class="actions"><button class="primary" id="autodetect">Detect</button><button id="analyze">Analyze</button></div><p id="status" class="status" role="status" aria-live="polite"></p>
 <details class="advanced"><summary>Advanced</summary><div class="settings">
 <div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div>
@@ -42,11 +43,11 @@
 <tr><td>Guide RMS</td><td>≤ 0.50 px</td><td>&gt; 0.50 to &lt; 0.70 px</td><td>≥ 0.70 px</td></tr>
 </tbody></table></div>
 <p class="small">All three low → lower concern. Any high → inspect. Otherwise → review. Coverage below 98% → check missing edges first.</p>
-<p class="small">Local Rq is under More. This table uses pixels, even if results show µm. Trial ranges from six photos with the earlier detector; recheck for this revision. Not pass/fail limits. Changed settings, image scale or blur need reassessment. Check green edges first.</p>
+<p class="small">These trial ranges refer to the legacy pooled edge metrics. This table uses pixels, even if results show µm. Trial ranges from six photos with the earlier detector; recheck for this revision. Not pass/fail limits. Changed settings, image scale or blur need reassessment. Check green edges first.</p>
 </details>
 <div id="resultCards" class="resultcards"><p class="empty-results">Measurements appear after upload.</p></div>
 <details class="panel secondary-panel" id="profilePanel"><summary>Width & edge profiles</summary><div class="inline" style="margin-bottom:10px"><select id="profileCompare" aria-label="Compare profiles"><option value="single">Single line</option><option value="sample">Sample: 1 + 2 µL</option><option value="all1">All 1 µL</option><option value="all2">All 2 µL</option></select><select id="profileSample" aria-label="Profile sample" hidden></select><select id="lineSelect" aria-label="Measured line"></select><select id="chartType" aria-label="Profile type"><option value="width">Width</option><option value="parallel">Guide deviation</option><option value="edges">Local roughness</option><option value="straight">Straight-line deviation</option></select></div><div id="profileFilter" hidden><div class="profile-filter-actions"><button type="button" id="profileSelectAll">Select all</button><span class="small" id="profileFilterCount"></span></div><div id="profileChecks" class="profile-checks"></div></div><canvas id="chart" class="chart"></canvas><div id="chartLegend" class="profile-legend" aria-label="Profile legend"></div><p id="chartNote" class="small"></p></details>
-<details class="panel secondary-panel"><summary>Full data</summary><div class="tablewrap"><table><thead><tr><th>Sample</th><th>Volume</th><th>Length · px</th><th>Width</th><th>CV · %</th><th>Local Rq</th><th>Relative Rq · %</th><th>Undetected · %</th><th>Longest gap · %</th><th>Defects / 100 px</th><th>Defects / 10 mm</th><th>Coverage · %</th><th>Straightness RMS</th><th>Center RMS</th><th>Angle · °</th></tr></thead><tbody id="resultTable"><tr><td colspan="15">No measurements</td></tr></tbody></table></div></details>
+<details class="panel secondary-panel"><summary>Full data</summary><div class="tablewrap"><table><thead><tr><th>Sample</th><th>Volume</th><th>Length · px</th><th>Width</th><th>CV · %</th><th id="rqHeading">Local Rq</th><th id="relativeRqHeading">Relative Rq · %</th><th>Undetected · %</th><th>Longest gap · %</th><th>Defects / 100 px</th><th>Defects / 10 mm</th><th>Coverage · %</th><th id="straightnessHeading">Straightness RMS</th><th>Center RMS</th><th>Angle · °</th></tr></thead><tbody id="resultTable"><tr><td colspan="15">No measurements</td></tr></tbody></table></div></details>
 <details class="panel secondary-panel methods"><summary>How to read the results</summary><p><b>Worst windows:</b> use ceil(Defect window % × analyzed cross-section count) rows per sliding window. Windows advance one row at a time. Width RMS uses signed width deviations from the stripe’s median width. Edge RMS pools squared perpendicular residuals to the left/right blue guides equally; local unevenness RMS pools left/right residuals to the moving-average trends equally. Each RMS is divided by the stripe’s median width and multiplied by 100. Report the maximum for each metric independently; their worst windows can differ. This is not an average of the entire stripe or a mean-centered RMS inside each window.</p><p><b>Interpretation:</b> Peak is the largest deviation at a single measured cross-section. Edge deformation and local unevenness use the larger deviation of the two sides. A short severe defect can have a high peak even when its window RMS is lower. Check the contour at the peak before judging a single-row spike. Use the same defect window when comparing window RMS between lines. A window containing missing or invalid rows is excluded without interpolation; incomplete coverage may hide defects and is exported. No valid window is shown/exported as missing, never as zero. Orange segments mark worst RMS windows. Orange dots mark peak locations. Hover over a mark to inspect the local values. Comparable physical imaging scale and matched settings are still required.</p><p><b>CV</b>: width consistency. <b>Guide RMS / P95</b>: deviation from the fitted parallel guides. Lower values indicate less deviation under matched imaging conditions; they are not pass/fail grades. Green edges must be correct before interpreting any measurement.</p>
 <p><b>Center-constrained detection:</b> a low-threshold whole-body redness profile first estimates the stripe axis independently of the dark-rim signal and final high-level edges. Left and right threshold crossings must lie on opposite sides of this initial axis; each side uses its own local peak so unequal rim darkness does not force both crossings onto one rim. Failed rows are re-tested on the original cross-section without vertical averaging, using the same boundary level and opposite-side constraint. Confirmed edges are included in width and roughness measurements and tagged as re-detected in the profile export. No interpolated coordinates enter the measurements. Measured edge arrays are never filled. The overlay connects consecutive confirmed edges. Unsupported gaps stay visible. If the line shifts across the initial axis or an edge cannot be confirmed, that row is marked uncertain. The yellow dashed center is estimated from the original whole red body, separately for each stripe, and is not the midpoint of the fitted blue guides. Green edges must straddle this yellow axis. Accepted green edges must also straddle the midpoint of the fitted blue guides as a second check. Points that fail this second guard are rejected and the guides refitted. Blue parallel guides are fitted to the accepted measurements, so this is a two-stage estimate, not an independent ground-truth reference. High settings and interpolation can change measured widths and roughness; inspect contours and use matched settings.</p><p><b>Parallel references:</b> each measured stripe receives its own two straight, mutually parallel reference lines. A common slope and separate left/right offsets minimize summed horizontal squared deviations on valid rows. Their spacing is estimated from that stripe; there is no preset width and no shared width between 1 µL and 2 µL. The dashed blue overlay is an idealized reference, not a replacement for detected edges. Parallel-reference RMS and P95 use perpendicular distances to these lines. Missing rows are excluded from fitting and deviation statistics. There is no automatic pass/fail threshold. The reference does not validate an incorrectly detected boundary.</p><p><b>Boundary signal:</b> Dark-red contrast uses a logarithmic red/green channel ratio with a small offset, followed by local background subtraction. It emphasizes relative green absorption rather than absolute red brightness. It is an image contrast measure, not calibrated optical density. Legacy redness uses red minus the mean of green and blue. The boundary level is a fraction between local background and a robust signal peak. A percentage does not define a physical material boundary; verify the contour against the original image. Signals and thresholds are not interchangeable: use the same method, level, imaging scale and lighting for comparisons.</p><p><b>Quality target:</b> each stripe should have straight, parallel dark-red outer boundaries and constant width. The 1 µL and 2 µL stripes are evaluated separately; their widths need not match. <b>Edge straightness RMS</b> fits each edge with one straight line and combines the perpendicular residual RMS values. This removes overall tilt while retaining bending. <b>Centerline bending RMS</b> measures wandering of the midpoint. <b>Overall edge angle difference</b> measures taper only; width CV also detects local loss of parallelism. A zero angle difference alone does not imply good quality. Compare equal analysis lengths and calibrated resolution. Lower values are not trustworthy where detection coverage is poor.</p><p><b>Mean width</b> = mean separation of the detected dark-red boundaries. With tilt correction enabled and accepted, cross-sections are perpendicular to one estimated sample direction. One rigid rotation is used for both stripes; individual rows are not straightened. Width is still an optical estimate, not a physical edge standard. <b>Width CV (%)</b> = 100 × standard deviation of width / mean width. <b>Edge Rq</b> is RMS edge deviation from a centered moving-average trend (optical contour roughness, not contact profilometry). <b>Relative edge Rq (%)</b> = 100 × edge Rq / mean width.</p>
 <p><b>Undetected (%)</b> = 100 × undetected rows / expected analysis rows; <b>longest gap (%)</b> = 100 × longest consecutive undetected sequence / expected analysis rows. <b>Defects per 100 px</b> = counted non-gap width-anomaly intervals / analyzed pixel length × 100. With sample length entered in millimeters, <b>defects per 10 mm</b> is additionally shown, normalized to the physical section length.</p>
@@ -412,9 +413,13 @@ function parallelReferences(left,right,valid){
  const refRight=right.map((_,i)=>rightMean+slope*(i-yMean));
  const errorLeft=left.map((x,i)=>valid[i]?(x-refLeft[i])/normal:NaN);
  const errorRight=right.map((x,i)=>valid[i]?(x-refRight[i])/normal:NaN);
- const errors=[...errorLeft,...errorRight].filter(Number.isFinite);
- const absolute=errors.map(Math.abs).sort((a,b)=>a-b);
- return {slope,refLeft,refRight,errorLeft,errorRight,width:(rightMean-leftMean)/normal,rms:rms(errors),p95:absolute[Math.max(0,Math.ceil(.95*absolute.length)-1)],first:rows[0],last:rows.at(-1)};
+ const leftErrors=errorLeft.filter(Number.isFinite),rightErrors=errorRight.filter(Number.isFinite);
+ const errors=[...leftErrors,...rightErrors];
+ const p95=values=>{
+  const absolute=values.map(Math.abs).sort((a,b)=>a-b);
+  return absolute[Math.max(0,Math.ceil(.95*absolute.length)-1)];
+ };
+ return {slope,refLeft,refRight,errorLeft,errorRight,width:(rightMean-leftMean)/normal,rms:rms(errors),p95:p95(errors),rmsSum:rms(leftErrors)+rms(rightErrors),p95Sum:p95(leftErrors)+p95(rightErrors),first:rows[0],last:rows.at(-1)};
 }
 function straightFit(values,valid){
  const points=values.map((x,y)=>({x,y})).filter(p=>valid[p.y]&&Number.isFinite(p.x));
@@ -560,8 +565,9 @@ function localDefects(m,windowPct=5){
  const baseline=values.length?(values[Math.floor((values.length-1)/2)]+values[Math.ceil((values.length-1)/2)])/2:NaN;
  const n=m.Y.length,k=Math.max(1,Math.ceil(n*windowPct/100));
  const peaks={width:{value:0,index:null,side:'width'},edge:{value:0,index:null,side:null},rough:{value:0,index:null,side:null}};
- const sides={left:{peak:null,worst:null},right:{peak:null,worst:null}};
- const rows=Array(n).fill(null),sums={width:[0],edge:[0],rough:[0],roughLeft:[0],roughRight:[0]},counts=[0];
+ const edgeKeys=['edgeLeft','edgeRight','roughLeft','roughRight'];
+ const byEdge=Object.fromEntries(edgeKeys.map(key=>[key,{peak:null,worst:null}]));
+ const rows=Array(n).fill(null),sums={width:[0],edge:[0],rough:[0],...Object.fromEntries(edgeKeys.map(key=>[key,[0]]))},counts=[0];
  let contraction=0,expansion=0;
  for(let i=0;i<n;i++){
   if(m.valid[i]&&baseline>0){
@@ -579,29 +585,31 @@ function localDefects(m,windowPct=5){
   sums.width.push(sums.width[i]+(r?r.widthSigned**2:0));
   sums.edge.push(sums.edge[i]+(r?(r.edgeLeft**2+r.edgeRight**2)/2:0));
   sums.rough.push(sums.rough[i]+(r?(r.roughLeft**2+r.roughRight**2)/2:0));
-  for(const [side,key] of [['left','roughLeft'],['right','roughRight']]){
+  for(const key of edgeKeys){
    const value=r?Math.abs(r[key]):0;
    sums[key].push(sums[key][i]+value**2);
-   if(r&&(!sides[side].peak||value>sides[side].peak.value))sides[side].peak={value,index:i,side};
+   if(r&&(!byEdge[key].peak||value>byEdge[key].peak.value))byEdge[key].peak={value,index:i,side:key.endsWith('Left')?'left':'right'};
   }
  }
  const worst={width:null,edge:null,rough:null};let eligible=0;
  for(let start=0;start+k<=n;start++){
   const end=start+k;if(counts[end]-counts[start]!==k)continue;eligible++;
-  for(const [side,key] of [['left','roughLeft'],['right','roughRight']]){
+  for(const key of edgeKeys){
    const value=Math.sqrt(Math.max(0,sums[key][end]-sums[key][start])/k);
-   if(!sides[side].worst||value>sides[side].worst.value)sides[side].worst={value,start,endExclusive:end,rows:k};
+   if(!byEdge[key].worst||value>byEdge[key].worst.value)byEdge[key].worst={value,start,endExclusive:end,rows:k};
   }
   for(const kind of ['width','edge','rough']){
    const value=Math.sqrt(Math.max(0,sums[kind][end]-sums[kind][start])/k);
    if(!worst[kind]||value>worst[kind].value)worst[kind]={value,start,endExclusive:end,rows:k};
   }
  }
- const sumSides=key=>sides.left[key]&&sides.right[key]
-  ?sides.left[key].value+sides.right[key].value:null;
- const roughnessSum={peakPct:sumSides('peak'),worstWindowRmsPct:sumSides('worst')};
+ const sideResults=kind=>({left:byEdge[kind+'Left'],right:byEdge[kind+'Right']});
+ const sumSides=({left,right},key)=>left[key]&&right[key]?left[key].value+right[key].value:null;
+ const totals=pair=>({peakPct:sumSides(pair,'peak'),worstWindowRmsPct:sumSides(pair,'worst')});
+ const sides=sideResults('rough'),edgeSides=sideResults('edge');
+ const roughnessSum=totals(sides),edgeSum=totals(edgeSides);
  const validity=counts[n]===n?'complete-detection-unverified':'incomplete-or-invalid-detection';
- return {version:'worst-window-rms-v2',baseline,windowPct,windowRows:k,effectiveWindowPct:100*k/n,eligibleWindows:eligible,totalWindows:Math.max(0,n-k+1),worst,peaks,sides,roughnessSum,rows,contraction,expansion,validity,status:eligible?'descriptive-only':'insufficient-continuous-data'};
+ return {version:'worst-window-rms-v2',baseline,windowPct,windowRows:k,effectiveWindowPct:100*k/n,eligibleWindows:eligible,totalWindows:Math.max(0,n-k+1),worst,peaks,sides,edgeSides,roughnessSum,edgeSum,rows,contraction,expansion,validity,status:eligible?'descriptive-only':'insufficient-continuous-data'};
 }
 function defectLocation(m,p){
  if(!p||p.index===null||p.index===undefined)return null;
@@ -655,18 +663,19 @@ function hoverDefect(event){
  const {m,row,window:w}=hit,values=m.local.rows[row];
  const axial=i=>fmt(100*i/Math.max(1,m.Y.length-1),1)+'%';
  const unit=displayUnit(),sample=state.samples.find(s=>s.id===m.sampleId)?.label||m.sample;
- const squares={width:0,edge:0,rough:0};
- if(w)for(let i=w.start;i<w.endExclusive;i++){
-  const r=m.local.rows[i];
-  squares.width+=r.widthSigned**2;
-  squares.edge+=(r.edgeLeft**2+r.edgeRight**2)/2;
-  squares.rough+=(r.roughLeft**2+r.roughRight**2)/2;
- }
+ const keys=['widthSigned','edgeLeft','edgeRight','roughLeft','roughRight'];
+ const squares=Object.fromEntries(keys.map(key=>[key,0]));
+ if(w)for(let i=w.start;i<w.endExclusive;i++)for(const key of keys)squares[key]+=m.local.rows[i][key]**2;
+ const rmsAt=key=>Math.sqrt(squares[key]/w.rows);
+ const atPoint=useEdgeSum()?{width:values.width,edge:Math.abs(values.edgeLeft)+Math.abs(values.edgeRight),rough:Math.abs(values.roughLeft)+Math.abs(values.roughRight)}:values;
+ const edgeRmsAt=kind=>useEdgeSum()?rmsAt(kind+'Left')+rmsAt(kind+'Right')
+  :Math.sqrt((squares[kind+'Left']+squares[kind+'Right'])/(2*w.rows));
+ const windowRms=w?{width:rmsAt('widthSigned'),edge:edgeRmsAt('edge'),rough:edgeRmsAt('rough')}:null;
  tip.innerHTML=`<strong>${htmlEscape(sample)} · ${m.volume} µL</strong>
  <div>${axial(row)} along line · Width ${fmt(m.widths[row]*unit.scale,2)} ${unit.unit}</div>
  ${w?`<div>${defectLabels[w.kind]} window · ${axial(w.start)}–${axial(w.endExclusive-1)}</div>`:''}
  <table><thead><tr><th></th><th scope="col">At point</th>${w?'<th scope="col">Window RMS</th>':''}</tr></thead>
- <tbody>${Object.entries(defectLabels).map(([kind,label])=>`<tr><th scope="row">${label}</th><td>${fmt(values[kind],1)}%</td>${w?`<td>${fmt(Math.sqrt(squares[kind]/w.rows),1)}%</td>`:''}</tr>`).join('')}</tbody></table>`;
+ <tbody>${Object.entries(defectLabels).map(([kind,label])=>`<tr><th scope="row">${label}${kind==='width'||!useEdgeSum()?'':' · L + R'}</th><td>${fmt(atPoint[kind],1)}%</td>${w?`<td>${fmt(windowRms[kind],1)}%</td>`:''}</tr>`).join('')}</tbody></table>`;
  tip.hidden=false;
  const margin=8;
  tip.style.left=Math.max(margin,Math.min(event.clientX+14,document.documentElement.clientWidth-tip.offsetWidth-margin))+'px';
@@ -676,7 +685,8 @@ function hoverDefect(event){
 canvas.addEventListener('pointermove',hoverDefect);
 for(const type of ['pointerleave','pointerdown','pointercancel'])canvas.addEventListener(type,()=>{E('defectTooltip').hidden=true;});
 E('imageViewport').addEventListener('scroll',()=>{E('defectTooltip').hidden=true;});
-function defectCard(m){
+function useEdgeSum(){return E('edgeDisplay').value==='sum';}
+function legacyDefectCard(m){
  const q=m.local,labels=defectLabels;
  const peaks=Object.fromEntries(Object.entries(q.peaks).map(([k,p])=>[k,p.index===null?null:p.value]));
  const peakText=value=>value==null?'—':fmt(value,1)+'%';
@@ -695,27 +705,57 @@ function defectCard(m){
   const highlight=m.volume===2&&k==='rough';
   return `<div${highlight?' class="membrane-roughness"':''}><label>${highlight?'Local unevenness peak':label}</label><b>${peakText(peaks[k])}</b></div>`;
  }).join('')}</div>
- <div class="defect-head"><span>Worst ${q.windowPct}% window · RMS</span></div>
- <div class="defect-three">${Object.entries(labels).filter(([k])=>k!=='rough').map(([k,label])=>{
+ <div class="defect-head"><span>Worst ${q.windowPct}% window · RMS (legacy)</span></div>
+ <div class="defect-three">${Object.entries(labels).map(([k,label])=>{
   const w=q.worst[k];
   return `<div><label>${label}</label><b>${w?fmt(w.value,1)+'%':'—'}</b>
   <div class="small">${w?position(w.start)+'–'+position(w.endExclusive-1)+' along line':'No valid window'}</div>
   ${w?`<div class="small">Span ${fmt(100*w.rows/n,2)}% · ${w.rows} rows</div>`:''}</div>`;
  }).join('')}</div>
- <div class="defect-head"><span>Local unevenness · left + right</span></div>
- <div class="defect-three">${Object.entries(q.sides).map(([side,{peak,worst}])=>`<div>
+ ${windows.length?`<p class="small"><strong>Total marked length ${fmt(100*markedRows/n,2)}%</strong> · overlap counted once. Marks show the worst windows.</p>`:''}
+ <details><summary>Locations &amp; coverage</summary>${Object.keys(labels).map(k=>{
+  const peak=defectLocation(m,q.peaks[k]);
+  return `<div class="kv"><span>${labels[k]} peak</span><span>${peak?fmt(peak.axialPct,1)+'% along line'+(k==='width'?' · '+(q.rows[peak.row].widthSigned<0?'narrower':q.rows[peak.row].widthSigned>0?'wider':'no change'):' · '+peak.side):'—'}</span></div>`;
+ }).join('')}<div class="kv"><span>Window</span><span>${q.windowRows} rows · ${fmt(q.effectiveWindowPct,2)}%</span></div><div class="kv"><span>Valid windows</span><span>${q.eligibleWindows} / ${q.totalWindows}</span></div>${q.validity==='incomplete-or-invalid-detection'?'<p class="small">Some rows could not be measured. Defects in those rows may be missed.</p>':''}</details></div>`;
+}
+function defectCard(m){
+ if(!useEdgeSum())return legacyDefectCard(m);
+ const q=m.local,labels=defectLabels;
+ const peaks=Object.fromEntries(Object.entries(q.peaks).map(([k,p])=>[k,p.index===null?null:p.value]));
+ const peakText=value=>value==null?'—':fmt(value,1)+'%';
+ const windows=Object.values(q.worst).filter(Boolean).sort((a,b)=>a.start-b.start);
+ const n=m.Y.length;
+ let markedRows=0,end=0;
+ for(const w of windows){
+  markedRows+=Math.max(0,w.endExclusive-Math.max(end,w.start));
+  end=Math.max(end,w.endExclusive);
+ }
+ const position=i=>fmt(100*i/Math.max(1,n-1),1)+'%';
+ return `<div class="defect-summary">
+ ${m.volume===1?`<div class="membrane-contraction"><span>Max local narrowing</span><b>${peakText(peaks.width===null?null:q.contraction)}</b></div>`:''}
+ <div class="defect-head"><span>Width variation</span></div>
+ <div class="defect-three">
+  <div><label>Peak</label><b>${peakText(peaks.width)}</b></div>
+  <div><label>Worst ${q.windowPct}% RMS</label><b>${peakText(q.worst.width?.value)}</b>
+   <div class="small">${q.worst.width?position(q.worst.width.start)+'–'+position(q.worst.width.endExclusive-1)+' along line':'No valid window'}</div>
+   ${q.worst.width?`<div class="small">Span ${fmt(q.effectiveWindowPct,2)}% · ${q.windowRows} rows</div>`:''}
+  </div>
+ </div>
+ ${[['Edge deformation',q.edgeSides,q.edgeSum],['Local unevenness',q.sides,q.roughnessSum]].map(([label,sides,total])=>`
+ <div class="defect-head"><span>${label} · L + R</span></div>
+ <div class="defect-three">${Object.entries(sides).map(([side,{peak,worst}])=>`<div>
   <label>${side==='left'?'Left edge':'Right edge'}</label>
   <div>Peak <strong>${peakText(peak?.value)}</strong></div>
   <div>Worst ${q.windowPct}% RMS <strong>${peakText(worst?.value)}</strong></div>
   <div class="small">${worst?position(worst.start)+'–'+position(worst.endExclusive-1)+' along line':'No valid window'}</div>
  </div>`).join('')}
- <div class="membrane-roughness"><label>Total · L + R</label>
-  <div>Peak <strong>${peakText(q.roughnessSum.peakPct)}</strong></div>
-  <div>Worst ${q.windowPct}% RMS <strong>${peakText(q.roughnessSum.worstWindowRmsPct)}</strong></div>
- </div></div>
- <p class="small">Each side can peak or have its worst window at a different location.</p>
- ${windows.length?`<p class="small"><strong>Total marked length ${fmt(100*markedRows/n,2)}%</strong> · overlap counted once. Orange marks include the combined unevenness window.</p>`:''}
- <details><summary>Locations &amp; coverage</summary><div class="kv"><span>Combined unevenness RMS</span><span>${peakText(q.worst.rough?.value)}</span></div>${Object.keys(labels).map(k=>{
+ <div${m.volume===2&&label==='Local unevenness'?' class="membrane-roughness"':''}><label>Total · L + R</label>
+  <div>Peak <strong>${peakText(total.peakPct)}</strong></div>
+  <div>Worst ${q.windowPct}% RMS <strong>${peakText(total.worstWindowRmsPct)}</strong></div>
+ </div></div>`).join('')}
+ <p class="small">Each side has its own peak and worst window.</p>
+ ${windows.length?`<p class="small"><strong>Total marked length ${fmt(100*markedRows/n,2)}%</strong> · overlap counted once. Orange edge marks locate the worst pooled windows.</p>`:''}
+ <details><summary>Locations &amp; coverage</summary><div class="kv"><span>Legacy pooled unevenness RMS</span><span>${peakText(q.worst.rough?.value)}</span></div>${Object.keys(labels).map(k=>{
   const peak=defectLocation(m,q.peaks[k]);
   return `<div class="kv"><span>${labels[k]} peak</span><span>${peak?fmt(peak.axialPct,1)+'% along line'+(k==='width'?' · '+(q.rows[peak.row].widthSigned<0?'narrower':q.rows[peak.row].widthSigned>0?'wider':'no change'):' · '+peak.side):'—'}</span></div>`;
  }).join('')}<div class="kv"><span>Window</span><span>${q.windowRows} rows · ${fmt(q.effectiveWindowPct,2)}%</span></div><div class="kv"><span>Valid windows</span><span>${q.eligibleWindows} / ${q.totalWindows}</span></div>${q.validity==='incomplete-or-invalid-detection'?'<p class="small">Some rows could not be measured. Defects in those rows may be missed.</p>':''}</details></div>`;
@@ -726,9 +766,11 @@ function refreshLocalDefects(){
 }
 function defectAudit(m){
  const q=m.local;return {
+ edgeDisplay:useEdgeSum()?'sum':'legacy',
  appVersion:'v8.5-experimental',metricVersion:q.version,detectorVersion:'v7.4-body-and-blue-center-constrained',status:q.status,validity:q.validity,contourVerified:false,
  nominalWindowPct:q.windowPct,windowRows:q.windowRows,effectiveWindowPct:q.effectiveWindowPct,eligibleWindows:q.eligibleWindows,totalWindows:q.totalWindows,normalWidthPx:q.baseline,
  worstWindowRmsPct:Object.fromEntries(Object.entries(q.worst).map(([k,w])=>[k,w?.value??null])),worstWindows:Object.fromEntries(Object.entries(q.worst).map(([k,w])=>[k,windowLocation(m,w)])),
+ edgeSum:q.edgeSum,
  roughnessSum:q.roughnessSum,
  roughnessByEdge:Object.fromEntries(Object.entries(q.sides).map(([side,{peak,worst}])=>[side,{
   peakPct:peak?.value??null,peakLocation:defectLocation(m,peak),
@@ -742,17 +784,20 @@ function defectAudit(m){
 }
 function exportDefectResults(){
  if(!state.measurements.length)return;
- const rows=[['Image','Sample','Side','Volume uL','Worst window width RMS (%)','Worst window edge RMS (%)','Worst window unevenness RMS (%)','Nominal window (%)','Window rows','Effective window (%)','Eligible windows','Total windows','Measurement validity','Contour verified','Normal width px','Raw width peak (%)','Raw edge peak (%)','Raw unevenness peak (%)','Raw contraction (%)','Raw expansion (%)','Coverage (%)','App version','Metric version','Unevenness peak sum L+R (%)','Worst window unevenness RMS sum L+R (%)','Audit JSON']];
- for(const m of state.measurements){const a=defectAudit(m);rows.push([state.imgName,state.samples.find(s=>s.id===m.sampleId)?.label||m.sample,m.side,m.volume,a.worstWindowRmsPct.width,a.worstWindowRmsPct.edge,a.worstWindowRmsPct.rough,a.nominalWindowPct,a.windowRows,a.effectiveWindowPct,a.eligibleWindows,a.totalWindows,a.validity,false,a.normalWidthPx,a.rawPeaks.width.valuePct,a.rawPeaks.edge.valuePct,a.rawPeaks.rough.valuePct,a.rawContractionPct,a.rawExpansionPct,a.coveragePct,a.appVersion,a.metricVersion,a.roughnessSum.peakPct,a.roughnessSum.worstWindowRmsPct,JSON.stringify(a)]);}
+ const rows=[['Image','Sample','Side','Volume uL','Worst window width RMS (%)','Worst window edge RMS (%)','Worst window unevenness RMS (%)','Nominal window (%)','Window rows','Effective window (%)','Eligible windows','Total windows','Measurement validity','Contour verified','Normal width px','Raw width peak (%)','Raw edge peak (%)','Raw unevenness peak (%)','Raw contraction (%)','Raw expansion (%)','Coverage (%)','App version','Metric version','Unevenness peak sum L+R (%)','Worst window unevenness RMS sum L+R (%)','Edge deformation peak sum L+R (%)','Worst window edge deformation RMS sum L+R (%)','Local edge Rq sum L+R (px)','Guide RMS sum L+R (px)','Guide P95 sum L+R (px)','Audit JSON']];
+ for(const m of state.measurements){const a=defectAudit(m);rows.push([state.imgName,state.samples.find(s=>s.id===m.sampleId)?.label||m.sample,m.side,m.volume,a.worstWindowRmsPct.width,a.worstWindowRmsPct.edge,a.worstWindowRmsPct.rough,a.nominalWindowPct,a.windowRows,a.effectiveWindowPct,a.eligibleWindows,a.totalWindows,a.validity,false,a.normalWidthPx,a.rawPeaks.width.valuePct,a.rawPeaks.edge.valuePct,a.rawPeaks.rough.valuePct,a.rawContractionPct,a.rawExpansionPct,a.coveragePct,a.appVersion,a.metricVersion,a.roughnessSum.peakPct,a.roughnessSum.worstWindowRmsPct,a.edgeSum.peakPct,a.edgeSum.worstWindowRmsPct,m.leftRq+m.rightRq,m.ideal.rmsSum,m.ideal.p95Sum,JSON.stringify(a)]);}
  downloadBlob(new Blob([csv(rows)],{type:'text/csv;charset=utf-8'}),'phenol_red_window_rms_experimental.csv');
 }
 
 function readoutRows(){let u=displayUnit(),rows=[];for(let m of state.measurements){let s=state.samples.find(s=>s.id===m.sampleId);rows.push([state.imgName,s?.label||m.sample,m.side,m.volume,s?.roi.h||'',m.expectedLength,fmt(s?.lengthmm||NaN,3),fmt(m.physicalLengthMM||NaN,3),fmt(m.meanWidth*u.scale,3),u.unit,fmt(m.widthSD*u.scale,3),fmt(m.widthCV,3),fmt(m.edgeRa*u.scale,3),fmt(m.edgeRq*u.scale,3),fmt(m.leftRq*u.scale,3),fmt(m.rightRq*u.scale,3),fmt(m.relRq,3),fmt(m.gapPct,3),fmt(m.longestGapPct,3),m.numberOfGaps,m.defects,fmt(m.defectsPer100px,3),fmt(m.defectsPer10mm,3),fmt(m.coverage*100,2),E('unequal').checked?'different':'full ROI',E('threshold').value,E('trend').value,E('defectPct').value,fmt(m.straightness*u.scale,3),fmt(m.relativeStraightness,3),fmt(m.centerBend*u.scale,3),fmt(m.parallelAngle,4),'v7.4-body-and-blue-center-constrained',fmt(m.tiltAngle,3),m.tiltStatus,m.boundaryMethod,fmt(m.ideal.width*u.scale,3),fmt(m.ideal.rms*u.scale,3),fmt(m.ideal.p95*u.scale,3),fmt(m.uncertainPct,3)])}return rows}
-function updateResults(){refreshLocalDefects();let u=displayUnit(),cards=[],table=[];for(let m of state.measurements){let s=state.samples.find(s=>s.id===m.sampleId),lab=htmlEscape(s?.label||m.sample),quality=m.coverage<.85?' <span style="color:#b34b39">(low detection)</span>':'';
- cards.push(`<article class="resultcard"><div class="result-header"><div class="title">${lab}<span class="dose">${m.volume} µL</span></div><span class="sub ${m.coverage<.85?'coverage-warning':''}">${m.coverage<.85?'Check contour':fmt(m.meanWidth*u.scale,1)+' '+u.unit+' width'}</span></div>${defectCard(m)}<div class="metric-row"><div class="metric"><label>Width CV</label><strong>${fmt(m.widthCV,1)}</strong><small>%</small></div><div class="metric"><label>Local edge Rq</label><strong>${fmt(m.edgeRq*u.scale,2)}</strong><small>${u.unit}</small></div><div class="metric"><label>Guide RMS</label><strong>${fmt(m.ideal.rms*u.scale,2)}</strong><small>${u.unit}</small></div><div class="metric"><label>Guide P95</label><strong>${fmt(m.ideal.p95*u.scale,2)}</strong><small>${u.unit}</small></div></div><details><summary>More</summary><div class="kv"><span>Mean width</span><span>${fmt(m.meanWidth*u.scale,2)} ${u.unit}</span></div><div class="kv"><span>Coverage</span><span>${fmt(m.coverage*100,1)}%</span></div><div class="kv"><span>Undetected</span><span>${fmt(m.gapPct,2)}%</span></div><div class="kv"><span>Re-detected rows</span><span>${fmt(m.recoveredPct,2)}%</span></div><div class="kv"><span>Uncertain edges</span><span>${fmt(m.uncertainPct,2)}%</span></div><div class="kv"><span>Tilt correction</span><span>${m.tiltStatus==='corrected'?fmt(m.tiltAngle,2)+'°':m.tiltStatus}</span></div><div class="kv"><span>Boundary</span><span>${m.boundaryMethod==='dark'?'Dark contrast':'Legacy'} · ${fmt(m.boundaryLevel,0)}%</span></div></details></article>`);
- table.push(`<tr><td>${lab}</td><td>${m.volume} µL</td><td>${m.expectedLength}</td><td>${fmt(m.meanWidth*u.scale,2)} ${u.unit}</td><td>${fmt(m.widthCV,2)}</td><td>${fmt(m.edgeRq*u.scale,2)} ${u.unit}</td><td>${fmt(m.relRq,2)}</td><td>${fmt(m.gapPct,2)}</td><td>${fmt(m.longestGapPct,2)}</td><td>${fmt(m.defectsPer100px,2)}</td><td>${fmt(m.defectsPer10mm,2)}</td><td>${fmt(m.coverage*100,1)}</td><td>${fmt(m.straightness*u.scale,2)} ${u.unit}</td><td>${fmt(m.centerBend*u.scale,2)} ${u.unit}</td><td>${fmt(m.parallelAngle,3)}</td></tr>`)}
+function updateResults(){refreshLocalDefects();const sum=useEdgeSum(),edgeSuffix=sum?' · L + R':'';let u=displayUnit(),cards=[],table=[];for(let m of state.measurements){let s=state.samples.find(s=>s.id===m.sampleId),lab=htmlEscape(s?.label||m.sample),rq=sum?m.leftRq+m.rightRq:m.edgeRq,quality=m.coverage<.85?' <span style="color:#b34b39">(low detection)</span>':'';
+ cards.push(`<article class="resultcard"><div class="result-header"><div class="title">${lab}<span class="dose">${m.volume} µL</span></div><span class="sub ${m.coverage<.85?'coverage-warning':''}">${m.coverage<.85?'Check contour':fmt(m.meanWidth*u.scale,1)+' '+u.unit+' width'}</span></div>${defectCard(m)}<div class="metric-row"><div class="metric"><label>Width CV</label><strong>${fmt(m.widthCV,1)}</strong><small>%</small></div><div class="metric"><label>Local edge Rq${edgeSuffix}</label><strong>${fmt(rq*u.scale,2)}</strong><small>${u.unit}</small></div><div class="metric"><label>Guide RMS${edgeSuffix}</label><strong>${fmt((sum?m.ideal.rmsSum:m.ideal.rms)*u.scale,2)}</strong><small>${u.unit}</small></div><div class="metric"><label>Guide P95${edgeSuffix}</label><strong>${fmt((sum?m.ideal.p95Sum:m.ideal.p95)*u.scale,2)}</strong><small>${u.unit}</small></div></div><details><summary>More</summary><div class="kv"><span>Mean width</span><span>${fmt(m.meanWidth*u.scale,2)} ${u.unit}</span></div><div class="kv"><span>Coverage</span><span>${fmt(m.coverage*100,1)}%</span></div><div class="kv"><span>Undetected</span><span>${fmt(m.gapPct,2)}%</span></div><div class="kv"><span>Re-detected rows</span><span>${fmt(m.recoveredPct,2)}%</span></div><div class="kv"><span>Uncertain edges</span><span>${fmt(m.uncertainPct,2)}%</span></div><div class="kv"><span>Tilt correction</span><span>${m.tiltStatus==='corrected'?fmt(m.tiltAngle,2)+'°':m.tiltStatus}</span></div><div class="kv"><span>Boundary</span><span>${m.boundaryMethod==='dark'?'Dark contrast':'Legacy'} · ${fmt(m.boundaryLevel,0)}%</span></div></details></article>`);
+ table.push(`<tr><td>${lab}</td><td>${m.volume} µL</td><td>${m.expectedLength}</td><td>${fmt(m.meanWidth*u.scale,2)} ${u.unit}</td><td>${fmt(m.widthCV,2)}</td><td>${fmt(rq*u.scale,2)} ${u.unit}</td><td>${fmt(100*rq/m.meanWidth,2)}</td><td>${fmt(m.gapPct,2)}</td><td>${fmt(m.longestGapPct,2)}</td><td>${fmt(m.defectsPer100px,2)}</td><td>${fmt(m.defectsPer10mm,2)}</td><td>${fmt(m.coverage*100,1)}</td><td>${fmt((sum?rms(m.SL.filter(Number.isFinite))+rms(m.SR.filter(Number.isFinite)):m.straightness)*u.scale,2)} ${u.unit}</td><td>${fmt(m.centerBend*u.scale,2)} ${u.unit}</td><td>${fmt(m.parallelAngle,3)}</td></tr>`)}
  for(const id of ['summaryCsv','profileCsv','defectCsv'])E(id).disabled=!state.measurements.length;E('overlayPng').disabled=!state.img;
  E('resultCards').innerHTML=cards.join('')||'<p class="empty-results">Measurements appear after upload.</p>';
+ E('rqHeading').textContent='Local Rq'+edgeSuffix;
+ E('relativeRqHeading').textContent='Relative Rq'+edgeSuffix+' · %';
+ E('straightnessHeading').textContent='Straightness RMS'+edgeSuffix;
  E('resultTable').innerHTML=table.join('')||'<tr><td colspan="15">Not analyzed yet</td></tr>';
  let prev=E('lineSelect').value;E('lineSelect').innerHTML=state.measurements.map((m,i)=>`<option value="${i}">${htmlEscape(state.samples.find(s=>s.id===m.sampleId)?.label||m.sample)} · ${m.volume} µL</option>`).join('');if([...E('lineSelect').options].some(o=>o.value===prev))E('lineSelect').value=prev ;const priorSample=E('profileSample').value;
  const measuredSamples=state.samples.filter(s=>state.measurements.some(m=>m.sampleId===s.id));
@@ -909,6 +954,7 @@ document.addEventListener('paste',e=>{let tgt=e.target;if(tgt&&(/INPUT|TEXTAREA/
 
 E('sampleSelect').onchange=()=>{state.chosen=+E('sampleSelect').value;refreshSamples();render();const selected=state.samples.find(s=>s.id===state.chosen);if(selected&&state.zoom>1)zoomImage(state.zoom,{x:selected.roi.x+selected.roi.w/2,y:selected.roi.y+selected.roi.h/2})};
 E('profilePanel').addEventListener('toggle',()=>{if(E('profilePanel').open)drawChart()});
+E('edgeDisplay').onchange=()=>{updateResults();render();};
 E('localWindow').oninput=()=>{
  E('localWindowText').textContent=E('localWindow').value+'%';
  if(state.measurements.length){updateResults();render();}

@@ -809,8 +809,8 @@ function sampleResultCard(sample,lines,sum,u){
  const volumes=[1,2];
  const pair=volumes.map(volume=>lines.find(m=>m.volume===volume));
  const sharedLength=sample?.lengthmm>0?fmt(sample.lengthmm,2)+' mm sample length':'';
- const metric=(label,value,unit,emphasis='')=>
-  `<div class="pair-value ${emphasis}"><span class="small">${label}</span><b>${Number.isFinite(value)?fmt(value,1)+unit:'—'}</b></div>`;
+ const metric=(label,value,unit,emphasis='',digits=1)=>
+  `<div class="pair-value ${emphasis}"><span class="small">${label}</span><b>${Number.isFinite(value)?fmt(value,digits)+unit:'—'}</b></div>`;
  const narrowing=m=>m?.local.peaks.width.index!=null?m.local.contraction:null;
  const unevenness=m=>sum?m?.local.roughnessSum.peakPct:m?.local.peaks.rough.index!=null?m.local.peaks.rough.value:null;
  return `<article class="resultcard"><div class="result-header">
@@ -821,6 +821,8 @@ function sampleResultCard(sample,lines,sum,u){
    ${!m?'<span class="sub coverage-warning">Not measured</span>':m.coverage<.85?'<span class="sub coverage-warning">Check contour</span>':''}</div>`).join('')}
   ${pair.map(m=>metric('Mean width',m?.meanWidth,' px')).join('')}
   ${pair.map(m=>metric('Width CV',m?.widthCV,'%')).join('')}
+  ${pair.map(m=>metric(sum?'Local edge Rq · L + R':'Local edge Rq',
+   m?(sum?m.leftRq+m.rightRq:m.edgeRq)*u.scale:null,' '+u.unit,'',2)).join('')}
   ${pair.map(m=>metric(`Width variation · Worst ${lines[0].local.windowPct}% RMS`,m?.local.worst.width?.value,'%')).join('')}
   ${pair.map((m,i)=>metric('Max local narrowing',narrowing(m),'%',i?'':'narrowing')).join('')}
   ${pair.map((m,i)=>metric(sum?'Unevenness peak · L + R':'Unevenness peak',unevenness(m),'%',i?'unevenness':'')).join('')}

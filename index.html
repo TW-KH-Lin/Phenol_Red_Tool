@@ -821,6 +821,7 @@ function sampleResultCard(sample,lines,sum,u){
    ${!m?'<span class="sub coverage-warning">Not measured</span>':m.coverage<.85?'<span class="sub coverage-warning">Check contour</span>':''}</div>`).join('')}
   ${pair.map(m=>metric('Mean width',m?.meanWidth,' px')).join('')}
   ${pair.map(m=>metric('Width CV',m?.widthCV,'%')).join('')}
+  ${pair.map(m=>metric(`Width variation · Worst ${lines[0].local.windowPct}% RMS`,m?.local.worst.width?.value,'%')).join('')}
   ${pair.map((m,i)=>metric('Max local narrowing',narrowing(m),'%',i?'':'narrowing')).join('')}
   ${pair.map((m,i)=>metric(sum?'Unevenness peak · L + R':'Unevenness peak',unevenness(m),'%',i?'unevenness':'')).join('')}
  </div>

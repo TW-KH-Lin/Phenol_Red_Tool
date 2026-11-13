@@ -850,12 +850,38 @@ function refreshLocalDefects(){
  const windowPct=Number(E('localWindow').value);
  for(const m of state.measurements)m.local=localDefects(m,windowPct);
 }
+// Use the same axial span for both edges. Missing rows break the path.
+function contourEstimate(m){
+ let left=0,right=0,reference=0;
+ const scale=calibration();
+ let leftMm=0,rightMm=0,referenceMm=0;
+ for(let i=1;i<m.Y.length;i++){
+  if(!m.valid[i-1]||!m.valid[i])continue;
+  const dy=m.Y[i]-m.Y[i-1],dl=m.L[i]-m.L[i-1],dr=m.R[i]-m.R[i-1];
+  if(dy<=0||![dy,dl,dr].every(Number.isFinite))continue;
+  left+=Math.hypot(dy,dl);
+  right+=Math.hypot(dy,dr);
+  reference+=dy;
+  if(scale){
+   leftMm+=Math.hypot(dy*scale.length,dl*scale.width)/1000;
+   rightMm+=Math.hypot(dy*scale.length,dr*scale.width)/1000;
+   referenceMm+=dy*scale.length/1000;
+  }
+ }
+ if(!reference)return null;
+ const deltaPct=length=>100*(length/reference-1);
+ const fullSpan=m.Y.at(-1)-m.Y[0];
+ return {meanPct:deltaPct((left+right)/2),leftPct:deltaPct(left),rightPct:deltaPct(right),
+  coveragePct:100*reference/fullSpan,referencePx:reference,
+  leftMm:scale?leftMm:null,rightMm:scale?rightMm:null,referenceMm:scale?referenceMm:null};
+}
 function defectAudit(m){
  const q=m.local;return {
  edgeDisplay:useEdgeSum()?'sum':'legacy',
  appVersion:'v8.5-experimental',metricVersion:q.version,detectorVersion:'v7.4-body-and-blue-center-constrained',status:q.status,validity:q.validity,contourVerified:false,
  nominalWindowPct:q.windowPct,windowRows:q.windowRows,effectiveWindowPct:q.effectiveWindowPct,eligibleWindows:q.eligibleWindows,totalWindows:q.totalWindows,normalWidthPx:q.baseline,
  worstWindowRmsPct:Object.fromEntries(Object.entries(q.worst).map(([k,w])=>[k,w?.value??null])),worstWindows:Object.fromEntries(Object.entries(q.worst).map(([k,w])=>[k,windowLocation(m,w)])),
+ contourLengthEstimate:m.contourEstimate,
  edgeSum:q.edgeSum,
  roughnessSum:q.roughnessSum,
  roughnessByEdge:Object.fromEntries(Object.entries(q.sides).map(([side,{peak,worst}])=>[side,{
@@ -870,8 +896,8 @@ function defectAudit(m){
 }
 function exportDefectResults(){
  if(!state.measurements.length)return;
- const rows=[['Image','Sample','Side','Volume uL','Worst window width RMS (%)','Worst window edge RMS (%)','Worst window unevenness RMS (%)','Nominal window (%)','Window rows','Effective window (%)','Eligible windows','Total windows','Measurement validity','Contour verified','Normal width px','Raw width peak (%)','Raw edge peak (%)','Raw unevenness peak (%)','Raw contraction (%)','Raw expansion (%)','Coverage (%)','App version','Metric version','Unevenness peak sum L+R (%)','Worst window unevenness RMS sum L+R (%)','Edge deformation peak sum L+R (%)','Worst window edge deformation RMS sum L+R (%)','Local edge Rq sum L+R (px)','Guide RMS sum L+R (px)','Guide P95 sum L+R (px)','Audit JSON']];
- for(const m of state.measurements){const a=defectAudit(m);rows.push([state.imgName,state.samples.find(s=>s.id===m.sampleId)?.label||m.sample,m.side,m.volume,a.worstWindowRmsPct.width,a.worstWindowRmsPct.edge,a.worstWindowRmsPct.rough,a.nominalWindowPct,a.windowRows,a.effectiveWindowPct,a.eligibleWindows,a.totalWindows,a.validity,false,a.normalWidthPx,a.rawPeaks.width.valuePct,a.rawPeaks.edge.valuePct,a.rawPeaks.rough.valuePct,a.rawContractionPct,a.rawExpansionPct,a.coveragePct,a.appVersion,a.metricVersion,a.roughnessSum.peakPct,a.roughnessSum.worstWindowRmsPct,a.edgeSum.peakPct,a.edgeSum.worstWindowRmsPct,m.leftRq+m.rightRq,m.ideal.rmsSum,m.ideal.p95Sum,JSON.stringify(a)]);}
+ const rows=[['Image','Sample','Side','Volume uL','Worst window width RMS (%)','Worst window edge RMS (%)','Worst window unevenness RMS (%)','Nominal window (%)','Window rows','Effective window (%)','Eligible windows','Total windows','Measurement validity','Contour verified','Normal width px','Raw width peak (%)','Raw edge peak (%)','Raw unevenness peak (%)','Raw contraction (%)','Raw expansion (%)','Coverage (%)','App version','Metric version','Unevenness peak sum L+R (%)','Worst window unevenness RMS sum L+R (%)','Edge deformation peak sum L+R (%)','Worst window edge deformation RMS sum L+R (%)','Local edge Rq sum L+R (px)','Guide RMS sum L+R (px)','Guide P95 sum L+R (px)','Contour length estimate (Delta Ref %)','Contour span coverage (%)','Audit JSON']];
+ for(const m of state.measurements){const a=defectAudit(m);rows.push([state.imgName,state.samples.find(s=>s.id===m.sampleId)?.label||m.sample,m.side,m.volume,a.worstWindowRmsPct.width,a.worstWindowRmsPct.edge,a.worstWindowRmsPct.rough,a.nominalWindowPct,a.windowRows,a.effectiveWindowPct,a.eligibleWindows,a.totalWindows,a.validity,false,a.normalWidthPx,a.rawPeaks.width.valuePct,a.rawPeaks.edge.valuePct,a.rawPeaks.rough.valuePct,a.rawContractionPct,a.rawExpansionPct,a.coveragePct,a.appVersion,a.metricVersion,a.roughnessSum.peakPct,a.roughnessSum.worstWindowRmsPct,a.edgeSum.peakPct,a.edgeSum.worstWindowRmsPct,m.leftRq+m.rightRq,m.ideal.rmsSum,m.ideal.p95Sum,a.contourLengthEstimate?.meanPct,a.contourLengthEstimate?.coveragePct,JSON.stringify(a)]);}
  downloadBlob(new Blob([csv(rows)],{type:'text/csv;charset=utf-8'}),'phenol_red_window_rms_experimental.csv');
 }
 
@@ -898,6 +924,8 @@ function sampleResultCard(sample,lines,sum,u){
    ${!m?'<span class="sub coverage-warning">Not measured</span>':m.coverage<.85?'<span class="sub coverage-warning">Check contour</span>':''}</div>`).join('')}
   ${pair.map(m=>metric('Mean width',m?.meanWidth,' px')).join('')}
   ${pair.map(m=>metric('Width CV',m?.widthCV,'%')).join('')}
+  ${pair.map(m=>metric(m?.contourEstimate?.coveragePct<100?'Contour length (partial est.)':'Contour length (est.)',
+   m?.contourEstimate?.meanPct,'%','',2)).join('')}
   ${pair.map(m=>metric(sum?'Local edge Rq · L + R':'Local edge Rq',
    m?(sum?m.leftRq+m.rightRq:m.edgeRq)*u.scale:null,' '+u.unit,'',2)).join('')}
   ${pair.map(m=>metric(`Width variation · Worst ${lines[0].local.windowPct}% RMS`,m?.local.worst.width?.value,'%')).join('')}
@@ -906,6 +934,7 @@ function sampleResultCard(sample,lines,sum,u){
  </div>
  <details class="result-details"><summary>Reference details</summary>
   ${sample?.roi?`<div class="kv"><span>Sample area</span><span>${sample.roi.w} × ${sample.roi.h} px</span></div>`:''}
+  <p class="small">Contour length estimate uses the mean of both traced edges relative to their measured axial span. Gaps are excluded. The selected analysis section and V8 edge tracing affect the result.</p>
   ${pair.filter(Boolean).map(m=>lineReference(m,sum,u)).join('')}
  </details></article>`;
 }
@@ -916,6 +945,7 @@ function updateResults(){
  const groups=new Map(),table=[];
  for(const m of state.measurements){
   if(!groups.has(m.sampleId))groups.set(m.sampleId,[]);
+  m.contourEstimate=contourEstimate(m);
   groups.get(m.sampleId).push(m);
   const s=state.samples.find(s=>s.id===m.sampleId),lab=htmlEscape(s?.label||m.sample),rq=sum?m.leftRq+m.rightRq:m.edgeRq;
  table.push(`<tr><td>${lab}</td><td>${m.volume} µL</td><td>${m.expectedLength}</td><td>${fmt(m.meanWidth*u.scale,2)} ${u.unit}</td><td>${fmt(m.widthCV,2)}</td><td>${fmt(rq*u.scale,2)} ${u.unit}</td><td>${fmt(100*rq/m.meanWidth,2)}</td><td>${fmt(m.gapPct,2)}</td><td>${fmt(m.longestGapPct,2)}</td><td>${fmt(m.defectsPer100px,2)}</td><td>${fmt(m.defectsPer10mm,2)}</td><td>${fmt(m.coverage*100,1)}</td><td>${fmt((sum?rms(m.SL.filter(Number.isFinite))+rms(m.SR.filter(Number.isFinite)):m.straightness)*u.scale,2)} ${u.unit}</td><td>${fmt(m.centerBend*u.scale,2)} ${u.unit}</td><td>${fmt(m.parallelAngle,3)}</td></tr>`)}

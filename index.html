@@ -44,8 +44,11 @@
 <div class="setting" id="dpiScale" hidden><label for="scanDpi">Original scan DPI</label><input id="scanDpi" type="number" min="1" step="any" placeholder="e.g. 300"></div>
 <div class="setting" id="stripSize" hidden><label for="stripMm">Membrane width · mm</label><input id="stripMm" value="25" type="number" min="0" step="any"></div>
 <div class="setting" id="stripSpan" hidden><label for="stripPx">Membrane width · original px</label><input id="stripPx" type="number" min="0" step="any"></div>
+<button type="button" class="full" id="autoStripWidth" hidden>Detect membrane widths</button>
 <button type="button" class="full" id="pickStripWidth" hidden>Measure width on photo</button>
 <p class="small full" id="scaleStatus" aria-live="polite"></p>
+<div class="setting full"><label for="contourMode">Contour length</label><select id="contourMode">
+<option value="legacy">Legacy comparison · 59.275 mm</option><option value="section" selected>Current analysis section</option></select></div>
 <div class="setting"><label for="defectPct">Width defect · %</label><input id="defectPct" type="number" min="5" max="100" value="25"></div>
 <label class="checkrow"><input id="autoTilt" type="checkbox" checked>Auto tilt correction</label>
 <div class="full"><label class="checkrow"><input id="unequal" type="checkbox" checked>Relative analysis section</label><p id="lengthDesc"></p><div id="lengthControls" class="two-fields"><div class="setting"><label for="startPct">Start · %</label><input id="startPct" type="number" value="2" min="0" max="95" step="1"></div><div class="setting"><label for="endPct">End · %</label><input id="endPct" type="number" value="98" min="5" max="100" step="1"></div></div></div>
@@ -89,7 +92,7 @@ function smooth5(a){return a.map((v,i)=>(a[Math.max(i-2,0)]+2*a[Math.max(i-1,0)]
 function fillInvalid(vals){let out=vals.slice(),idx=[];for(let i=0;i<vals.length;i++)if(Number.isFinite(vals[i]))idx.push(i);if(!idx.length)return out.fill(0);for(let i=0;i<idx[0];i++)out[i]=vals[idx[0]];for(let i=idx.at(-1)+1;i<vals.length;i++)out[i]=vals[idx.at(-1)];for(let j=0;j<idx.length-1;j++){let a=idx[j],b=idx[j+1];for(let i=a+1;i<b;i++)out[i]=vals[a]+(vals[b]-vals[a])*(i-a)/(b-a)}return out}
 function medFilter(a,k=5){let r=Math.floor(k/2),out=a.slice();for(let i=0;i<a.length;i++){if(!Number.isFinite(a[i]))continue;let ar=[];for(let j=Math.max(0,i-r);j<=Math.min(a.length-1,i+r);j++)if(Number.isFinite(a[j]))ar.push(a[j]);out[i]=median(ar)}return out}
 const even=s=>s*2+1;
-let raster=null,contrastPreview=null,processedScaleX=1,processedScaleY=1,stripPick=null;
+let raster=null,contrastPreview=null,processedScaleX=1,processedScaleY=1,stripPick=null,autoWidthNote='';
 function score(x,y){let p=4*(y*rawCanvas.width+x),a=raster;return a[p]-(a[p+1]+a[p+2])*.5}
 function scoreAt(x,y){return score(Math.max(0,Math.min(rawCanvas.width-1,Math.round(x))),Math.max(0,Math.min(rawCanvas.height-1,Math.round(y))))}
 function getProjection(x0,x1,y0,y1,ystep=3){let a=new Float32Array(x1-x0),n=0;for(let y=y0;y<y1;y+=ystep){for(let x=x0;x<x1;x++)a[x-x0]+=score(x,y);n++}return Array.from(a,v=>v/Math.max(1,n))}
@@ -406,7 +409,7 @@ function updateScaleSettings(){
 }
 for(const id of ['scale','scanDpi','stripMm','stripPx'])E(id).oninput=updateScaleSettings;
 E('trendMm').oninput=queuePreview;
-E('scaleMode').onchange=()=>{stripPick=null;updateScaleSettings();};
+E('scaleMode').onchange=()=>{stripPick=null;if(E('scaleMode').value==='strip'&&state.img&&!Number(E('stripPx').value))fillAutomaticStripWidth();updateScaleSettings();};
 E('pickStripWidth').onclick=()=>{
  if(!state.img)return;
  stripPick=[];
@@ -428,6 +431,7 @@ canvas.addEventListener('pointerdown',e=>{if(!state.img)return;let p=getPosition
  const width=Math.hypot((point.x-first.x)/processedScaleX,(point.y-first.y)/processedScaleY);
  if(width<2){E('scaleStatus').textContent='Pick the opposite membrane edge.';return;}
  E('stripPx').value=width.toFixed(2);
+ autoWidthNote='';
  stripPick=null;updateScaleSettings();return;
 }if(!state.drawMode&&state.zoom>1&&e.pointerType==='mouse'){state.pan={x:e.clientX,y:e.clientY,left:E('imageViewport').scrollLeft,top:E('imageViewport').scrollTop,moved:false};canvas.setPointerCapture(e.pointerId);canvas.classList.add('panning');return;}if(!state.drawMode){let hits=state.samples.filter(s=>p.x>=s.roi.x&&p.x<=s.roi.x+s.roi.w&&p.y>=s.roi.y&&p.y<=s.roi.y+s.roi.h);if(hits.length){state.chosen=hits.at(-1).id;refreshSamples();render()}return}state.down={start:p,current:p};canvas.setPointerCapture(e.pointerId);render()});
 canvas.addEventListener('pointermove',e=>{if(state.pan){const dx=e.clientX-state.pan.x,dy=e.clientY-state.pan.y;if(Math.abs(dx)+Math.abs(dy)>3)state.pan.moved=true;E('imageViewport').scrollLeft=state.pan.left-dx;E('imageViewport').scrollTop=state.pan.top-dy;return;}if(!state.down)return;state.down.current=getPosition(e);render()});
@@ -638,6 +642,59 @@ let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y
 }
 function analyze(){if(!state.img||!state.samples.length){setStatus('First load an image and detect (or draw) samples.',true);return}let results=[],errors=[];for(let s of state.samples)for(let vol of [1,2]){try{results.push(analyzeStripe(s,vol))}catch(err){errors.push(err.message)}}state.measurements=results;refreshSamples();updateResults();render();setStatus(`${state.samples.length} samples · ${results.length} lines measured.`+(errors.length?` ${errors.length} detection error(s): ${errors.join(' | ')}`:''),!!errors.length)}
 E('analyze').onclick=analyze;
+// Follow the continuous bright strip around each sample box center.
+function detectMembraneWidths(pixels,w,h,samples){
+ const lum=(x,y)=>{
+  const i=4*(y*w+x);
+  return (.2126*pixels[i]+.7152*pixels[i+1]+.0722*pixels[i+2])*pixels[i+3]/255;
+ };
+ const result=[];
+ for(const sample of samples){
+  const {x,y,w:rw,h:rh}=sample.roi,center=Math.round(x+rw/2);
+  if(center<8||center>=w-8)continue;
+  const widths=[];
+  for(let row=0;row<17;row++){
+   const yy=Math.round(y+rh*(.25+.5*row/16));
+   if(yy<1||yy>=h-1)continue;
+   const interior=median(Array.from({length:15},(_,i)=>lum(center-7+i,yy)));
+   if(interior<80)continue;
+   const level=interior*.56;
+   const light=x=>(lum(x,yy-1)+lum(x,yy)+lum(x,yy+1))/3;
+   const edge=direction=>{
+    for(let d=8;d<=rw*2;d++){
+     const x=center+direction*d;
+     if(x<6||x>=w-6)break;
+     const outside=light(x+direction*5),inside=light(x-direction*5);
+     if(light(x)<=level&&outside<interior*.35&&inside-outside>=45)return x;
+    }
+    return null;
+   };
+   const l=edge(-1),r=edge(1);
+   if(l===null||r===null||r-l<Math.max(20,rw*.7)||r-l>rw*4)continue;
+   widths.push(r-l);
+  }
+  if(widths.length<9)continue;
+  const middle=median(widths),inliers=widths.filter(v=>Math.abs(v-middle)<=middle*.08);
+  if(inliers.length<9)continue;
+  result.push({sampleId:sample.id,width:mean(inliers),rows:inliers.length});
+ }
+ return result;
+}
+function fillAutomaticStripWidth(){
+ const strips=detectMembraneWidths(raster,rawCanvas.width,rawCanvas.height,state.samples);
+ if(!strips.length){autoWidthNote='No reliable membrane edges found. Measure width on photo.';return false;}
+ const typical=median(strips.map(s=>s.width));
+ const accepted=strips.filter(s=>Math.abs(s.width-typical)<=typical*.12);
+ if(!accepted.length){autoWidthNote='Membrane widths disagree. Measure width on photo.';return false;}
+ E('stripPx').value=(mean(accepted.map(s=>s.width))/processedScaleX).toFixed(2);
+ autoWidthNote=`Auto width from ${accepted.length} of ${state.samples.length} strips.`;
+ return true;
+}
+E('autoStripWidth').onclick=()=>{
+ stripPick=null;
+ if(fillAutomaticStripWidth())updateScaleSettings();else updateCalibration();
+};
+E('contourMode').onchange=updateResults;
 function calibration(){
  const mode=E('scaleMode').value;
  const dpi=Number(E('scanDpi').value),mm=Number(E('stripMm').value),px=Number(E('stripPx').value);
@@ -668,11 +725,12 @@ function updateCalibration(){
  E('manualScale').hidden=mode!=='manual';
  E('dpiScale').hidden=mode!=='dpi';
  E('stripSize').hidden=E('stripSpan').hidden=mode!=='strip';
- E('pickStripWidth').hidden=mode!=='strip';
+ E('pickStripWidth').hidden=E('autoStripWidth').hidden=mode!=='strip';
+ E('autoStripWidth').disabled=!state.img||!state.samples.length;
  E('pickStripWidth').disabled=!state.img;
  E('scaleStatus').textContent=stripPick?(stripPick.length?'Tap the opposite membrane edge across the strip.':'Tap one outer membrane edge.')
-  :scale?`${fmt(scale.width,3)} µm/processed px`
-  :mode==='strip'?'Tap across the membrane at right angles to the strip, or enter its width in original-image pixels.'
+  :scale?`${fmt(scale.width,3)} µm/processed px${mode==='strip'&&autoWidthNote?' · '+autoWidthNote:''}`
+  :mode==='strip'?autoWidthNote||'Tap across the membrane at right angles to the strip, or enter its width in original-image pixels.'
   :mode==='dpi'?'Enter the DPI of the uploaded scan at its original size.':'';
  for(const m of state.measurements){
   const sample=state.samples.find(s=>s.id===m.sampleId);
@@ -912,12 +970,44 @@ function contourEstimate(m){
   coveragePct:100*reference/fullSpan,referencePx:reference,
   leftMm:scale?leftMm:null,rightMm:scale?rightMm:null,referenceMm:scale?referenceMm:null};
 }
+// Rebuild the old 700-row reference grid from a 59.275 mm section.
+// The original scan coordinates and edge tracer are unavailable.
+function legacyContourEstimate(m,sample){
+ const scale=calibration();
+ if(!scale||!sample?.roi)return null;
+ const referenceMm=59.275,steps=700,stepMm=referenceMm/steps;
+ const span=referenceMm*1000/scale.length;
+ const center=sample.roi.y+.45*sample.roi.h;
+ const start=center-span/2;
+ const first=m.Y[0],last=m.Y.at(-1);
+ if(start<first||start+span>last)return null;
+ const point=(edge,y)=>{
+  const i=Math.floor(y-first),t=y-first-i;
+  if(!m.valid[i]||(t>0&&!m.valid[i+1]))return NaN;
+  return (edge[i]+(t>0?t*(edge[i+1]-edge[i]):0))*scale.width/1000/stepMm;
+ };
+ let left=0,right=0,prevL,prevR;
+ for(let k=0;k<=steps;k++){
+  const y=start+span*k/steps;
+  const l=point(m.L,y),r=point(m.R,y);
+  if(!Number.isFinite(l)||!Number.isFinite(r))return null;
+  if(k){
+   left+=Math.hypot(1,Math.round(l)-Math.round(prevL))*stepMm;
+   right+=Math.hypot(1,Math.round(r)-Math.round(prevR))*stepMm;
+  }
+  prevL=l;prevR=r;
+ }
+ const pct=mm=>100*(mm/referenceMm-1);
+ return {method:'legacy-reference-grid-estimate',meanPct:pct((left+right)/2),
+  leftPct:pct(left),rightPct:pct(right),leftMm:left,rightMm:right,referenceMm,coveragePct:100};
+}
 function defectAudit(m){
  const q=m.local;return {
  edgeDisplay:useEdgeSum()?'sum':'legacy',
  appVersion:'v8.5-experimental',metricVersion:q.version,detectorVersion:'v7.4-body-and-blue-center-constrained',status:q.status,validity:q.validity,contourVerified:false,
  nominalWindowPct:q.windowPct,windowRows:q.windowRows,effectiveWindowPct:q.effectiveWindowPct,eligibleWindows:q.eligibleWindows,totalWindows:q.totalWindows,normalWidthPx:q.baseline,
  worstWindowRmsPct:Object.fromEntries(Object.entries(q.worst).map(([k,w])=>[k,w?.value??null])),worstWindows:Object.fromEntries(Object.entries(q.worst).map(([k,w])=>[k,windowLocation(m,w)])),
+ contourMode:E('contourMode').value,
  contourLengthEstimate:m.contourEstimate,
  edgeSum:q.edgeSum,
  roughnessSum:q.roughnessSum,
@@ -980,7 +1070,7 @@ function sampleResultCard(sample,lines,sum,u){
    ${!m?'<span class="sub coverage-warning">Not measured</span>':m.coverage<.85?'<span class="sub coverage-warning">Check contour</span>':''}</div>`).join('')}
   ${pair.map(m=>metric('Mean width',m?m.meanWidth*(u.unit==='µm'?u.scale/1000:1):null,u.unit==='µm'?' mm':' px','',u.unit==='µm'?2:1)).join('')}
   ${pair.map(m=>metric('Width CV',m?.widthCV,'%')).join('')}
-  ${pair.map(m=>metric(m?.contourEstimate?.coveragePct<100?'Contour length (partial est.)':'Contour length (est.)',
+  ${pair.map(m=>metric(E('contourMode').value==='legacy'?'Legacy contour (est.)':m?.contourEstimate?.coveragePct<100?'Contour length (partial est.)':'Contour length (est.)',
    m?.contourEstimate?.meanPct,'%','',2)).join('')}
   ${pair.map(m=>metric(sum?'Local edge Rq · L + R':'Local edge Rq',
    m?(sum?m.leftRq+m.rightRq:m.edgeRq)*u.scale:null,' '+u.unit,'',2)).join('')}
@@ -989,6 +1079,7 @@ function sampleResultCard(sample,lines,sum,u){
   ${pair.map((m,i)=>metric(sum?'Unevenness peak · L + R':'Unevenness peak',unevenness(m),'%',i?'unevenness':'')).join('')}
  </div>
  <details class="result-details"><summary>Reference details</summary>
+  ${E('contourMode').value==='legacy'?'<p class="small">Legacy contour uses a 59.275 mm window centered at 45% of the sample box. Calibration and continuous edges across that window are required.</p>':''}
   <p class="small">Analysis range: ${E('unequal').checked?E('startPct').value+'–'+E('endPct').value+'% of sample box':'Full sample box'}. Window locations are relative to this range.</p>
   ${pair.filter(Boolean).map(m=>lineReference(m,sum)).join('')}
  </details></article>`;
@@ -1000,7 +1091,7 @@ function updateResults(){
  const groups=new Map(),table=[];
  for(const m of state.measurements){
   if(!groups.has(m.sampleId))groups.set(m.sampleId,[]);
-  m.contourEstimate=contourEstimate(m);
+  m.contourEstimate=E('contourMode').value==='legacy'?legacyContourEstimate(m,state.samples.find(s=>s.id===m.sampleId)):contourEstimate(m);
   groups.get(m.sampleId).push(m);
   const s=state.samples.find(s=>s.id===m.sampleId),lab=htmlEscape(s?.label||m.sample),rq=sum?m.leftRq+m.rightRq:m.edgeRq;
  table.push(`<tr><td>${lab}</td><td>${m.volume} µL</td><td>${m.expectedLength}</td><td>${fmt(m.meanWidth*u.scale,2)} ${u.unit}</td><td>${fmt(m.widthCV,2)}</td><td>${fmt(rq*u.scale,2)} ${u.unit}</td><td>${fmt(100*rq/m.meanWidth,2)}</td><td>${fmt(m.gapPct,2)}</td><td>${fmt(m.longestGapPct,2)}</td><td>${fmt(m.defectsPer100px,2)}</td><td>${fmt(m.defectsPer10mm,2)}</td><td>${fmt(m.coverage*100,1)}</td><td>${fmt((sum?rms(m.SL.filter(Number.isFinite))+rms(m.SR.filter(Number.isFinite)):m.straightness)*u.scale,2)} ${u.unit}</td><td>${fmt(m.centerBend*u.scale,2)} ${u.unit}</td><td>${fmt(m.parallelAngle,3)}</td></tr>`)}
@@ -1113,10 +1204,13 @@ function loadImage(uri,label){return new Promise((resolve,reject)=>{
   contrastPreview=null;
   stripPick=null;
   E('stripPx').value='';
+  autoWidthNote='';
   resetProfileSelection();state.img=im;state.imgName=label;state.samples=[];state.measurements=[];state.uid=0;
   state.chosen=null;state.drawMode=null;state.zoom=1;state.pan=null;E('imageViewport').scrollLeft=0;E('imageViewport').scrollTop=0;canvas.classList.remove('draw-enabled');
   E('fileLabel').textContent=`${label} · processed ${w} × ${h} px`+(resize<1?` (original ${originalW} × ${originalH}; resized to ${(resize*100).toFixed(0)}%)`:'');
-  autoSamples();resolve();
+  autoSamples();
+  if(E('scaleMode').value==='strip'){fillAutomaticStripWidth();updateScaleSettings();}
+  resolve();
  }catch(err){reject(err)}};
  im.onerror=()=>reject(Error('Cannot decode this image in your browser. Try sharing it as JPEG or PNG.'));
  im.src=uri;

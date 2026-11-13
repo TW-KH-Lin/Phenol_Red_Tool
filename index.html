@@ -20,6 +20,7 @@
 .sample-pair .narrowing{background:#eaf2ff;color:#174e9b}
 .sample-pair .unevenness{background:#f2eafb;color:#642b94}
 .sample-reference-line h4{margin:12px 0 6px}
+[hidden]{display:none!important}
 </style></head><body>
 <header><div class="brand"><div class="brandmark" aria-hidden="true"></div><h1>Phenol Red <span class="version">v8.5 Experimental</span></h1></div><span id="runtimeNotice" class="runtime" role="status">Starting…</span></header>
 <main><div style="text-align:right;margin:0 0 8px"><a href="guide.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5">Help · 圖解教學 ↗</a> <a href="guide-en.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5;margin-left:10px">English ↗</a></div><div class="experiment-banner">Experimental · Local defects <a href="phenol-red-v7.5.html">Open preserved v7.5</a></div>
@@ -36,7 +37,13 @@
 <div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div>
 <div class="setting"><label for="boundaryMethod">Boundary signal</label><select id="boundaryMethod"><option value="dark" selected>Dark-red contrast</option><option value="legacy">Legacy redness</option></select></div>
 <div class="setting"><label for="trend">Roughness window <span class="value" id="trendText">121 px</span></label><input id="trend" type="range" min="21" max="201" step="10" value="121"></div>
-<div class="setting"><label for="scale">Scale · µm/px</label><input id="scale" type="number" min="0" step="any" placeholder="Optional"></div>
+<div class="setting full"><label for="scaleMode">Image calibration</label>
+<select id="scaleMode"><option value="manual">Manual scale</option><option value="dpi">Scan resolution</option><option value="strip">Known strip size</option></select></div>
+<div class="setting" id="manualScale"><label for="scale">Scale · µm/processed px</label><input id="scale" type="number" min="0" step="any" placeholder="Optional"></div>
+<div class="setting" id="dpiScale" hidden><label for="scanDpi">Original scan DPI</label><input id="scanDpi" type="number" min="1" step="any" placeholder="e.g. 300"></div>
+<div class="setting" id="stripSize" hidden><label for="stripMm">Measured strip length · mm</label><input id="stripMm" type="number" min="0" step="any"></div>
+<div class="setting" id="stripSpan" hidden><label for="stripPx">Same span · original px</label><input id="stripPx" type="number" min="0" step="any"></div>
+<p class="small full" id="scaleStatus" aria-live="polite"></p>
 <div class="setting"><label for="defectPct">Width defect · %</label><input id="defectPct" type="number" min="5" max="100" value="25"></div>
 <label class="checkrow"><input id="autoTilt" type="checkbox" checked>Auto tilt correction</label>
 <div class="full"><label class="checkrow"><input id="unequal" type="checkbox" checked>Relative analysis section</label><p id="lengthDesc"></p><div id="lengthControls" class="two-fields"><div class="setting"><label for="startPct">Start · %</label><input id="startPct" type="number" value="2" min="0" max="95" step="1"></div><div class="setting"><label for="endPct">End · %</label><input id="endPct" type="number" value="98" min="5" max="100" step="1"></div></div></div>
@@ -80,7 +87,7 @@ function smooth5(a){return a.map((v,i)=>(a[Math.max(i-2,0)]+2*a[Math.max(i-1,0)]
 function fillInvalid(vals){let out=vals.slice(),idx=[];for(let i=0;i<vals.length;i++)if(Number.isFinite(vals[i]))idx.push(i);if(!idx.length)return out.fill(0);for(let i=0;i<idx[0];i++)out[i]=vals[idx[0]];for(let i=idx.at(-1)+1;i<vals.length;i++)out[i]=vals[idx.at(-1)];for(let j=0;j<idx.length-1;j++){let a=idx[j],b=idx[j+1];for(let i=a+1;i<b;i++)out[i]=vals[a]+(vals[b]-vals[a])*(i-a)/(b-a)}return out}
 function medFilter(a,k=5){let r=Math.floor(k/2),out=a.slice();for(let i=0;i<a.length;i++){if(!Number.isFinite(a[i]))continue;let ar=[];for(let j=Math.max(0,i-r);j<=Math.min(a.length-1,i+r);j++)if(Number.isFinite(a[j]))ar.push(a[j]);out[i]=median(ar)}return out}
 const even=s=>s*2+1;
-let raster=null,contrastPreview=null;
+let raster=null,contrastPreview=null,processedScaleX=1,processedScaleY=1;
 function score(x,y){let p=4*(y*rawCanvas.width+x),a=raster;return a[p]-(a[p+1]+a[p+2])*.5}
 function scoreAt(x,y){return score(Math.max(0,Math.min(rawCanvas.width-1,Math.round(x))),Math.max(0,Math.min(rawCanvas.height-1,Math.round(y))))}
 function getProjection(x0,x1,y0,y1,ystep=3){let a=new Float32Array(x1-x0),n=0;for(let y=y0;y<y1;y+=ystep){for(let x=x0;x<x1;x++)a[x-x0]+=score(x,y);n++}return Array.from(a,v=>v/Math.max(1,n))}
@@ -391,7 +398,8 @@ E('autoTilt').onchange=queuePreview;
 E('boundaryMethod').onchange=queuePreview;
 E('unequal').onchange=()=>{setLengthUI();queuePreview()};
 for(let id of ['startPct','endPct','threshold','trend','defectPct'])E(id).oninput=()=>{E('thresholdText').textContent=E('threshold').value+'%';E('trendText').textContent=E('trend').value+' px';queuePreview()};
-E('scale').oninput=updateResults;
+for(const id of ['scale','scanDpi','stripMm','stripPx'])E(id).oninput=updateResults;
+E('scaleMode').onchange=updateResults;
 E('autodetect').onclick=()=>{autoSamples();if(state.samples.length)analyze()};
 E('sampleDiscovery').onchange=()=>setStatus('Tap Detect to apply search mode.');
 E('addROI').onclick=()=>{state.drawMode='add';canvas.classList.add('draw-enabled');setStatus('Drag a rectangle around BOTH red lines of one sample.')};
@@ -609,7 +617,33 @@ let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y
 }
 function analyze(){if(!state.img||!state.samples.length){setStatus('First load an image and detect (or draw) samples.',true);return}let results=[],errors=[];for(let s of state.samples)for(let vol of [1,2]){try{results.push(analyzeStripe(s,vol))}catch(err){errors.push(err.message)}}state.measurements=results;refreshSamples();updateResults();render();setStatus(`${state.samples.length} samples · ${results.length} lines measured.`+(errors.length?` ${errors.length} detection error(s): ${errors.join(' | ')}`:''),!!errors.length)}
 E('analyze').onclick=analyze;
-function displayUnit(){let v=+E('scale').value;return v>0?{scale:v,unit:'µm'}:{scale:1,unit:'px'}}
+function calibration(){
+ const mode=E('scaleMode').value;
+ const dpi=Number(E('scanDpi').value),mm=Number(E('stripMm').value),px=Number(E('stripPx').value);
+ const originalScale=mode==='dpi'?25400/dpi:1000*mm/px;
+ const width=mode==='manual'?Number(E('scale').value):originalScale/processedScaleX;
+ const length=mode==='manual'?width:originalScale/processedScaleY;
+ return Number.isFinite(width)&&width>0&&Number.isFinite(length)&&length>0?{width,length}:null;
+}
+function displayUnit(){
+ const scale=calibration()?.width;
+ return scale?{scale,unit:'µm'}:{scale:1,unit:'px'};
+}
+function updateCalibration(){
+ const mode=E('scaleMode').value,scale=calibration();
+ E('manualScale').hidden=mode!=='manual';
+ E('dpiScale').hidden=mode!=='dpi';
+ E('stripSize').hidden=E('stripSpan').hidden=mode!=='strip';
+ E('scaleStatus').textContent=scale?`${fmt(scale.width,3)} µm/processed px`
+  :mode==='strip'?'Enter the same distance in mm and original-image pixels.'
+  :mode==='dpi'?'Enter the DPI of the uploaded scan at its original size.':'';
+ for(const m of state.measurements){
+  const sample=state.samples.find(s=>s.id===m.sampleId);
+  m.physicalLengthMM=sample?.lengthmm>0?m.expectedLength/sample.roi.h*sample.lengthmm
+   :scale?m.expectedLength*scale.length/1000:null;
+  m.defectsPer10mm=m.physicalLengthMM?10*m.defects/m.physicalLengthMM:NaN;
+ }
+}
 // Experimental local metrics. No contour smoothing or minimum defect length.
 function defectSettings(){return {ruleId:'',width:null,edge:null,rough:null};}
 function localDefects(m,windowPct=5){
@@ -830,7 +864,7 @@ function defectAudit(m){
  }])),
  rawPeaks:Object.fromEntries(Object.entries(q.peaks).map(([k,p])=>[k,{valuePct:p.index===null?null:p.value,location:defectLocation(m,p)}])),rawContractionPct:q.contraction,rawExpansionPct:q.expansion,
  coveragePct:100*m.coverage,boundarySignal:m.boundaryMethod,boundaryLevelPct:m.boundaryLevel,roughnessWindowPx:Number(E('trend').value),imageWidthPx:rawCanvas.width,imageHeightPx:rawCanvas.height,
- analysisStartPct:Number(E('startPct').value),analysisEndPct:Number(E('endPct').value),relativeSection:E('unequal').checked,tiltCorrectionEnabled:E('autoTilt').checked,tiltStatus:m.tiltStatus,imageScaleUmPerPx:Number(E('scale').value)||null,
+ analysisStartPct:Number(E('startPct').value),analysisEndPct:Number(E('endPct').value),relativeSection:E('unequal').checked,tiltCorrectionEnabled:E('autoTilt').checked,tiltStatus:m.tiltStatus,imageScaleUmPerPx:calibration()?.width??null,calibrationMode:E('scaleMode').value,scanDpi:E('scaleMode').value==='dpi'?Number(E('scanDpi').value)||null:null,stripCalibration:E('scaleMode').value==='strip'?{mm:Number(E('stripMm').value)||null,originalPx:Number(E('stripPx').value)||null}:null,
  rule:'window=max(1,ceil(nominalWindowPct*analyzedRows/100)); full valid windows only; per metric maximum RMS; width residual to stripe median; edge perpendicular residuals to blue guides; roughness residuals to moving trend; edge and roughness pool left/right squares equally; divide by median width ×100; no hard minimum defect length, composite score or pass/fail limits'
  };
 }
@@ -876,6 +910,7 @@ function sampleResultCard(sample,lines,sum,u){
  </details></article>`;
 }
 function updateResults(){
+ updateCalibration();
  refreshLocalDefects();
  const sum=useEdgeSum(),edgeSuffix=sum?' · L + R':'',u=displayUnit();
  const groups=new Map(),table=[];
@@ -987,6 +1022,7 @@ function loadImage(uri,label){return new Promise((resolve,reject)=>{
   const maxDim=2350,maxPixels=2800000;
   const resize=Math.min(1,maxDim/Math.max(originalW,originalH),Math.sqrt(maxPixels/(originalW*originalH)));
   const w=Math.max(1,Math.round(originalW*resize)),h=Math.max(1,Math.round(originalH*resize));
+  processedScaleX=w/originalW;processedScaleY=h/originalH;
   rawCanvas.width=w;rawCanvas.height=h;rawCtx.drawImage(im,0,0,w,h);
   raster=rawCtx.getImageData(0,0,w,h).data;
   contrastPreview=null;

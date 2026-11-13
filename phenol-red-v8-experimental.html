@@ -735,6 +735,20 @@ function snapBurrEdge(read,edge,direction,limit,level,sensitivity=0){
  }
  return best;
 }
+function continuousStripeExtent(start,end,hasDye){
+ const runs=[];
+ let first=null,last=null;
+ for(let y=start;y<end;y++){
+  if(!hasDye(y))continue;
+  if(last!==null&&y-last>7){runs.push([first,last+1]);first=null;}
+  if(first===null)first=y;
+  last=y;
+ }
+ if(first!==null)runs.push([first,last+1]);
+ const longest=Math.max(0,...runs.map(([a,b])=>b-a));
+ const sustained=runs.filter(([a,b])=>b-a>=Math.max(24,longest*.18));
+ return sustained.length?[sustained[0][0],sustained.at(-1)[1]]:null;
+}
 function analyzeStripe(s,vol){
  let roi=safeRegion(s.roi);
  const frame=tiltFrame(roi,E('autoTilt').checked);
@@ -750,7 +764,25 @@ function analyzeStripe(s,vol){
  // Keep the two stripes in separate search domains.
  const split=(centers[0]+centers[1])/2;
  if(vol===1)x1=Math.min(x1,Math.floor(split-1));else x0=Math.max(x0,Math.ceil(split+1));
- let y0=roi.y,y1=roi.y+roi.h;if(E('unequal').checked){let start=+E('startPct').value,end=+E('endPct').value;if(!(start>=0&&end<=100&&start<end))throw Error('Start/end percentages must satisfy 0 ≤ start < end ≤ 100');y0=roi.y+Math.floor(roi.h*start/100);y1=roi.y+Math.ceil(roi.h*end/100)}
+ let y0=roi.y,y1=roi.y+roi.h;
+ if(s.discoveryMode==='membrane-cross-sections'){
+  const extent=continuousStripeExtent(y0,y1,y=>{
+   const background=Math.min(sampleScore(x0+2,y),sampleScore(x1-2,y));
+   if(!Number.isFinite(background))return false;
+   let count=0;
+   const half=Math.max(5,Math.min(16,Math.round(sep*.28)));
+   for(let x=Math.max(x0,Math.round(center)-half);x<=Math.min(x1,Math.round(center)+half);x++){
+    if(sampleScore(x,y)>Math.max(12,background+9)&&++count>=3)return true;
+   }
+   return false;
+  });
+  if(extent)[y0,y1]=extent;
+ }
+ if(E('unequal').checked){
+  const start=+E('startPct').value,end=+E('endPct').value,top=y0,height=y1-y0;
+  if(!(start>=0&&end<=100&&start<end))throw Error('Start/end percentages must satisfy 0 ≤ start < end ≤ 100');
+  y0=top+Math.floor(height*start/100);y1=top+Math.ceil(height*end/100);
+ }
  let n=y1-y0;if(n<30)throw Error(`${s.label}: selected length is too short`);
  let L=Array(n).fill(NaN),R=Array(n).fill(NaN),Y=Array.from({length:n},(_,j)=>y0+j),valid=Array(n).fill(false);
  let threshold=+E('threshold').value/100;
@@ -809,6 +841,28 @@ let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y
    const delta=seq[i+1]-seq[i];
    if(seq[i]<leftLevel&&seq[i+1]>=leftLevel)rising.push({x:i+(leftLevel-seq[i])/delta,g:delta});
    if(seq[i]>=rightLevel&&seq[i+1]<rightLevel)falling.push({x:i+(rightLevel-seq[i])/delta,g:-delta});
+  }
+  // A weaker outer rim can sit below Boundary while the inner band
+  // crosses it. Admit a second candidate only with nearby axial support.
+  if(outerPreference>0){
+   const addRim=(candidates,direction,peak,ref)=>{
+    const level=bg+Math.max(8,(.40-.14*outerPreference/100)*(peak-bg));
+    const reach=Math.max(4,Math.min(12,refWidth*.45));
+    for(let i=1;i<k-2;i++){
+     const inside=direction<0?i+1:i,outside=direction<0?i:i+1;
+     if(!pixelValid[inside]||!pixelValid[outside])continue;
+     const high=seq[inside],low=seq[outside],drop=high-low;
+     if(!(low<level&&high>=level&&drop>=3))continue;
+     const x=outside+(inside-outside)*(level-low)/drop;
+     if(direction*(x-guideCenter)<=0||Math.abs(x-ref)>reach)continue;
+     if(!candidates.some(c=>direction*(x-c.x)>=1))continue;
+     const sampleX=x0+inside;
+     if(![y-2,y+2].every(row=>sampleScore(sampleX,row)>=level))continue;
+     candidates.push({x,g:drop});
+    }
+   };
+   addRim(rising,-1,leftPeak,refLeft);
+   addRim(falling,1,rightPeak,refRight);
   }
   let best=null;
   // Score the left and right boundaries together. An internal highlight may
@@ -1341,7 +1395,7 @@ function sampleResultCard(sample,lines,sum,u){
  </div>
  <details class="result-details"><summary>Reference details</summary>
   ${E('contourMode').value==='legacy'?'<p class="small">Legacy contour uses a 59.275 mm window centered at 45% of the sample box. Calibration and continuous edges across that window are required.</p>':''}
-  <p class="small">Analysis range: ${E('unequal').checked?E('startPct').value+'–'+E('endPct').value+'% of sample box':'Full sample box'}. Window locations are relative to this range.</p>
+  <p class="small">Analysis range: ${E('unequal').checked?E('startPct').value+'–'+E('endPct').value+'% of '+(sample?.discoveryMode==='membrane-cross-sections'?'continuous stripe':'sample box'):(sample?.discoveryMode==='membrane-cross-sections'?'Continuous stripe':'Full sample box')}. Window locations are relative to this range.</p>
   ${pair.filter(Boolean).map(m=>lineReference(m,sum)).join('')}
  </details></article>`;
 }

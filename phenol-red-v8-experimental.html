@@ -37,6 +37,7 @@
 <div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div>
 <div class="setting"><label for="boundaryMethod">Boundary signal</label><select id="boundaryMethod"><option value="dark" selected>Dark-red contrast</option><option value="legacy">Legacy redness</option></select></div>
 <div class="setting"><label for="trend">Roughness window <span class="value" id="trendText">121 px</span></label><input id="trend" type="range" min="21" max="201" step="10" value="121"></div>
+<div class="setting"><label for="trendMm">Roughness window · mm</label><input id="trendMm" type="number" min="0" step="any" placeholder="Optional"><span class="small" id="trendMmNote"></span></div>
 <div class="setting full"><label for="scaleMode">Image calibration</label>
 <select id="scaleMode"><option value="manual">Manual scale</option><option value="dpi">Scan resolution</option><option value="strip">Known strip width</option></select></div>
 <div class="setting" id="manualScale"><label for="scale">Scale · µm/processed px</label><input id="scale" type="number" min="0" step="any" placeholder="Optional"></div>
@@ -399,8 +400,13 @@ E('autoTilt').onchange=queuePreview;
 E('boundaryMethod').onchange=queuePreview;
 E('unequal').onchange=()=>{setLengthUI();queuePreview()};
 for(let id of ['startPct','endPct','threshold','trend','defectPct'])E(id).oninput=()=>{E('thresholdText').textContent=E('threshold').value+'%';E('trendText').textContent=E('trend').value+' px';queuePreview()};
-for(const id of ['scale','scanDpi','stripMm','stripPx'])E(id).oninput=updateResults;
-E('scaleMode').onchange=()=>{stripPick=null;updateResults();};
+function updateScaleSettings(){
+ if(Number(E('trendMm').value)>0&&state.img&&state.samples.length)queuePreview();
+ else updateResults();
+}
+for(const id of ['scale','scanDpi','stripMm','stripPx'])E(id).oninput=updateScaleSettings;
+E('trendMm').oninput=queuePreview;
+E('scaleMode').onchange=()=>{stripPick=null;updateScaleSettings();};
 E('pickStripWidth').onclick=()=>{
  if(!state.img)return;
  stripPick=[];
@@ -422,7 +428,7 @@ canvas.addEventListener('pointerdown',e=>{if(!state.img)return;let p=getPosition
  const width=Math.hypot((point.x-first.x)/processedScaleX,(point.y-first.y)/processedScaleY);
  if(width<2){E('scaleStatus').textContent='Pick the opposite membrane edge.';return;}
  E('stripPx').value=width.toFixed(2);
- stripPick=null;updateResults();return;
+ stripPick=null;updateScaleSettings();return;
 }if(!state.drawMode&&state.zoom>1&&e.pointerType==='mouse'){state.pan={x:e.clientX,y:e.clientY,left:E('imageViewport').scrollLeft,top:E('imageViewport').scrollTop,moved:false};canvas.setPointerCapture(e.pointerId);canvas.classList.add('panning');return;}if(!state.drawMode){let hits=state.samples.filter(s=>p.x>=s.roi.x&&p.x<=s.roi.x+s.roi.w&&p.y>=s.roi.y&&p.y<=s.roi.y+s.roi.h);if(hits.length){state.chosen=hits.at(-1).id;refreshSamples();render()}return}state.down={start:p,current:p};canvas.setPointerCapture(e.pointerId);render()});
 canvas.addEventListener('pointermove',e=>{if(state.pan){const dx=e.clientX-state.pan.x,dy=e.clientY-state.pan.y;if(Math.abs(dx)+Math.abs(dy)>3)state.pan.moved=true;E('imageViewport').scrollLeft=state.pan.left-dx;E('imageViewport').scrollTop=state.pan.top-dy;return;}if(!state.down)return;state.down.current=getPosition(e);render()});
 canvas.addEventListener('pointerup',e=>{if(state.pan){const moved=state.pan.moved;state.pan=null;canvas.classList.remove('panning');if(!moved){const p=getPosition(e),hit=state.samples.filter(s=>p.x>=s.roi.x&&p.x<=s.roi.x+s.roi.w&&p.y>=s.roi.y&&p.y<=s.roi.y+s.roi.h).at(-1);if(hit){state.chosen=hit.id;refreshSamples();render()}}return;}if(!state.down)return;state.down.current=getPosition(e);let a=state.down.start,b=state.down.current,roi={x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};state.down=null;if(roi.w<30||roi.h<50){setStatus('ROI too small; please draw a larger rectangle.',true);render();return}let centers=detectedPairs(roi);if(state.drawMode==='add'){let s=newSample(roi,centers);state.samples.push(s);state.chosen=s.id}else{let s=state.samples.find(s=>s.id===state.chosen);if(s){s.roi=roi;s.centers=centers}}state.drawMode=null;canvas.classList.remove('draw-enabled');state.measurements=[];refreshSamples();updateResults();render();setStatus('ROI updated. Click Analyze all lines.')});
@@ -614,7 +620,7 @@ let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y
  // Smooth only valid regions to suppress single-pixel JPEG noise; retain true gaps.
  // Keep measured boundary positions unsmoothed so true edge roughness is retained.
  let widths=L.map((l,i)=>valid[i]?R[i]-l:NaN),ws=widths.filter(Number.isFinite),wMean=mean(ws),wSD=sd(ws),wCV=100*wSD/wMean;
- let wWin=Math.min(n|1,+E('trend').value|1);if(wWin%2===0)wWin++;let lt=moving(fillInvalid(L),wWin),rt=moving(fillInvalid(R),wWin);
+ let wWin=roughnessRows(n);let lt=moving(fillInvalid(L),wWin),rt=moving(fillInvalid(R),wWin);
  let DL=L.map((v,i)=>valid[i]?v-lt[i]:NaN),DR=R.map((v,i)=>valid[i]?v-rt[i]:NaN),leftRq=rms(DL.filter(Number.isFinite)),rightRq=rms(DR.filter(Number.isFinite)),edgeRq=Math.sqrt((leftRq**2+rightRq**2)/2),edgeRa=mean([...DL,...DR].filter(Number.isFinite).map(Math.abs));
  const ideal=parallelReferences(L,R,valid);
  const straightL=straightFit(L,valid),straightR=straightFit(R,valid);
@@ -627,7 +633,7 @@ let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y
  let wTrend=moving(fillInvalid(widths),wWin),anom=widths.map((v,i)=>valid[i]&&Math.abs(v-wTrend[i])>Math.max(2,Math.abs(wTrend[i])*(+E('defectPct').value/100)));
  let defects=0,segmentLen=0;for(let j=0;j<=n;j++){if(j<n&&anom[j]){segmentLen++}else{if(segmentLen>=3)defects++;segmentLen=0}}
  let frac=n/roi.h,mm=s.lengthmm>0?s.lengthmm*frac:null;
- return{recovered,recoveredPct:100*recovered.filter(Boolean).length/n,initialGuideCenter:x0+guideCenter,uncertain,uncertainPct:100*uncertain.filter(Boolean).length/n,ideal,boundaryMethod:method,boundaryLevel:threshold*100,frame,tiltAngle:frame.angle,tiltStatus:frame.status,sampleId:s.id,sample:s.label,volume:vol,side:vol===1?'Left':'Right',center,y0,y1,expectedLength:n,physicalLengthMM:mm,L,R,Y,valid,widths,DL,DR,
+ return{roughnessRows:wWin,recovered,recoveredPct:100*recovered.filter(Boolean).length/n,initialGuideCenter:x0+guideCenter,uncertain,uncertainPct:100*uncertain.filter(Boolean).length/n,ideal,boundaryMethod:method,boundaryLevel:threshold*100,frame,tiltAngle:frame.angle,tiltStatus:frame.status,sampleId:s.id,sample:s.label,volume:vol,side:vol===1?'Left':'Right',center,y0,y1,expectedLength:n,physicalLengthMM:mm,L,R,Y,valid,widths,DL,DR,
   straightness,centerBend:straightCenter.rms,parallelAngle,SL:straightL.residual,SR:straightR.residual,relativeStraightness:100*straightness/wMean,meanWidth:wMean,widthSD:wSD,widthCV:wCV,edgeRq,edgeRa,leftRq,rightRq,relRq:100*edgeRq/wMean,coverage:detected/n,gapPct:100*gapCount/n,longestGapPct:100*longestGap/n,numberOfGaps:gaps,defects,defectsPer100px:100*defects/n,defectsPer10mm:mm?10*defects/mm:NaN,detected};
 }
 function analyze(){if(!state.img||!state.samples.length){setStatus('First load an image and detect (or draw) samples.',true);return}let results=[],errors=[];for(let s of state.samples)for(let vol of [1,2]){try{results.push(analyzeStripe(s,vol))}catch(err){errors.push(err.message)}}state.measurements=results;refreshSamples();updateResults();render();setStatus(`${state.samples.length} samples · ${results.length} lines measured.`+(errors.length?` ${errors.length} detection error(s): ${errors.join(' | ')}`:''),!!errors.length)}
@@ -640,12 +646,25 @@ function calibration(){
  const length=mode==='manual'?width:originalScale/processedScaleY;
  return Number.isFinite(width)&&width>0&&Number.isFinite(length)&&length>0?{width,length}:null;
 }
+function roughnessRows(n){
+ const length=calibration()?.length,mm=Number(E('trendMm').value);
+ const requested=length&&Number.isFinite(mm)&&mm>0?1000*mm/length:Number(E('trend').value);
+ const odd=Math.max(1,2*Math.floor(requested/2)+1);
+ return Math.min(n%2?n:n-1,odd);
+}
 function displayUnit(){
  const scale=calibration()?.width;
  return scale?{scale,unit:'µm'}:{scale:1,unit:'px'};
 }
 function updateCalibration(){
  const mode=E('scaleMode').value,scale=calibration();
+ const physicalWindow=!!scale&&Number(E('trendMm').value)>0;
+ E('trendMm').disabled=!scale;
+ E('trend').disabled=physicalWindow;
+ E('trendMmNote').textContent=scale
+  ?physicalWindow?`About ${roughnessRows(rawCanvas.height)} px before section limits`:'Leave blank to use the pixel window.'
+  :'Calibrate the image to use mm.';
+
  E('manualScale').hidden=mode!=='manual';
  E('dpiScale').hidden=mode!=='dpi';
  E('stripSize').hidden=E('stripSpan').hidden=mode!=='strip';
@@ -907,7 +926,7 @@ function defectAudit(m){
   worstWindowRmsPct:worst?.value??null,worstWindow:windowLocation(m,worst)
  }])),
  rawPeaks:Object.fromEntries(Object.entries(q.peaks).map(([k,p])=>[k,{valuePct:p.index===null?null:p.value,location:defectLocation(m,p)}])),rawContractionPct:q.contraction,rawExpansionPct:q.expansion,
- coveragePct:100*m.coverage,boundarySignal:m.boundaryMethod,boundaryLevelPct:m.boundaryLevel,roughnessWindowPx:Number(E('trend').value),imageWidthPx:rawCanvas.width,imageHeightPx:rawCanvas.height,
+ coveragePct:100*m.coverage,boundarySignal:m.boundaryMethod,boundaryLevelPct:m.boundaryLevel,roughnessWindowPx:m.roughnessRows??Number(E('trend').value),roughnessWindowRequestedMm:calibration()&&Number(E('trendMm').value)>0?Number(E('trendMm').value):null,imageWidthPx:rawCanvas.width,imageHeightPx:rawCanvas.height,
  analysisStartPct:Number(E('startPct').value),analysisEndPct:Number(E('endPct').value),relativeSection:E('unequal').checked,tiltCorrectionEnabled:E('autoTilt').checked,tiltStatus:m.tiltStatus,imageScaleUmPerPx:calibration()?.width??null,calibrationMode:E('scaleMode').value,scanDpi:E('scaleMode').value==='dpi'?Number(E('scanDpi').value)||null:null,stripCalibration:E('scaleMode').value==='strip'?{axis:'width',mm:Number(E('stripMm').value)||null,originalPx:Number(E('stripPx').value)||null}:null,
  rule:'window=max(1,ceil(nominalWindowPct*analyzedRows/100)); full valid windows only; per metric maximum RMS; width residual to stripe median; edge perpendicular residuals to blue guides; roughness residuals to moving trend; edge and roughness pool left/right squares equally; divide by median width ×100; no hard minimum defect length, composite score or pass/fail limits'
  };
@@ -919,12 +938,31 @@ function exportDefectResults(){
  downloadBlob(new Blob([csv(rows)],{type:'text/csv;charset=utf-8'}),'phenol_red_window_rms_experimental.csv');
 }
 
-function readoutRows(){let u=displayUnit(),rows=[];for(let m of state.measurements){let s=state.samples.find(s=>s.id===m.sampleId);rows.push([state.imgName,s?.label||m.sample,m.side,m.volume,s?.roi.h||'',m.expectedLength,fmt(s?.lengthmm||NaN,3),fmt(m.physicalLengthMM||NaN,3),fmt(m.meanWidth*u.scale,3),u.unit,fmt(m.widthSD*u.scale,3),fmt(m.widthCV,3),fmt(m.edgeRa*u.scale,3),fmt(m.edgeRq*u.scale,3),fmt(m.leftRq*u.scale,3),fmt(m.rightRq*u.scale,3),fmt(m.relRq,3),fmt(m.gapPct,3),fmt(m.longestGapPct,3),m.numberOfGaps,m.defects,fmt(m.defectsPer100px,3),fmt(m.defectsPer10mm,3),fmt(m.coverage*100,2),E('unequal').checked?'different':'full ROI',E('threshold').value,E('trend').value,E('defectPct').value,fmt(m.straightness*u.scale,3),fmt(m.relativeStraightness,3),fmt(m.centerBend*u.scale,3),fmt(m.parallelAngle,4),'v7.4-body-and-blue-center-constrained',fmt(m.tiltAngle,3),m.tiltStatus,m.boundaryMethod,fmt(m.ideal.width*u.scale,3),fmt(m.ideal.rms*u.scale,3),fmt(m.ideal.p95*u.scale,3),fmt(m.uncertainPct,3)])}return rows}
-function lineReference(m,sum,u){
- const edgeSuffix=sum?' · L + R':'';
- const rq=sum?m.leftRq+m.rightRq:m.edgeRq;
+function readoutRows(){let u=displayUnit(),rows=[];for(let m of state.measurements){let s=state.samples.find(s=>s.id===m.sampleId);rows.push([state.imgName,s?.label||m.sample,m.side,m.volume,s?.roi.h||'',m.expectedLength,fmt(s?.lengthmm||NaN,3),fmt(m.physicalLengthMM||NaN,3),fmt(m.meanWidth*u.scale,3),u.unit,fmt(m.widthSD*u.scale,3),fmt(m.widthCV,3),fmt(m.edgeRa*u.scale,3),fmt(m.edgeRq*u.scale,3),fmt(m.leftRq*u.scale,3),fmt(m.rightRq*u.scale,3),fmt(m.relRq,3),fmt(m.gapPct,3),fmt(m.longestGapPct,3),m.numberOfGaps,m.defects,fmt(m.defectsPer100px,3),fmt(m.defectsPer10mm,3),fmt(m.coverage*100,2),E('unequal').checked?'different':'full ROI',E('threshold').value,m.roughnessRows??E('trend').value,E('defectPct').value,fmt(m.straightness*u.scale,3),fmt(m.relativeStraightness,3),fmt(m.centerBend*u.scale,3),fmt(m.parallelAngle,4),'v7.4-body-and-blue-center-constrained',fmt(m.tiltAngle,3),m.tiltStatus,m.boundaryMethod,fmt(m.ideal.width*u.scale,3),fmt(m.ideal.rms*u.scale,3),fmt(m.ideal.p95*u.scale,3),fmt(m.uncertainPct,3)])}return rows}
+function lineReference(m,sum){
+ const q=m.local, contour=m.contourEstimate;
+ const position=i=>fmt(100*i/Math.max(1,m.Y.length-1),1)+'%';
+ const range=w=>w?position(w.start)+'–'+position(w.endExclusive-1):'—';
+ const locations=sum?[
+  ['Width RMS',q.worst.width],
+  ['Edge deformation · left',q.edgeSides.left.worst],
+  ['Edge deformation · right',q.edgeSides.right.worst],
+  ['Local unevenness · left',q.sides.left.worst],
+  ['Local unevenness · right',q.sides.right.worst]
+ ]:Object.entries(defectLabels).map(([key,label])=>[label,q.worst[key]]);
+ const row=(label,value)=>`<div class="kv"><span>${label}</span><span>${value}</span></div>`;
+ const length=m.physicalLengthMM>0?fmt(m.physicalLengthMM,2)+' mm':m.expectedLength+' px';
+ const scale=calibration();
+ const window=m.roughnessRows??Number(E('trend').value);
  return `<section class="sample-reference-line"><h4>${m.volume} µL · ${m.volume===1?'Left':'Right'}</h4>
- ${defectCard(m)}<div class="metric-row"><div class="metric"><label>Local edge Rq${edgeSuffix}</label><strong>${fmt(rq*u.scale,2)}</strong><small>${u.unit}</small></div><div class="metric"><label>Guide RMS${edgeSuffix}</label><strong>${fmt((sum?m.ideal.rmsSum:m.ideal.rms)*u.scale,2)}</strong><small>${u.unit}</small></div><div class="metric"><label>Guide P95${edgeSuffix}</label><strong>${fmt((sum?m.ideal.p95Sum:m.ideal.p95)*u.scale,2)}</strong><small>${u.unit}</small></div></div><div class="kv"><span>Mean width</span><span>${fmt(m.meanWidth*u.scale,2)} ${u.unit}</span></div><div class="kv"><span>Coverage</span><span>${fmt(m.coverage*100,1)}%</span></div><div class="kv"><span>Undetected</span><span>${fmt(m.gapPct,2)}%</span></div><div class="kv"><span>Re-detected rows</span><span>${fmt(m.recoveredPct,2)}%</span></div><div class="kv"><span>Uncertain edges</span><span>${fmt(m.uncertainPct,2)}%</span></div><div class="kv"><span>Tilt correction</span><span>${m.tiltStatus==='corrected'?fmt(m.tiltAngle,2)+'°':m.tiltStatus}</span></div><div class="kv"><span>Boundary</span><span>${m.boundaryMethod==='dark'?'Dark contrast':'Legacy'} · ${fmt(m.boundaryLevel,0)}%</span></div></section>`;
+ ${row('Analyzed length',length)}
+ ${row('Roughness window',scale?fmt(window*scale.length/1000,2)+' mm · '+window+' px':window+' px')}
+ ${row('Detection coverage',fmt(m.coverage*100,1)+'%')}
+ ${m.gapPct>0?row('Undetected',fmt(m.gapPct,1)+'%'):''}
+ ${m.uncertainPct>0?row('Uncertain edges',fmt(m.uncertainPct,1)+'%'):''}
+ ${contour?.referenceMm>0?row('Contour paths · L / R',fmt(contour.leftMm,2)+' / '+fmt(contour.rightMm,2)+' mm')+row('Contour reference',fmt(contour.referenceMm,2)+' mm'):''}
+ <div class="defect-head">Worst ${q.windowPct}% window locations</div>
+ ${locations.map(([label,w])=>row(label,range(w))).join('')}</section>`;
 }
 function sampleResultCard(sample,lines,sum,u){
  const volumes=[1,2];
@@ -940,7 +978,7 @@ function sampleResultCard(sample,lines,sum,u){
  <div class="sample-pair">
   ${pair.map((m,i)=>`<div class="pair-heading">${volumes[i]} µL · ${i?'Right':'Left'}
    ${!m?'<span class="sub coverage-warning">Not measured</span>':m.coverage<.85?'<span class="sub coverage-warning">Check contour</span>':''}</div>`).join('')}
-  ${pair.map(m=>metric('Mean width',m?.meanWidth,' px')).join('')}
+  ${pair.map(m=>metric('Mean width',m?m.meanWidth*(u.unit==='µm'?u.scale/1000:1):null,u.unit==='µm'?' mm':' px','',u.unit==='µm'?2:1)).join('')}
   ${pair.map(m=>metric('Width CV',m?.widthCV,'%')).join('')}
   ${pair.map(m=>metric(m?.contourEstimate?.coveragePct<100?'Contour length (partial est.)':'Contour length (est.)',
    m?.contourEstimate?.meanPct,'%','',2)).join('')}
@@ -951,9 +989,8 @@ function sampleResultCard(sample,lines,sum,u){
   ${pair.map((m,i)=>metric(sum?'Unevenness peak · L + R':'Unevenness peak',unevenness(m),'%',i?'unevenness':'')).join('')}
  </div>
  <details class="result-details"><summary>Reference details</summary>
-  ${sample?.roi?`<div class="kv"><span>Sample area</span><span>${sample.roi.w} × ${sample.roi.h} px</span></div>`:''}
-  <p class="small">Contour length estimate uses the mean of both traced edges relative to their measured axial span. Gaps are excluded. The selected analysis section and V8 edge tracing affect the result.</p>
-  ${pair.filter(Boolean).map(m=>lineReference(m,sum,u)).join('')}
+  <p class="small">Analysis range: ${E('unequal').checked?E('startPct').value+'–'+E('endPct').value+'% of sample box':'Full sample box'}. Window locations are relative to this range.</p>
+  ${pair.filter(Boolean).map(m=>lineReference(m,sum)).join('')}
  </details></article>`;
 }
 function updateResults(){

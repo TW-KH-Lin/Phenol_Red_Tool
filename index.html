@@ -32,7 +32,8 @@ canvas.adjusting-box{touch-action:none}
 <div class="image-preview"><div class="image-toolbar"><select id="sampleSelect" aria-label="Selected sample"><option>No samples</option></select><button type="button" id="adjustImageBox" aria-pressed="false" disabled>Adjust box</button><button type="button" id="removeImageBox" disabled>Remove box</button><button id="zoomSample" title="Zoom to the selected sample">Zoom selected sample</button><div class="zoom-tools" role="group" aria-label="Zoom"><button id="zoomOut" aria-label="Zoom out">−</button><label for="imageZoom"><output id="zoomText">1×</output></label><input id="imageZoom" type="range" min="1" max="8" step="0.25" value="1" aria-label="Image zoom"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomFit">Fit</button></div></div>
 <div class="image-toolbar sample-actions" role="group" aria-label="Sample tools">
 <button type="button" id="addROI" disabled>Add box</button><button type="button" id="editROI" disabled>Redraw</button><button type="button" id="cancelDraw" hidden>Cancel drawing</button>
-<div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div><label class="checkrow"><input id="fineEdges" type="checkbox" checked>Trace fine burrs</label></div>
+<div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div><label class="checkrow"><input id="fineEdges" type="checkbox" checked>Trace fine detection</label>
+<div class="setting"><label for="fineSensitivity">Fine sensitivity <output id="fineSensitivityText" for="fineSensitivity">50</output></label><input id="fineSensitivity" type="range" min="0" max="100" step="5" value="50"></div></div>
 <div class="imagebox" id="imageViewport" tabindex="0" aria-label="Image preview; scroll or drag to pan"><canvas id="imageCanvas" aria-label="Sample image with detected edges and reference lines"></canvas><div class="empty-image"><span>＋</span>Upload a photo to begin</div></div>
 <div class="image-bottom"><label class="checkrow"><input type="checkbox" id="autoContrast" title="Enhance the preview; measurements use the original image">Auto contrast</label><label class="checkrow edge"><input type="checkbox" id="showEdges" checked>Edges</label><label class="checkrow guide"><input type="checkbox" id="showReferences" checked>Guides</label><label class="checkrow guide"><input type="checkbox" id="showCenter" title="Yellow dashed line: center estimated from the original red body" checked>Center</label><label class="checkrow" style="color:#c77117"><input type="checkbox" id="showDefects" checked>Defect marks</label><span id="imageInfo">No image</span></div></div>
 <aside class="nearby-settings"><div class="control-head"><h2>Adjust</h2><span class="small">Live preview</span></div><div class="boundary-control"><label for="threshold">Boundary <span class="value" id="thresholdText">60%</span></label><input id="threshold" type="range" min="15" max="90" step="1" value="60"></div>
@@ -528,7 +529,14 @@ function queuePreview(){
  previewTimer=setTimeout(()=>{previewTimer=null;analyze()},180);
 }
 E('autoTilt').onchange=queuePreview;
-E('fineEdges').onchange=queuePreview;
+E('fineEdges').onchange=()=>{
+ E('fineSensitivity').disabled=!E('fineEdges').checked;
+ queuePreview();
+};
+E('fineSensitivity').oninput=()=>{
+ E('fineSensitivityText').textContent=E('fineSensitivity').value;
+ if(E('fineEdges').checked)queuePreview();
+};
 E('unequal').onchange=()=>{setLengthUI();queuePreview()};
 for(let id of ['startPct','endPct','threshold','trend','defectPct'])E(id).oninput=()=>{E('thresholdText').textContent=E('threshold').value+'%';E('trendText').textContent=E('trend').value+' px';queuePreview()};
 function updateScaleSettings(){
@@ -697,23 +705,24 @@ function followFineBurr(read,edge,direction,limit,level){
  return edge;
 }
 // Locate a sharp outward color drop within the connected dye support.
-function snapBurrEdge(read,edge,direction,limit,level){
+function snapBurrEdge(read,edge,direction,limit,level,sensitivity=0){
  const support=followFineBurr(read,edge,direction,limit,level);
  const origin=direction<0?Math.ceil(edge):Math.floor(edge);
- let best=edge,bestDrop=0;
+ let best=edge,bestScore=0;
  for(let step=0;step<=limit;step++){
   const inner=origin+direction*step,outer=inner+direction;
   const position=(inner+outer)/2;
   const distance=direction*(position-edge);
   if(distance<0||distance>limit||direction*(position-support)>.5)continue;
   const high=read(inner),low=read(outer),drop=high-low;
-  if(high>=level&&drop>=4&&drop>bestDrop){
+  const score=drop*(1+.6*sensitivity*distance/limit);
+  if(high>=level&&drop>=4&&score>bestScore){
    const before=read(inner-direction)-high,after=low-read(outer+direction);
    const curvature=2*drop-before-after;
    const offset=Number.isFinite(curvature)&&curvature>0
      ?Math.max(-.5,Math.min(.5,(after-before)/(2*curvature))):0;
    best=edge+direction*Math.max(0,Math.min(limit,distance+offset));
-   bestDrop=drop;
+   bestScore=score;
   }
  }
  return best;
@@ -738,6 +747,8 @@ function analyzeStripe(s,vol){
  let L=Array(n).fill(NaN),R=Array(n).fill(NaN),Y=Array.from({length:n},(_,j)=>y0+j),valid=Array(n).fill(false);
  let threshold=+E('threshold').value/100;
  const fineEdges=E('fineEdges').checked;
+ const fineSensitivity=Number(E('fineSensitivity').value);
+ const fineAdjustment=(fineSensitivity-50)/50;
  // A longitudinal reference identifies the two OUTER core boundaries, even
  // when a pale centre splits the red body into two disconnected bands.
  const reference=gaussian(project(x0,x1+1,y0,y1,2),1);
@@ -804,18 +815,18 @@ let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y
    if(!best||cost<best.cost)best={l:l.x,r:r.x,cost};
   }
   if(best&&raw&&fineEdges){
-   const limit=Math.max(1,Math.min(4,Math.round(refWidth*.16)));
+   const limit=Math.max(1,Math.min(4+Math.round(2*fineAdjustment),Math.round(refWidth*(.16+.08*fineAdjustment))));
    const read=i=>pixelValid[i]?seq[i]:NaN;
    const refine=(edge,direction,peak,level)=>{
-    const outerLevel=Math.max(bg+7,bg+.62*(level-bg));
-    const candidate=snapBurrEdge(read,edge,direction,limit,outerLevel);
+    const outerLevel=Math.max(bg+7-2*fineAdjustment,bg+(.62-.16*fineAdjustment)*(level-bg));
+    const candidate=snapBurrEdge(read,edge,direction,limit,outerLevel,fineAdjustment);
     if(candidate===edge)return edge;
     const x=x0+candidate-direction*.75;
     const neighbor=Math.max(...[y-1,y+1].map(row=>{
      const value=sampleScore(x,row);
      return Number.isFinite(value)?value:-Infinity;
     }));
-    return neighbor>=bg+.24*(peak-bg)?candidate:edge;
+    return neighbor>=bg+(.24-.06*fineAdjustment)*(peak-bg)?candidate:edge;
    };
    best.l=refine(best.l,-1,leftPeak,leftLevel);
    best.r=refine(best.r,1,rightPeak,rightLevel);
@@ -859,7 +870,7 @@ let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y
  let wTrend=moving(fillInvalid(widths),wWin),anom=widths.map((v,i)=>valid[i]&&Math.abs(v-wTrend[i])>Math.max(2,Math.abs(wTrend[i])*(+E('defectPct').value/100)));
  let defects=0,segmentLen=0;for(let j=0;j<=n;j++){if(j<n&&anom[j]){segmentLen++}else{if(segmentLen>=3)defects++;segmentLen=0}}
  let frac=n/roi.h,mm=s.lengthmm>0?s.lengthmm*frac:null;
- return{fineEdges,roughnessRows:wWin,recovered,recoveredPct:100*recovered.filter(Boolean).length/n,initialGuideCenter:x0+guideCenter,uncertain,uncertainPct:100*uncertain.filter(Boolean).length/n,ideal,boundaryMethod:method,boundaryLevel:threshold*100,frame,tiltAngle:frame.angle,tiltStatus:frame.status,sampleId:s.id,sample:s.label,volume:vol,side:vol===1?'Left':'Right',center,y0,y1,expectedLength:n,physicalLengthMM:mm,L,R,Y,valid,widths,DL,DR,
+ return{fineEdges,fineSensitivity,roughnessRows:wWin,recovered,recoveredPct:100*recovered.filter(Boolean).length/n,initialGuideCenter:x0+guideCenter,uncertain,uncertainPct:100*uncertain.filter(Boolean).length/n,ideal,boundaryMethod:method,boundaryLevel:threshold*100,frame,tiltAngle:frame.angle,tiltStatus:frame.status,sampleId:s.id,sample:s.label,volume:vol,side:vol===1?'Left':'Right',center,y0,y1,expectedLength:n,physicalLengthMM:mm,L,R,Y,valid,widths,DL,DR,
   straightness,centerBend:straightCenter.rms,parallelAngle,SL:straightL.residual,SR:straightR.residual,relativeStraightness:100*straightness/wMean,meanWidth:wMean,widthSD:wSD,widthCV:wCV,edgeRq,edgeRa,leftRq,rightRq,relRq:100*edgeRq/wMean,coverage:detected/n,gapPct:100*gapCount/n,longestGapPct:100*longestGap/n,numberOfGaps:gaps,defects,defectsPer100px:100*defects/n,defectsPer10mm:mm?10*defects/mm:NaN,detected};
 }
 function analyze(){if(!state.img||!state.samples.length){setStatus('First load an image and detect (or draw) samples.',true);return}let results=[],errors=[];for(let s of state.samples)for(let vol of [1,2]){try{results.push(analyzeStripe(s,vol))}catch(err){errors.push(err.message)}}state.measurements=results;refreshSamples();updateResults();render();setStatus(`${state.samples.length} samples · ${results.length} lines measured.`+(errors.length?` ${errors.length} detection error(s): ${errors.join(' | ')}`:''),!!errors.length)}
@@ -1226,6 +1237,7 @@ function legacyContourEstimate(m,sample){
 function defectAudit(m){
  const q=m.local;return {
  fineBurrTracing:m.fineEdges??false,
+ fineDetectionSensitivity:m.fineEdges?m.fineSensitivity:null,
  fineBurrMethod:m.fineEdges?'connected-color-gradient':null,
  edgeDisplay:useEdgeSum()?'sum':'legacy',
  appVersion:'v8.5-experimental',metricVersion:q.version,detectorVersion:'v7.4-body-and-blue-center-constrained',status:q.status,validity:q.validity,contourVerified:false,

@@ -23,12 +23,16 @@
 [hidden]{display:none!important}
 #adjustImageBox[aria-pressed="true"]{background:var(--blue);color:white}
 canvas.adjusting-box{touch-action:none}
+.sample-actions{flex-wrap:wrap}.sample-actions .setting{display:flex;align-items:center;gap:6px}.sample-actions select{width:auto}
 </style></head><body>
 <header><div class="brand"><div class="brandmark" aria-hidden="true"></div><h1>Phenol Red <span class="version">v8.5 Experimental</span></h1></div><span id="runtimeNotice" class="runtime" role="status">Starting…</span></header>
 <main><div style="text-align:right;margin:0 0 8px"><a href="guide.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5">Help · 圖解教學 ↗</a> <a href="guide-en.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5;margin-left:10px">English ↗</a> <button type="button" id="updateApp" style="margin-left:8px">Update app</button></div><div class="experiment-banner">Experimental · Local defects <a href="phenol-red-v7.5.html">Open preserved v7.5</a></div>
 <div class="uploadbar" id="dropZone"><label class="upload-button">Upload photo<input id="upload" type="file" accept="image/*" aria-label="Upload photo"></label><label class="upload-button secondary">Camera<input id="cameraUpload" type="file" accept="image/*" capture="environment" aria-label="Take photo"></label><button id="loadSyntheticDemo" type="button">Demo</button><span class="file-name" id="fileLabel">No photo selected</span><div id="uploadStatus" class="upload-status" role="status" aria-live="polite"></div></div>
 <section class="panel workspace">
 <div class="image-preview"><div class="image-toolbar"><select id="sampleSelect" aria-label="Selected sample"><option>No samples</option></select><button type="button" id="adjustImageBox" aria-pressed="false" disabled>Adjust box</button><button type="button" id="removeImageBox" disabled>Remove box</button><button id="zoomSample" title="Zoom to the selected sample">Zoom selected sample</button><div class="zoom-tools" role="group" aria-label="Zoom"><button id="zoomOut" aria-label="Zoom out">−</button><label for="imageZoom"><output id="zoomText">1×</output></label><input id="imageZoom" type="range" min="1" max="8" step="0.25" value="1" aria-label="Image zoom"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomFit">Fit</button></div></div>
+<div class="image-toolbar sample-actions" role="group" aria-label="Sample tools">
+<button type="button" id="addROI" disabled>Add box</button><button type="button" id="editROI" disabled>Redraw</button><button type="button" id="cancelDraw" hidden>Cancel drawing</button>
+<div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div><label class="checkrow"><input id="fineEdges" type="checkbox" checked>Trace fine burrs</label></div>
 <div class="imagebox" id="imageViewport" tabindex="0" aria-label="Image preview; scroll or drag to pan"><canvas id="imageCanvas" aria-label="Sample image with detected edges and reference lines"></canvas><div class="empty-image"><span>＋</span>Upload a photo to begin</div></div>
 <div class="image-bottom"><label class="checkrow"><input type="checkbox" id="autoContrast" title="Enhance the preview; measurements use the original image">Auto contrast</label><label class="checkrow edge"><input type="checkbox" id="showEdges" checked>Edges</label><label class="checkrow guide"><input type="checkbox" id="showReferences" checked>Guides</label><label class="checkrow guide"><input type="checkbox" id="showCenter" title="Yellow dashed line: center estimated from the original red body" checked>Center</label><label class="checkrow" style="color:#c77117"><input type="checkbox" id="showDefects" checked>Defect marks</label><span id="imageInfo">No image</span></div></div>
 <aside class="nearby-settings"><div class="control-head"><h2>Adjust</h2><span class="small">Live preview</span></div><div class="boundary-control"><label for="threshold">Boundary <span class="value" id="thresholdText">60%</span></label><input id="threshold" type="range" min="15" max="90" step="1" value="60"></div>
@@ -36,9 +40,6 @@ canvas.adjusting-box{touch-action:none}
 <div class="setting"><label for="edgeDisplay">Edge metrics</label><select id="edgeDisplay"><option value="sum" selected>Left + right sum</option><option value="legacy">Legacy pooled</option></select></div>
 <div class="actions"><button class="primary" id="autodetect">Detect</button><button id="analyze">Analyze</button></div><p id="status" class="status" role="status" aria-live="polite"></p>
 <details class="advanced"><summary>Advanced</summary><div class="settings">
-<div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div>
-<label class="checkrow full"><input id="fineEdges" type="checkbox" checked>Trace fine burrs</label>
-<div class="setting"><label for="boundaryMethod">Boundary signal</label><select id="boundaryMethod"><option value="dark" selected>Dark-red contrast</option><option value="legacy">Legacy redness</option></select></div>
 <div class="setting"><label for="trend">Roughness window <span class="value" id="trendText">121 px</span></label><input id="trend" type="range" min="21" max="201" step="10" value="121"></div>
 <div class="setting"><label for="trendMm">Roughness window · mm</label><input id="trendMm" type="number" min="0" step="any" placeholder="Optional"><span class="small" id="trendMmNote"></span></div>
 <div class="setting full"><label for="scaleMode">Image calibration</label>
@@ -56,14 +57,7 @@ canvas.adjusting-box{touch-action:none}
 <label class="checkrow"><input id="autoTilt" type="checkbox" checked>Auto tilt correction</label>
 <div class="full"><label class="checkrow"><input id="unequal" type="checkbox" checked>Relative analysis section</label><p id="lengthDesc"></p><div id="lengthControls" class="two-fields"><div class="setting"><label for="startPct">Start · %</label><input id="startPct" type="number" value="15" min="0" max="95" step="1"></div><div class="setting"><label for="endPct">End · %</label><input id="endPct" type="number" value="85" min="5" max="100" step="1"></div></div></div>
 <p class="advanced-note full">Keep the same signal, level and image scale when comparing samples.</p></div></details>
-<details class="sample-tools"><summary>Edit samples</summary><div class="actions"><button id="addROI">Add box</button><button id="editROI">Redraw</button><button id="cancelDraw">Cancel</button></div><p class="editor-label">Draw around both lines.</p>
-<fieldset id="boxGeometry" disabled><legend>Selected box · processed px</legend>
-<div class="settings">
-<div class="setting"><label for="boxX">X</label><input id="boxX" type="number" min="0" step="1"></div>
-<div class="setting"><label for="boxY">Y</label><input id="boxY" type="number" min="0" step="1"></div>
-<div class="setting"><label for="boxW">Width</label><input id="boxW" type="number" min="30" step="1"></div>
-<div class="setting"><label for="boxH">Height</label><input id="boxH" type="number" min="50" step="1"></div>
-</div><button type="button" id="applyBox">Apply box</button></fieldset></details></aside></section>
+</aside></section>
 <details class="panel secondary-panel" id="samplesPanel"><summary>Samples <span id="stats" class="stats"></span></summary><div id="sampleList" class="samplelist"></div><div class="actions" style="margin-top:9px"><button id="deleteSelected" class="danger">Remove selected</button><button id="removeAll" class="danger">Remove all</button></div></details>
 <div class="section-head"><h2>Results</h2><details class="export-menu"><summary>Export</summary><div class="export-items"><button id="defectCsv">Defect CSV</button><button id="summaryCsv">Legacy results CSV</button><button id="profileCsv">Profiles CSV</button><button id="overlayPng">Overlay image</button></div></details></div>
 <details class="screening-reference"><summary>Screening reference</summary>
@@ -427,6 +421,7 @@ E('adjustImageBox').onclick=()=>{
  render();
 };
 function render(){
+ E('cancelDraw').hidden=!state.drawMode;
  E('defectTooltip').hidden=true;
  document.body.classList.toggle('has-image',!!state.img);
  if(!state.img)return;canvas.width=rawCanvas.width;canvas.height=rawCanvas.height;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(previewImage(),0,0);applyImageView();
@@ -497,23 +492,11 @@ function render(){
 
  if(state.down){let a=state.down.start,b=state.down.current;ctx.save();ctx.strokeStyle='#ec9d12';ctx.lineWidth=3;ctx.setLineDash([8,6]);ctx.strokeRect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(a.x-b.x),Math.abs(a.y-b.y));ctx.restore()}
 }
-const boxFields={x:'boxX',y:'boxY',w:'boxW',h:'boxH'};
 function refreshBoxControls(){
  const sample=state.samples.find(s=>s.id===state.chosen);
- E('boxGeometry').disabled=E('removeImageBox').disabled=E('adjustImageBox').disabled=!sample;
+ E('addROI').disabled=!state.img;
+ E('editROI').disabled=E('removeImageBox').disabled=E('adjustImageBox').disabled=!sample;
  if(!sample)setBoxAdjust(false);
- for(const [key,id] of Object.entries(boxFields))E(id).value=sample?.roi[key]??'';
-}
-function applySelectedBox(){
- const sample=state.samples.find(s=>s.id===state.chosen);
- if(!sample)return;
- const roi=Object.fromEntries(Object.entries(boxFields).map(([key,id])=>[key,Number.parseFloat(E(id).value)]));
- if(!Object.values(roi).every(Number.isInteger)||roi.x<0||roi.y<0||roi.w<30||roi.h<50||
-    roi.x+roi.w>rawCanvas.width||roi.y+roi.h>rawCanvas.height){
-  setStatus('Keep the box inside the image and at least 30 × 50 px.',true);
-  return;
- }
- commitBox(sample,roi);
 }
 function commitBox(sample,roi){
  sample.roi=roi;
@@ -522,7 +505,6 @@ function commitBox(sample,roi){
  refreshSamples();updateResults();render();
  setStatus('Box updated. Click Analyze to measure it.');
 }
-E('applyBox').onclick=applySelectedBox;
 E('removeImageBox').onclick=()=>{if(state.chosen!=null)removeSample(state.chosen);};
 function refreshSamples(){let html='';for(let s of state.samples){let r=s.roi;html+=`<div class="sample ${s.id===state.chosen?'active':''}" data-id="${s.id}"><div><input class="txt sampleName" type="text" value="${htmlEscape(s.label)}" data-id="${s.id}" aria-label="Sample name"><div class="meta">${r.w} × ${r.h} px</div></div><div><label for="mm-${s.id}">Length · mm</label><br><input id="mm-${s.id}" data-id="${s.id}" class="length sampleMM" type="number" min="0" step="any" placeholder="Optional" value="${s.lengthmm||''}"></div><div class="actions"><button data-id="${s.id}" class="pick">Select</button><button data-id="${s.id}" class="erase danger">Remove</button></div></div>`}
  refreshBoxControls();
@@ -546,7 +528,6 @@ function queuePreview(){
  previewTimer=setTimeout(()=>{previewTimer=null;analyze()},180);
 }
 E('autoTilt').onchange=queuePreview;
-E('boundaryMethod').onchange=queuePreview;
 E('fineEdges').onchange=queuePreview;
 E('unequal').onchange=()=>{setLengthUI();queuePreview()};
 for(let id of ['startPct','endPct','threshold','trend','defectPct'])E(id).oninput=()=>{E('thresholdText').textContent=E('threshold').value+'%';E('trendText').textContent=E('trend').value+' px';queuePreview()};
@@ -564,8 +545,8 @@ E('pickStripWidth').onclick=()=>{
 };
 E('autodetect').onclick=()=>{autoSamples();if(state.samples.length)analyze()};
 E('sampleDiscovery').onchange=()=>setStatus('Tap Detect to apply search mode.');
-E('addROI').onclick=()=>{setBoxAdjust(false);state.drawMode='add';canvas.classList.add('draw-enabled');setStatus('Drag a rectangle around BOTH red lines of one sample.')};
-E('editROI').onclick=()=>{setBoxAdjust(false);if(!state.chosen){setStatus('Select a sample before editing its box.',true);return}state.drawMode='edit';canvas.classList.add('draw-enabled');setStatus('Drag a replacement box around both lines of the selected sample.')};
+E('addROI').onclick=()=>{setBoxAdjust(false);if(!state.img)return;state.drawMode='add';E('cancelDraw').hidden=false;canvas.classList.add('draw-enabled');setStatus('Drag a rectangle around BOTH red lines of one sample.')};
+E('editROI').onclick=()=>{setBoxAdjust(false);if(!state.chosen){setStatus('Select a sample before editing its box.',true);return}state.drawMode='edit';E('cancelDraw').hidden=false;canvas.classList.add('draw-enabled');setStatus('Drag a replacement box around both lines of the selected sample.')};
 E('cancelDraw').onclick=()=>{state.drawMode=null;canvas.classList.remove('draw-enabled');state.down=null;render();setStatus('Drawing cancelled.')};
 E('deleteSelected').onclick=()=>{if(state.chosen)removeSample(state.chosen)};
 E('removeAll').onclick=()=>{state.samples=[];state.measurements=[];state.chosen=null;refreshSamples();updateResults();render()};
@@ -740,8 +721,8 @@ function snapBurrEdge(read,edge,direction,limit,level){
 function analyzeStripe(s,vol){
  let roi=safeRegion(s.roi);
  const frame=tiltFrame(roi,E('autoTilt').checked);
- const method=E('boundaryMethod').value;
- const signal=method==='dark'?darkPixelScore:score;
+ const method='dark';
+ const signal=darkPixelScore;
  const project=(x0,x1,y0,y1,step=3)=>frameProjection(frame,x0,x1,y0,y1,step,signal);
  const sampleScore=(x,y)=>frameScore(frame,x,y,signal);
  let centers=detectedPairs(roi,project)||(frame.status==='corrected'?null:s.centers);

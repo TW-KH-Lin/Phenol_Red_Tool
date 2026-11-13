@@ -39,7 +39,7 @@
 <div class="setting"><label for="trend">Roughness window <span class="value" id="trendText">121 px</span></label><input id="trend" type="range" min="21" max="201" step="10" value="121"></div>
 <div class="setting"><label for="trendMm">Roughness window · mm</label><input id="trendMm" type="number" min="0" step="any" placeholder="Optional"><span class="small" id="trendMmNote"></span></div>
 <div class="setting full"><label for="scaleMode">Image calibration</label>
-<select id="scaleMode"><option value="manual">Manual scale</option><option value="dpi">Scan resolution</option><option value="strip">Known strip width</option></select></div>
+<select id="scaleMode"><option value="manual">Manual scale</option><option value="dpi">Scan resolution</option><option value="strip" selected>Known strip width</option></select></div>
 <div class="setting" id="manualScale"><label for="scale">Scale · µm/processed px</label><input id="scale" type="number" min="0" step="any" placeholder="Optional"></div>
 <div class="setting" id="dpiScale" hidden><label for="scanDpi">Original scan DPI</label><input id="scanDpi" type="number" min="1" step="any" placeholder="e.g. 300"></div>
 <div class="setting" id="stripSize" hidden><label for="stripMm">Membrane width · mm</label><input id="stripMm" value="25" type="number" min="0" step="any"></div>
@@ -48,10 +48,10 @@
 <button type="button" class="full" id="pickStripWidth" hidden>Measure width on photo</button>
 <p class="small full" id="scaleStatus" aria-live="polite"></p>
 <div class="setting full"><label for="contourMode">Contour length</label><select id="contourMode">
-<option value="legacy">Legacy comparison · 59.275 mm</option><option value="section" selected>Current analysis section</option></select></div>
+<option value="legacy" selected>Legacy comparison · 59.275 mm</option><option value="section">Current analysis section</option></select></div>
 <div class="setting"><label for="defectPct">Width defect · %</label><input id="defectPct" type="number" min="5" max="100" value="25"></div>
 <label class="checkrow"><input id="autoTilt" type="checkbox" checked>Auto tilt correction</label>
-<div class="full"><label class="checkrow"><input id="unequal" type="checkbox" checked>Relative analysis section</label><p id="lengthDesc"></p><div id="lengthControls" class="two-fields"><div class="setting"><label for="startPct">Start · %</label><input id="startPct" type="number" value="2" min="0" max="95" step="1"></div><div class="setting"><label for="endPct">End · %</label><input id="endPct" type="number" value="98" min="5" max="100" step="1"></div></div></div>
+<div class="full"><label class="checkrow"><input id="unequal" type="checkbox" checked>Relative analysis section</label><p id="lengthDesc"></p><div id="lengthControls" class="two-fields"><div class="setting"><label for="startPct">Start · %</label><input id="startPct" type="number" value="15" min="0" max="95" step="1"></div><div class="setting"><label for="endPct">End · %</label><input id="endPct" type="number" value="85" min="5" max="100" step="1"></div></div></div>
 <p class="advanced-note full">Keep the same signal, level and image scale when comparing samples.</p></div></details>
 <details class="sample-tools"><summary>Edit samples</summary><div class="actions"><button id="addROI">Add box</button><button id="editROI">Redraw</button><button id="cancelDraw">Cancel</button></div><p class="editor-label">Draw around both lines.</p></details></aside></section>
 <details class="panel secondary-panel" id="samplesPanel"><summary>Samples <span id="stats" class="stats"></span></summary><div id="sampleList" class="samplelist"></div><div class="actions" style="margin-top:9px"><button id="deleteSelected" class="danger">Remove selected</button><button id="removeAll" class="danger">Remove all</button></div></details>

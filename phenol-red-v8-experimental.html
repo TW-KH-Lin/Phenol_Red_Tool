@@ -35,6 +35,7 @@
 <div class="actions"><button class="primary" id="autodetect">Detect</button><button id="analyze">Analyze</button></div><p id="status" class="status" role="status" aria-live="polite"></p>
 <details class="advanced"><summary>Advanced</summary><div class="settings">
 <div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div>
+<label class="checkrow full"><input id="fineEdges" type="checkbox">Trace fine burrs</label>
 <div class="setting"><label for="boundaryMethod">Boundary signal</label><select id="boundaryMethod"><option value="dark" selected>Dark-red contrast</option><option value="legacy">Legacy redness</option></select></div>
 <div class="setting"><label for="trend">Roughness window <span class="value" id="trendText">121 px</span></label><input id="trend" type="range" min="21" max="201" step="10" value="121"></div>
 <div class="setting"><label for="trendMm">Roughness window · mm</label><input id="trendMm" type="number" min="0" step="any" placeholder="Optional"><span class="small" id="trendMmNote"></span></div>
@@ -401,6 +402,7 @@ function queuePreview(){
 }
 E('autoTilt').onchange=queuePreview;
 E('boundaryMethod').onchange=queuePreview;
+E('fineEdges').onchange=queuePreview;
 E('unequal').onchange=()=>{setLengthUI();queuePreview()};
 for(let id of ['startPct','endPct','threshold','trend','defectPct'])E(id).oninput=()=>{E('thresholdText').textContent=E('threshold').value+'%';E('trendText').textContent=E('trend').value+' px';queuePreview()};
 function updateScaleSettings(){
@@ -514,6 +516,24 @@ function straightFit(values,valid){
  const residual=values.map((x,y)=>valid[y]?(x-mx-slope*(y-my))/Math.sqrt(1+slope*slope):NaN);
  return {slope,residual,rms:rms(residual.filter(Number.isFinite))};
 }
+// Recover short attached protrusions near a supported core crossing.
+function followFineBurr(read,edge,direction,limit,level){
+ const origin=direction<0?Math.ceil(edge):Math.floor(edge);
+ if(!(read(origin)>=level))return edge;
+ let inner=origin;
+ for(let step=1;step<=limit+1;step++){
+  const outer=origin+direction*step;
+  const high=read(inner),low=read(outer);
+  if(!Number.isFinite(low))return edge;
+  if(low<level){
+   const crossing=inner+direction*(high-level)/(high-low);
+   const extension=direction*(crossing-edge);
+   return extension>=.25&&extension<=limit?crossing:edge;
+  }
+  inner=outer;
+ }
+ return edge;
+}
 function analyzeStripe(s,vol){
  let roi=safeRegion(s.roi);
  const frame=tiltFrame(roi,E('autoTilt').checked);
@@ -533,6 +553,7 @@ function analyzeStripe(s,vol){
  let n=y1-y0;if(n<30)throw Error(`${s.label}: selected length is too short`);
  let L=Array(n).fill(NaN),R=Array(n).fill(NaN),Y=Array.from({length:n},(_,j)=>y0+j),valid=Array(n).fill(false);
  let threshold=+E('threshold').value/100;
+ const fineEdges=E('fineEdges').checked;
  // A longitudinal reference identifies the two OUTER core boundaries, even
  // when a pale centre splits the red body into two disconnected bands.
  const reference=gaussian(project(x0,x1+1,y0,y1,2),1);
@@ -598,11 +619,25 @@ let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y
    const cost=distance+.35*tracking-.08*Math.log1p(Math.min(l.g,r.g));
    if(!best||cost<best.cost)best={l:l.x,r:r.x,cost};
   }
+  if(best&&raw&&fineEdges){
+   const limit=Math.max(1,Math.min(4,Math.round(refWidth*.16)));
+   const read=i=>pixelValid[i]?seq[i]:NaN;
+   const refine=(edge,direction,peak,level)=>{
+    const outerLevel=Math.max(bg+7,bg+.78*(level-bg));
+    const candidate=followFineBurr(read,edge,direction,limit,outerLevel);
+    // Require some dye support in a neighboring row to reject isolated specks.
+    const x=x0+candidate-direction*.5;
+    return Math.max(sampleScore(x,y-1)||-Infinity,sampleScore(x,y+1)||-Infinity)
+      >=bg+.22*(peak-bg)?candidate:edge;
+   };
+   best.l=refine(best.l,-1,leftPeak,leftLevel);
+   best.r=refine(best.r,1,rightPeak,rightLevel);
+  }
   return best;
  }
  for(let j=0;j<n;j++){
-  let best=detectRow(y0+j,false,previous);
-  if(!best){best=detectRow(y0+j,true,previous);recovered[j]=!!best;}
+  let best=detectRow(y0+j,fineEdges,previous);
+  if(!best){best=detectRow(y0+j,!fineEdges,previous);recovered[j]=!!best;}
   if(!best){uncertain[j]=true;previous=null;continue;}
   L[j]=x0+best.l;R[j]=x0+best.r;valid[j]=true;
   previous=[best.l,best.r];
@@ -637,7 +672,7 @@ let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y
  let wTrend=moving(fillInvalid(widths),wWin),anom=widths.map((v,i)=>valid[i]&&Math.abs(v-wTrend[i])>Math.max(2,Math.abs(wTrend[i])*(+E('defectPct').value/100)));
  let defects=0,segmentLen=0;for(let j=0;j<=n;j++){if(j<n&&anom[j]){segmentLen++}else{if(segmentLen>=3)defects++;segmentLen=0}}
  let frac=n/roi.h,mm=s.lengthmm>0?s.lengthmm*frac:null;
- return{roughnessRows:wWin,recovered,recoveredPct:100*recovered.filter(Boolean).length/n,initialGuideCenter:x0+guideCenter,uncertain,uncertainPct:100*uncertain.filter(Boolean).length/n,ideal,boundaryMethod:method,boundaryLevel:threshold*100,frame,tiltAngle:frame.angle,tiltStatus:frame.status,sampleId:s.id,sample:s.label,volume:vol,side:vol===1?'Left':'Right',center,y0,y1,expectedLength:n,physicalLengthMM:mm,L,R,Y,valid,widths,DL,DR,
+ return{fineEdges,roughnessRows:wWin,recovered,recoveredPct:100*recovered.filter(Boolean).length/n,initialGuideCenter:x0+guideCenter,uncertain,uncertainPct:100*uncertain.filter(Boolean).length/n,ideal,boundaryMethod:method,boundaryLevel:threshold*100,frame,tiltAngle:frame.angle,tiltStatus:frame.status,sampleId:s.id,sample:s.label,volume:vol,side:vol===1?'Left':'Right',center,y0,y1,expectedLength:n,physicalLengthMM:mm,L,R,Y,valid,widths,DL,DR,
   straightness,centerBend:straightCenter.rms,parallelAngle,SL:straightL.residual,SR:straightR.residual,relativeStraightness:100*straightness/wMean,meanWidth:wMean,widthSD:wSD,widthCV:wCV,edgeRq,edgeRa,leftRq,rightRq,relRq:100*edgeRq/wMean,coverage:detected/n,gapPct:100*gapCount/n,longestGapPct:100*longestGap/n,numberOfGaps:gaps,defects,defectsPer100px:100*defects/n,defectsPer10mm:mm?10*defects/mm:NaN,detected};
 }
 function analyze(){if(!state.img||!state.samples.length){setStatus('First load an image and detect (or draw) samples.',true);return}let results=[],errors=[];for(let s of state.samples)for(let vol of [1,2]){try{results.push(analyzeStripe(s,vol))}catch(err){errors.push(err.message)}}state.measurements=results;refreshSamples();updateResults();render();setStatus(`${state.samples.length} samples · ${results.length} lines measured.`+(errors.length?` ${errors.length} detection error(s): ${errors.join(' | ')}`:''),!!errors.length)}
@@ -1003,6 +1038,7 @@ function legacyContourEstimate(m,sample){
 }
 function defectAudit(m){
  const q=m.local;return {
+ fineBurrTracing:m.fineEdges??false,
  edgeDisplay:useEdgeSum()?'sum':'legacy',
  appVersion:'v8.5-experimental',metricVersion:q.version,detectorVersion:'v7.4-body-and-blue-center-constrained',status:q.status,validity:q.validity,contourVerified:false,
  nominalWindowPct:q.windowPct,windowRows:q.windowRows,effectiveWindowPct:q.effectiveWindowPct,eligibleWindows:q.eligibleWindows,totalWindows:q.totalWindows,normalWidthPx:q.baseline,

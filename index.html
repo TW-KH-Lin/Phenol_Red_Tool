@@ -37,6 +37,7 @@ canvas.adjusting-box{touch-action:none}
 <div class="imagebox" id="imageViewport" tabindex="0" aria-label="Image preview; scroll or drag to pan"><canvas id="imageCanvas" aria-label="Sample image with detected edges and reference lines"></canvas><div class="empty-image"><span>＋</span>Upload a photo to begin</div></div>
 <div class="image-bottom"><label class="checkrow"><input type="checkbox" id="autoContrast" title="Enhance the preview; measurements use the original image">Auto contrast</label><label class="checkrow edge"><input type="checkbox" id="showEdges" checked>Edges</label><label class="checkrow guide"><input type="checkbox" id="showReferences" checked>Guides</label><label class="checkrow guide"><input type="checkbox" id="showCenter" title="Yellow dashed line: center estimated from the original red body" checked>Center</label><label class="checkrow" style="color:#c77117"><input type="checkbox" id="showDefects" checked>Defect marks</label><span id="imageInfo">No image</span></div></div>
 <aside class="nearby-settings"><div class="control-head"><h2>Adjust</h2><span class="small">Live preview</span></div><div class="boundary-control"><label for="threshold">Boundary <span class="value" id="thresholdText">60%</span></label><input id="threshold" type="range" min="15" max="90" step="1" value="60"></div>
+<div class="boundary-control"><label for="outerPreference">Outer edge preference <output class="value" id="outerPreferenceText" for="outerPreference">50</output></label><input id="outerPreference" type="range" min="0" max="100" step="5" value="50" title="Higher values give more weight to outer edges when dye is visible outside a candidate edge"></div>
 <div class="boundary-control"><label for="localWindow">Defect window <span class="value" id="localWindowText">5%</span></label><input id="localWindow" type="range" min="0.5" max="25" step="0.5" value="5"></div>
 <div class="setting"><label for="edgeDisplay">Edge metrics</label><select id="edgeDisplay"><option value="sum" selected>Left + right sum</option><option value="legacy">Legacy pooled</option></select></div>
 <div class="actions"><button class="primary" id="autodetect">Detect</button><button id="analyze">Analyze</button></div><p id="status" class="status" role="status" aria-live="polite"></p>
@@ -536,6 +537,10 @@ E('fineEdges').onchange=()=>{
  E('fineSensitivity').disabled=!E('fineEdges').checked;
  queuePreview();
 };
+E('outerPreference').oninput=()=>{
+ E('outerPreferenceText').textContent=E('outerPreference').value;
+ queuePreview();
+};
 E('fineSensitivity').oninput=()=>{
  E('fineSensitivityText').textContent=E('fineSensitivity').value;
  if(E('fineEdges').checked)queuePreview();
@@ -751,6 +756,8 @@ function analyzeStripe(s,vol){
  let threshold=+E('threshold').value/100;
  const fineEdges=E('fineEdges').checked;
  const fineSensitivity=Number(E('fineSensitivity').value);
+ const outerPreference=Number(E('outerPreference').value);
+ const outerPenalty=.75*outerPreference/50;
  const fineAdjustment=(fineSensitivity-50)/50;
  // A longitudinal reference identifies the two OUTER core boundaries, even
  // when a pale centre splits the red body into two disconnected bands.
@@ -815,13 +822,14 @@ let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y
    const distance=(Math.abs(l.x-refLeft)+Math.abs(r.x-refRight))/Math.max(4,refWidth);
    const tracking=previous?(Math.abs(l.x-previous[0])+Math.abs(r.x-previous[1]))/Math.max(4,refWidth):0;
    const innerBandPenalty=(edge,direction,peak)=>{
+    if(!outerPenalty)return 0;
     // A sustained dye band outside a crossing indicates an internal highlight.
     const reach=Math.min(12,Math.max(4,Math.round(refWidth*.32)));
     let run=0;
     for(let d=1;d<=reach;d++){
      const i=Math.round(edge+direction*d);
      if(pixelValid[i]&&seq[i]>=bg+Math.max(7,.30*(peak-bg))){
-      if(++run>=2)return .75;
+      if(++run>=2)return outerPenalty;
      }else run=0;
     }
     return 0;
@@ -886,7 +894,7 @@ let seq=[];for(let x=x0;x<=x1;x++)seq.push(raw?sampleScore(x,y):(sampleScore(x,y
  let wTrend=moving(fillInvalid(widths),wWin),anom=widths.map((v,i)=>valid[i]&&Math.abs(v-wTrend[i])>Math.max(2,Math.abs(wTrend[i])*(+E('defectPct').value/100)));
  let defects=0,segmentLen=0;for(let j=0;j<=n;j++){if(j<n&&anom[j]){segmentLen++}else{if(segmentLen>=3)defects++;segmentLen=0}}
  let frac=n/roi.h,mm=s.lengthmm>0?s.lengthmm*frac:null;
- return{fineEdges,fineSensitivity,roughnessRows:wWin,recovered,recoveredPct:100*recovered.filter(Boolean).length/n,initialGuideCenter:x0+guideCenter,uncertain,uncertainPct:100*uncertain.filter(Boolean).length/n,ideal,boundaryMethod:method,boundaryLevel:threshold*100,frame,tiltAngle:frame.angle,tiltStatus:frame.status,sampleId:s.id,sample:s.label,volume:vol,side:vol===1?'Left':'Right',center,y0,y1,expectedLength:n,physicalLengthMM:mm,L,R,Y,valid,widths,DL,DR,
+ return{fineEdges,fineSensitivity,outerPreference,roughnessRows:wWin,recovered,recoveredPct:100*recovered.filter(Boolean).length/n,initialGuideCenter:x0+guideCenter,uncertain,uncertainPct:100*uncertain.filter(Boolean).length/n,ideal,boundaryMethod:method,boundaryLevel:threshold*100,frame,tiltAngle:frame.angle,tiltStatus:frame.status,sampleId:s.id,sample:s.label,volume:vol,side:vol===1?'Left':'Right',center,y0,y1,expectedLength:n,physicalLengthMM:mm,L,R,Y,valid,widths,DL,DR,
   straightness,centerBend:straightCenter.rms,parallelAngle,SL:straightL.residual,SR:straightR.residual,relativeStraightness:100*straightness/wMean,meanWidth:wMean,widthSD:wSD,widthCV:wCV,edgeRq,edgeRa,leftRq,rightRq,relRq:100*edgeRq/wMean,coverage:detected/n,gapPct:100*gapCount/n,longestGapPct:100*longestGap/n,numberOfGaps:gaps,defects,defectsPer100px:100*defects/n,defectsPer10mm:mm?10*defects/mm:NaN,detected};
 }
 function analyze(){if(!state.img||!state.samples.length){setStatus('First load an image and detect (or draw) samples.',true);return}let results=[],errors=[];for(let s of state.samples)for(let vol of [1,2]){try{results.push(analyzeStripe(s,vol))}catch(err){errors.push(err.message)}}state.measurements=results;refreshSamples();updateResults();render();setStatus(`${state.samples.length} samples · ${results.length} lines measured.`+(errors.length?` ${errors.length} detection error(s): ${errors.join(' | ')}`:''),!!errors.length)}
@@ -1253,6 +1261,7 @@ function legacyContourEstimate(m,sample){
 function defectAudit(m){
  const q=m.local;return {
  fineBurrTracing:m.fineEdges??false,
+ outerEdgePreference:m.outerPreference??null,
  fineDetectionSensitivity:m.fineEdges?m.fineSensitivity:null,
  fineBurrMethod:m.fineEdges?'connected-color-gradient':null,
  edgeDisplay:useEdgeSum()?'sum':'legacy',

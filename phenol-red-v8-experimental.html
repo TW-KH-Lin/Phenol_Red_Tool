@@ -38,11 +38,12 @@
 <div class="setting"><label for="boundaryMethod">Boundary signal</label><select id="boundaryMethod"><option value="dark" selected>Dark-red contrast</option><option value="legacy">Legacy redness</option></select></div>
 <div class="setting"><label for="trend">Roughness window <span class="value" id="trendText">121 px</span></label><input id="trend" type="range" min="21" max="201" step="10" value="121"></div>
 <div class="setting full"><label for="scaleMode">Image calibration</label>
-<select id="scaleMode"><option value="manual">Manual scale</option><option value="dpi">Scan resolution</option><option value="strip">Known strip size</option></select></div>
+<select id="scaleMode"><option value="manual">Manual scale</option><option value="dpi">Scan resolution</option><option value="strip">Known strip width</option></select></div>
 <div class="setting" id="manualScale"><label for="scale">Scale · µm/processed px</label><input id="scale" type="number" min="0" step="any" placeholder="Optional"></div>
 <div class="setting" id="dpiScale" hidden><label for="scanDpi">Original scan DPI</label><input id="scanDpi" type="number" min="1" step="any" placeholder="e.g. 300"></div>
-<div class="setting" id="stripSize" hidden><label for="stripMm">Measured strip length · mm</label><input id="stripMm" type="number" min="0" step="any"></div>
-<div class="setting" id="stripSpan" hidden><label for="stripPx">Same span · original px</label><input id="stripPx" type="number" min="0" step="any"></div>
+<div class="setting" id="stripSize" hidden><label for="stripMm">Membrane width · mm</label><input id="stripMm" value="25" type="number" min="0" step="any"></div>
+<div class="setting" id="stripSpan" hidden><label for="stripPx">Membrane width · original px</label><input id="stripPx" type="number" min="0" step="any"></div>
+<button type="button" class="full" id="pickStripWidth" hidden>Measure width on photo</button>
 <p class="small full" id="scaleStatus" aria-live="polite"></p>
 <div class="setting"><label for="defectPct">Width defect · %</label><input id="defectPct" type="number" min="5" max="100" value="25"></div>
 <label class="checkrow"><input id="autoTilt" type="checkbox" checked>Auto tilt correction</label>
@@ -87,7 +88,7 @@ function smooth5(a){return a.map((v,i)=>(a[Math.max(i-2,0)]+2*a[Math.max(i-1,0)]
 function fillInvalid(vals){let out=vals.slice(),idx=[];for(let i=0;i<vals.length;i++)if(Number.isFinite(vals[i]))idx.push(i);if(!idx.length)return out.fill(0);for(let i=0;i<idx[0];i++)out[i]=vals[idx[0]];for(let i=idx.at(-1)+1;i<vals.length;i++)out[i]=vals[idx.at(-1)];for(let j=0;j<idx.length-1;j++){let a=idx[j],b=idx[j+1];for(let i=a+1;i<b;i++)out[i]=vals[a]+(vals[b]-vals[a])*(i-a)/(b-a)}return out}
 function medFilter(a,k=5){let r=Math.floor(k/2),out=a.slice();for(let i=0;i<a.length;i++){if(!Number.isFinite(a[i]))continue;let ar=[];for(let j=Math.max(0,i-r);j<=Math.min(a.length-1,i+r);j++)if(Number.isFinite(a[j]))ar.push(a[j]);out[i]=median(ar)}return out}
 const even=s=>s*2+1;
-let raster=null,contrastPreview=null,processedScaleX=1,processedScaleY=1;
+let raster=null,contrastPreview=null,processedScaleX=1,processedScaleY=1,stripPick=null;
 function score(x,y){let p=4*(y*rawCanvas.width+x),a=raster;return a[p]-(a[p+1]+a[p+2])*.5}
 function scoreAt(x,y){return score(Math.max(0,Math.min(rawCanvas.width-1,Math.round(x))),Math.max(0,Math.min(rawCanvas.height-1,Math.round(y))))}
 function getProjection(x0,x1,y0,y1,ystep=3){let a=new Float32Array(x1-x0),n=0;for(let y=y0;y<y1;y+=ystep){for(let x=x0;x<x1;x++)a[x-x0]+=score(x,y);n++}return Array.from(a,v=>v/Math.max(1,n))}
@@ -399,7 +400,12 @@ E('boundaryMethod').onchange=queuePreview;
 E('unequal').onchange=()=>{setLengthUI();queuePreview()};
 for(let id of ['startPct','endPct','threshold','trend','defectPct'])E(id).oninput=()=>{E('thresholdText').textContent=E('threshold').value+'%';E('trendText').textContent=E('trend').value+' px';queuePreview()};
 for(const id of ['scale','scanDpi','stripMm','stripPx'])E(id).oninput=updateResults;
-E('scaleMode').onchange=updateResults;
+E('scaleMode').onchange=()=>{stripPick=null;updateResults();};
+E('pickStripWidth').onclick=()=>{
+ if(!state.img)return;
+ stripPick=[];
+ updateCalibration();
+};
 E('autodetect').onclick=()=>{autoSamples();if(state.samples.length)analyze()};
 E('sampleDiscovery').onchange=()=>setStatus('Tap Detect to apply search mode.');
 E('addROI').onclick=()=>{state.drawMode='add';canvas.classList.add('draw-enabled');setStatus('Drag a rectangle around BOTH red lines of one sample.')};
@@ -408,7 +414,16 @@ E('cancelDraw').onclick=()=>{state.drawMode=null;canvas.classList.remove('draw-e
 E('deleteSelected').onclick=()=>{if(state.chosen)removeSample(state.chosen)};
 E('removeAll').onclick=()=>{state.samples=[];state.measurements=[];state.chosen=null;refreshSamples();updateResults();render()};
 function getPosition(e){let b=canvas.getBoundingClientRect();return{x:Math.max(0,Math.min(canvas.width-1,Math.round((e.clientX-b.left)*canvas.width/b.width))),y:Math.max(0,Math.min(canvas.height-1,Math.round((e.clientY-b.top)*canvas.height/b.height)))}}
-canvas.addEventListener('pointerdown',e=>{if(!state.img)return;let p=getPosition(e);if(!state.drawMode&&state.zoom>1&&e.pointerType==='mouse'){state.pan={x:e.clientX,y:e.clientY,left:E('imageViewport').scrollLeft,top:E('imageViewport').scrollTop,moved:false};canvas.setPointerCapture(e.pointerId);canvas.classList.add('panning');return;}if(!state.drawMode){let hits=state.samples.filter(s=>p.x>=s.roi.x&&p.x<=s.roi.x+s.roi.w&&p.y>=s.roi.y&&p.y<=s.roi.y+s.roi.h);if(hits.length){state.chosen=hits.at(-1).id;refreshSamples();render()}return}state.down={start:p,current:p};canvas.setPointerCapture(e.pointerId);render()});
+canvas.addEventListener('pointerdown',e=>{if(!state.img)return;let p=getPosition(e);if(stripPick){
+ const bounds=canvas.getBoundingClientRect();
+ const point={x:(e.clientX-bounds.left)*canvas.width/bounds.width,y:(e.clientY-bounds.top)*canvas.height/bounds.height};
+ if(!stripPick.length){stripPick.push(point);updateCalibration();return;}
+ const first=stripPick[0];
+ const width=Math.hypot((point.x-first.x)/processedScaleX,(point.y-first.y)/processedScaleY);
+ if(width<2){E('scaleStatus').textContent='Pick the opposite membrane edge.';return;}
+ E('stripPx').value=width.toFixed(2);
+ stripPick=null;updateResults();return;
+}if(!state.drawMode&&state.zoom>1&&e.pointerType==='mouse'){state.pan={x:e.clientX,y:e.clientY,left:E('imageViewport').scrollLeft,top:E('imageViewport').scrollTop,moved:false};canvas.setPointerCapture(e.pointerId);canvas.classList.add('panning');return;}if(!state.drawMode){let hits=state.samples.filter(s=>p.x>=s.roi.x&&p.x<=s.roi.x+s.roi.w&&p.y>=s.roi.y&&p.y<=s.roi.y+s.roi.h);if(hits.length){state.chosen=hits.at(-1).id;refreshSamples();render()}return}state.down={start:p,current:p};canvas.setPointerCapture(e.pointerId);render()});
 canvas.addEventListener('pointermove',e=>{if(state.pan){const dx=e.clientX-state.pan.x,dy=e.clientY-state.pan.y;if(Math.abs(dx)+Math.abs(dy)>3)state.pan.moved=true;E('imageViewport').scrollLeft=state.pan.left-dx;E('imageViewport').scrollTop=state.pan.top-dy;return;}if(!state.down)return;state.down.current=getPosition(e);render()});
 canvas.addEventListener('pointerup',e=>{if(state.pan){const moved=state.pan.moved;state.pan=null;canvas.classList.remove('panning');if(!moved){const p=getPosition(e),hit=state.samples.filter(s=>p.x>=s.roi.x&&p.x<=s.roi.x+s.roi.w&&p.y>=s.roi.y&&p.y<=s.roi.y+s.roi.h).at(-1);if(hit){state.chosen=hit.id;refreshSamples();render()}}return;}if(!state.down)return;state.down.current=getPosition(e);let a=state.down.start,b=state.down.current,roi={x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};state.down=null;if(roi.w<30||roi.h<50){setStatus('ROI too small; please draw a larger rectangle.',true);render();return}let centers=detectedPairs(roi);if(state.drawMode==='add'){let s=newSample(roi,centers);state.samples.push(s);state.chosen=s.id}else{let s=state.samples.find(s=>s.id===state.chosen);if(s){s.roi=roi;s.centers=centers}}state.drawMode=null;canvas.classList.remove('draw-enabled');state.measurements=[];refreshSamples();updateResults();render();setStatus('ROI updated. Click Analyze all lines.')});
 canvas.addEventListener('pointercancel',()=>{state.pan=null;state.down=null;canvas.classList.remove('panning')});
@@ -634,8 +649,11 @@ function updateCalibration(){
  E('manualScale').hidden=mode!=='manual';
  E('dpiScale').hidden=mode!=='dpi';
  E('stripSize').hidden=E('stripSpan').hidden=mode!=='strip';
- E('scaleStatus').textContent=scale?`${fmt(scale.width,3)} µm/processed px`
-  :mode==='strip'?'Enter the same distance in mm and original-image pixels.'
+ E('pickStripWidth').hidden=mode!=='strip';
+ E('pickStripWidth').disabled=!state.img;
+ E('scaleStatus').textContent=stripPick?(stripPick.length?'Tap the opposite membrane edge across the strip.':'Tap one outer membrane edge.')
+  :scale?`${fmt(scale.width,3)} µm/processed px`
+  :mode==='strip'?'Tap across the membrane at right angles to the strip, or enter its width in original-image pixels.'
   :mode==='dpi'?'Enter the DPI of the uploaded scan at its original size.':'';
  for(const m of state.measurements){
   const sample=state.samples.find(s=>s.id===m.sampleId);
@@ -890,7 +908,7 @@ function defectAudit(m){
  }])),
  rawPeaks:Object.fromEntries(Object.entries(q.peaks).map(([k,p])=>[k,{valuePct:p.index===null?null:p.value,location:defectLocation(m,p)}])),rawContractionPct:q.contraction,rawExpansionPct:q.expansion,
  coveragePct:100*m.coverage,boundarySignal:m.boundaryMethod,boundaryLevelPct:m.boundaryLevel,roughnessWindowPx:Number(E('trend').value),imageWidthPx:rawCanvas.width,imageHeightPx:rawCanvas.height,
- analysisStartPct:Number(E('startPct').value),analysisEndPct:Number(E('endPct').value),relativeSection:E('unequal').checked,tiltCorrectionEnabled:E('autoTilt').checked,tiltStatus:m.tiltStatus,imageScaleUmPerPx:calibration()?.width??null,calibrationMode:E('scaleMode').value,scanDpi:E('scaleMode').value==='dpi'?Number(E('scanDpi').value)||null:null,stripCalibration:E('scaleMode').value==='strip'?{mm:Number(E('stripMm').value)||null,originalPx:Number(E('stripPx').value)||null}:null,
+ analysisStartPct:Number(E('startPct').value),analysisEndPct:Number(E('endPct').value),relativeSection:E('unequal').checked,tiltCorrectionEnabled:E('autoTilt').checked,tiltStatus:m.tiltStatus,imageScaleUmPerPx:calibration()?.width??null,calibrationMode:E('scaleMode').value,scanDpi:E('scaleMode').value==='dpi'?Number(E('scanDpi').value)||null:null,stripCalibration:E('scaleMode').value==='strip'?{axis:'width',mm:Number(E('stripMm').value)||null,originalPx:Number(E('stripPx').value)||null}:null,
  rule:'window=max(1,ceil(nominalWindowPct*analyzedRows/100)); full valid windows only; per metric maximum RMS; width residual to stripe median; edge perpendicular residuals to blue guides; roughness residuals to moving trend; edge and roughness pool left/right squares equally; divide by median width ×100; no hard minimum defect length, composite score or pass/fail limits'
  };
 }
@@ -1056,6 +1074,8 @@ function loadImage(uri,label){return new Promise((resolve,reject)=>{
   rawCanvas.width=w;rawCanvas.height=h;rawCtx.drawImage(im,0,0,w,h);
   raster=rawCtx.getImageData(0,0,w,h).data;
   contrastPreview=null;
+  stripPick=null;
+  E('stripPx').value='';
   resetProfileSelection();state.img=im;state.imgName=label;state.samples=[];state.measurements=[];state.uid=0;
   state.chosen=null;state.drawMode=null;state.zoom=1;state.pan=null;E('imageViewport').scrollLeft=0;E('imageViewport').scrollTop=0;canvas.classList.remove('draw-enabled');
   E('fileLabel').textContent=`${label} · processed ${w} × ${h} px`+(resize<1?` (original ${originalW} × ${originalH}; resized to ${(resize*100).toFixed(0)}%)`:'');

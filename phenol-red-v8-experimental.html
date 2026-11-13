@@ -35,7 +35,7 @@
 <div class="actions"><button class="primary" id="autodetect">Detect</button><button id="analyze">Analyze</button></div><p id="status" class="status" role="status" aria-live="polite"></p>
 <details class="advanced"><summary>Advanced</summary><div class="settings">
 <div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div>
-<label class="checkrow full"><input id="fineEdges" type="checkbox">Trace fine burrs</label>
+<label class="checkrow full"><input id="fineEdges" type="checkbox" checked>Trace fine burrs</label>
 <div class="setting"><label for="boundaryMethod">Boundary signal</label><select id="boundaryMethod"><option value="dark" selected>Dark-red contrast</option><option value="legacy">Legacy redness</option></select></div>
 <div class="setting"><label for="trend">Roughness window <span class="value" id="trendText">121 px</span></label><input id="trend" type="range" min="21" max="201" step="10" value="121"></div>
 <div class="setting"><label for="trendMm">Roughness window · mm</label><input id="trendMm" type="number" min="0" step="any" placeholder="Optional"><span class="small" id="trendMmNote"></span></div>
@@ -212,10 +212,71 @@ function framedSamples(){
  }
  return found;
 }
+// Find bright membrane strips separated by dark background. Horizontal
+// coverage locates the sides; vertical coverage locates each strip's ends.
+function crossSectionBoxes(pixels,w,h){
+ const bright=(x,y)=>{
+  const i=4*(y*w+x);
+  return pixels[i+3]>127&&.213*pixels[i]+.715*pixels[i+1]+.072*pixels[i+2]>85;
+ };
+ const runs=(length,test)=>{
+  const spans=[];
+  let start=null;
+  for(let i=0;i<=length;i++){
+   if(i<length&&test(i)){if(start===null)start=i;}
+   else if(start!==null){spans.push([start,i]);start=null;}
+  }
+  return spans;
+ };
+ const columns=runs(w,x=>{
+  let count=0;
+  for(let j=0;j<25;j++)if(bright(x,Math.round((.2+.6*j/24)*(h-1))))count++;
+  return count>=20;
+ });
+ const boxes=[];
+ for(const [left,right] of columns){
+  const width=right-left;
+  if(width<26)continue;
+  const rows=runs(h,y=>{
+   let count=0;
+   for(let j=0;j<15;j++)if(bright(left+Math.floor((.14+.72*j/14)*(width-1)),y))count++;
+   return count>=12;
+  });
+  const body=rows.reduce((best,row)=>!best||row[1]-row[0]>best[1]-best[0]?row:best,null);
+  if(!body||body[1]-body[0]<Math.max(60,2*width))continue;
+  const [top,bottom]=body;
+  const darkOutside=(edge,direction)=>{
+   let count=0;
+   for(let j=0;j<13;j++){
+    const y=Math.round(top+(.2+.6*j/12)*(bottom-top-1));
+    const x=edge+direction*Math.max(4,Math.round(width*.09));
+    if(x>=0&&x<w&&!bright(x,y))count++;
+   }
+   return count>=9;
+  };
+  if(!darkOutside(left,-1)||!darkOutside(right-1,1))continue;
+  boxes.push({x:left,y:top,w:width,h:bottom-top});
+ }
+ return boxes;
+}
 function autoSamples(){
  if(!state.img)return;
  let w=rawCanvas.width,h=rawCanvas.height;
  const mode=E('sampleDiscovery').value,tolerant=mode==='tolerant';
+ const cross=tolerant?crossSectionBoxes(raster,w,h).map(roi=>({roi,centers:detectedPairs(roi)})).filter(box=>box.centers):[];
+ if(cross.length){
+  state.samples=cross.map(({roi,centers})=>{
+   const sample=newSample(roi,centers);
+   sample.discoveryMode='membrane-cross-sections';
+   return sample;
+  });
+  state.samples.forEach((sample,i)=>{sample.label='Sample '+(i+1);});
+  state.chosen=state.samples[0].id;
+  state.measurements=[];
+  render();refreshSamples();updateResults();
+  setStatus(`${cross.length} membrane boxes · Check boxes before comparing.`);
+  return;
+ }
  const frames=tolerant?framedSamples():[];
  let proj=getProjection(0,w,Math.round(h*.34),Math.round(h*.80),3),sm=gaussian(proj,tolerant?Math.max(2,Math.min(4,w/300)):Math.max(3,Math.min(5.5,w/220)));
  let ps=peaks(sm,{height:tolerant?4:8,prominence:tolerant?3:7,distance:Math.max(tolerant?12:18,Math.round(w*(tolerant?.016:.024)))});

@@ -73,7 +73,10 @@ canvas.adjusting-box{touch-action:none}
 </details>
 <div id="resultCards" class="resultcards"><p class="empty-results">Measurements appear after upload.</p></div>
 <details class="panel secondary-panel" id="profilePanel"><summary>Width & edge profiles</summary><div class="inline" style="margin-bottom:10px"><select id="profileCompare" aria-label="Compare profiles"><option value="single">Single line</option><option value="sample">Sample: 1 + 2 µL</option><option value="all1">All 1 µL</option><option value="all2">All 2 µL</option></select><select id="profileSample" aria-label="Profile sample" hidden></select><select id="lineSelect" aria-label="Measured line"></select><select id="chartType" aria-label="Profile type"><option value="width">Width</option><option value="parallel">Guide deviation</option><option value="edges">Local roughness</option><option value="straight">Straight-line deviation</option></select></div><div id="profileFilter" hidden><div class="profile-filter-actions"><button type="button" id="profileSelectAll">Select all</button><span class="small" id="profileFilterCount"></span></div><div id="profileChecks" class="profile-checks"></div></div><canvas id="chart" class="chart"></canvas><div id="chartLegend" class="profile-legend" aria-label="Profile legend"></div><p id="chartNote" class="small"></p></details>
-<details class="panel secondary-panel"><summary>Full data</summary><div class="tablewrap"><table><thead><tr><th>Sample</th><th>Volume</th><th>Length · px</th><th>Width</th><th>CV · %</th><th id="rqHeading">Local Rq</th><th id="relativeRqHeading">Relative Rq · %</th><th>Undetected · %</th><th>Longest gap · %</th><th>Defects / 100 px</th><th>Defects / 10 mm</th><th>Coverage · %</th><th id="straightnessHeading">Straightness RMS</th><th>Center RMS</th><th>Angle · °</th></tr></thead><tbody id="resultTable"><tr><td colspan="15">No measurements</td></tr></tbody></table></div></details>
+<div class="panel secondary-panel">
+<div class="section-head"><details id="fullDataToggle"><summary>Full data</summary></details><button type="button" id="exportFullData" disabled>Export to Excel</button></div>
+<div id="fullDataContent" class="tablewrap" hidden><table><thead><tr id="fullDataHead"></tr></thead><tbody id="resultTable"></tbody></table></div>
+</div>
 <details class="panel secondary-panel methods"><summary>How to read the results</summary><p><b>Worst windows:</b> use ceil(Defect window % × analyzed cross-section count) rows per sliding window. Windows advance one row at a time. Width RMS uses signed width deviations from the stripe’s median width. Edge RMS pools squared perpendicular residuals to the left/right blue guides equally; local unevenness RMS pools left/right residuals to the moving-average trends equally. Each RMS is divided by the stripe’s median width and multiplied by 100. Report the maximum for each metric independently; their worst windows can differ. This is not an average of the entire stripe or a mean-centered RMS inside each window.</p><p><b>Interpretation:</b> Peak is the largest deviation at a single measured cross-section. Edge deformation and local unevenness use the larger deviation of the two sides. A short severe defect can have a high peak even when its window RMS is lower. Check the contour at the peak before judging a single-row spike. Use the same defect window when comparing window RMS between lines. A window containing missing or invalid rows is excluded without interpolation; incomplete coverage may hide defects and is exported. No valid window is shown/exported as missing, never as zero. Orange segments mark worst RMS windows. Orange dots mark peak locations. Hover over a mark to inspect the local values. Comparable physical imaging scale and matched settings are still required.</p><p><b>CV</b>: width consistency. <b>Guide RMS / P95</b>: deviation from the fitted parallel guides. Lower values indicate less deviation under matched imaging conditions; they are not pass/fail grades. Use Auto contrast to inspect faint edges. It changes the preview only; adjust Boundary to change the detected edge. Green edges must be correct before interpreting any measurement.</p>
 <p><b>Center-constrained detection:</b> a low-threshold whole-body redness profile first estimates the stripe axis independently of the dark-rim signal and final high-level edges. Left and right threshold crossings must lie on opposite sides of this initial axis; each side uses its own local peak so unequal rim darkness does not force both crossings onto one rim. Failed rows are re-tested on the original cross-section without vertical averaging, using the same boundary level and opposite-side constraint. Confirmed edges are included in width and roughness measurements and tagged as re-detected in the profile export. No interpolated coordinates enter the measurements. Measured edge arrays are never filled. The overlay connects consecutive confirmed edges. Unsupported gaps stay visible. If the line shifts across the initial axis or an edge cannot be confirmed, that row is marked uncertain. The yellow dashed center is estimated from the original whole red body, separately for each stripe, and is not the midpoint of the fitted blue guides. Green edges must straddle this yellow axis. Accepted green edges must also straddle the midpoint of the fitted blue guides as a second check. Points that fail this second guard are rejected and the guides refitted. Blue parallel guides are fitted to the accepted measurements, so this is a two-stage estimate, not an independent ground-truth reference. High settings and interpolation can change measured widths and roughness; inspect contours and use matched settings.</p><p><b>Parallel references:</b> each measured stripe receives its own two straight, mutually parallel reference lines. A common slope and separate left/right offsets minimize summed horizontal squared deviations on valid rows. Their spacing is estimated from that stripe; there is no preset width and no shared width between 1 µL and 2 µL. The dashed blue overlay is an idealized reference, not a replacement for detected edges. Parallel-reference RMS and P95 use perpendicular distances to these lines. Missing rows are excluded from fitting and deviation statistics. There is no automatic pass/fail threshold. The reference does not validate an incorrectly detected boundary.</p><p><b>Boundary signal:</b> Dark-red contrast uses a logarithmic red/green channel ratio with a small offset, followed by local background subtraction. It emphasizes relative green absorption rather than absolute red brightness. It is an image contrast measure, not calibrated optical density. Legacy redness uses red minus the mean of green and blue. The boundary level is a fraction between local background and a robust signal peak. A percentage does not define a physical material boundary; verify the contour against the original image. Signals and thresholds are not interchangeable: use the same method, level, imaging scale and lighting for comparisons.</p><p><b>Quality target:</b> each stripe should have straight, parallel dark-red outer boundaries and constant width. The 1 µL and 2 µL stripes are evaluated separately; their widths need not match. <b>Edge straightness RMS</b> fits each edge with one straight line and combines the perpendicular residual RMS values. This removes overall tilt while retaining bending. <b>Centerline bending RMS</b> measures wandering of the midpoint. <b>Overall edge angle difference</b> measures taper only; width CV also detects local loss of parallelism. A zero angle difference alone does not imply good quality. Compare equal analysis lengths and calibrated resolution. Lower values are not trustworthy where detection coverage is poor.</p><p><b>Mean width</b> = mean separation of the detected dark-red boundaries. With tilt correction enabled and accepted, cross-sections are perpendicular to one estimated sample direction. One rigid rotation is used for both stripes; individual rows are not straightened. Width is still an optical estimate, not a physical edge standard. <b>Width CV (%)</b> = 100 × standard deviation of width / mean width. <b>Edge Rq</b> is RMS edge deviation from a centered moving-average trend (optical contour roughness, not contact profilometry). <b>Relative edge Rq (%)</b> = 100 × edge Rq / mean width.</p>
 <p><b>Undetected (%)</b> = 100 × undetected rows / expected analysis rows; <b>longest gap (%)</b> = 100 × longest consecutive undetected sequence / expected analysis rows. <b>Defects per 100 px</b> = counted non-gap width-anomaly intervals / analyzed pixel length × 100. With sample length entered in millimeters, <b>defects per 10 mm</b> is additionally shown, normalized to the physical section length.</p>
@@ -1320,24 +1323,62 @@ function sampleResultCard(sample,lines,sum,u){
   ${pair.filter(Boolean).map(m=>lineReference(m,sum)).join('')}
  </details></article>`;
 }
+let fullDataRows=[];
+function refreshFullData(groups,sum,u){
+ const widthUnit=u.unit==='µm'?'mm':'px',suffix=sum?' · L + R':'';
+ const window=Number(E('localWindow').value);
+ const legacy=E('contourMode').value==='legacy';
+ const headers=['Sample','Volume (µL)','Sample length (mm)','Result','Mean width ('+widthUnit+')','Width CV (%)',
+  (legacy?'Legacy contour':'Contour length')+' estimate (%)','Contour span coverage (%)',
+  'Local edge Rq'+suffix+' ('+u.unit+')','Width variation · Worst '+window+'% RMS (%)',
+  'Max local narrowing (%)','Unevenness peak'+suffix+' (%)','Analyzed length (px)','Analyzed length (mm)',
+  'Relative Rq'+suffix+' (%)','Undetected (%)','Longest gap (%)','Defects / 100 px','Defects / 10 mm',
+  'Coverage (%)','Straightness RMS'+suffix+' ('+u.unit+')','Center RMS ('+u.unit+')','Angle (°)'];
+ const number=(value,digits)=>Number.isFinite(value)?Number(fmt(value,digits)):null;
+ const rows=[];
+ for(const [id,lines] of groups){
+  const sample=state.samples.find(s=>s.id===id);
+  for(const volume of [1,2]){
+   const m=lines.find(line=>line.volume===volume),q=m?.local;
+   const base=[sample?.label||lines[0].sample,volume,number(sample?.lengthmm,2)];
+   if(!m){rows.push([...base,'Not measured',...Array(headers.length-4).fill(null)]);continue;}
+   const rq=sum?m.leftRq+m.rightRq:m.edgeRq;
+   rows.push([...base,m.coverage<.85?'Check contour':m.contourEstimate?.coveragePct<100?'Partial contour':'Measured',
+    number(m.meanWidth*(widthUnit==='mm'?u.scale/1000:1),widthUnit==='mm'?2:1),number(m.widthCV,1),
+    number(m.contourEstimate?.meanPct,2),number(m.contourEstimate?.coveragePct,2),
+    number(rq*u.scale,2),number(q.worst.width?.value,1),
+    number(q.peaks.width.index===null?null:q.contraction,1),
+    number(sum?q.roughnessSum.peakPct:q.peaks.rough.index===null?null:q.peaks.rough.value,1),
+    m.expectedLength,number(m.physicalLengthMM,2),number(100*rq/m.meanWidth,2),number(m.gapPct,2),
+    number(m.longestGapPct,2),number(m.defectsPer100px,2),number(m.defectsPer10mm,2),number(m.coverage*100,1),
+    number((sum?rms(m.SL.filter(Number.isFinite))+rms(m.SR.filter(Number.isFinite)):m.straightness)*u.scale,2),
+    number(m.centerBend*u.scale,2),number(m.parallelAngle,3)]);
+  }
+ }
+ fullDataRows=[headers,...rows];
+ E('fullDataHead').innerHTML=headers.map(value=>`<th scope="col">${htmlEscape(value)}</th>`).join('');
+ E('resultTable').innerHTML=rows.map(row=>`<tr>${row.map(value=>`<td>${htmlEscape(String(value??'—'))}</td>`).join('')}</tr>`).join('')
+  ||`<tr><td colspan="${headers.length}">Not analyzed yet</td></tr>`;
+ E('exportFullData').disabled=!rows.length;
+}
+E('fullDataToggle').ontoggle=()=>{E('fullDataContent').hidden=!E('fullDataToggle').open;};
+E('exportFullData').onclick=()=>{
+ if(fullDataRows.length>1)downloadBlob(workbook(fullDataRows),'phenol_red_full_data.xlsx');
+};
 function updateResults(){
  updateCalibration();
  refreshLocalDefects();
  const sum=useEdgeSum(),edgeSuffix=sum?' · L + R':'',u=displayUnit();
- const groups=new Map(),table=[];
+ const groups=new Map();
  for(const m of state.measurements){
   if(!groups.has(m.sampleId))groups.set(m.sampleId,[]);
   m.contourEstimate=E('contourMode').value==='legacy'?legacyContourEstimate(m,state.samples.find(s=>s.id===m.sampleId)):contourEstimate(m);
   groups.get(m.sampleId).push(m);
-  const s=state.samples.find(s=>s.id===m.sampleId),lab=htmlEscape(s?.label||m.sample),rq=sum?m.leftRq+m.rightRq:m.edgeRq;
- table.push(`<tr><td>${lab}</td><td>${m.volume} µL</td><td>${m.expectedLength}</td><td>${fmt(m.meanWidth*u.scale,2)} ${u.unit}</td><td>${fmt(m.widthCV,2)}</td><td>${fmt(rq*u.scale,2)} ${u.unit}</td><td>${fmt(100*rq/m.meanWidth,2)}</td><td>${fmt(m.gapPct,2)}</td><td>${fmt(m.longestGapPct,2)}</td><td>${fmt(m.defectsPer100px,2)}</td><td>${fmt(m.defectsPer10mm,2)}</td><td>${fmt(m.coverage*100,1)}</td><td>${fmt((sum?rms(m.SL.filter(Number.isFinite))+rms(m.SR.filter(Number.isFinite)):m.straightness)*u.scale,2)} ${u.unit}</td><td>${fmt(m.centerBend*u.scale,2)} ${u.unit}</td><td>${fmt(m.parallelAngle,3)}</td></tr>`)}
+ }
  for(const id of ['summaryCsv','profileCsv','defectCsv'])E(id).disabled=!state.measurements.length;E('overlayPng').disabled=!state.img;
  const cards=[...groups].map(([id,lines])=>sampleResultCard(state.samples.find(s=>s.id===id),lines,sum,u));
  E('resultCards').innerHTML=cards.join('')||'<p class="empty-results">Measurements appear after upload.</p>';
- E('rqHeading').textContent='Local Rq'+edgeSuffix;
- E('relativeRqHeading').textContent='Relative Rq'+edgeSuffix+' · %';
- E('straightnessHeading').textContent='Straightness RMS'+edgeSuffix;
- E('resultTable').innerHTML=table.join('')||'<tr><td colspan="15">Not analyzed yet</td></tr>';
+ refreshFullData(groups,sum,u);
  let prev=E('lineSelect').value;E('lineSelect').innerHTML=state.measurements.map((m,i)=>`<option value="${i}">${htmlEscape(state.samples.find(s=>s.id===m.sampleId)?.label||m.sample)} · ${m.volume} µL</option>`).join('');if([...E('lineSelect').options].some(o=>o.value===prev))E('lineSelect').value=prev ;const priorSample=E('profileSample').value;
  const measuredSamples=state.samples.filter(s=>state.measurements.some(m=>m.sampleId===s.id));
  E('profileSample').innerHTML=measuredSamples.map(s=>`<option value="${s.id}">${htmlEscape(s.label)}</option>`).join('');
@@ -1421,6 +1462,48 @@ E('profileChecks').onchange=event=>{
 };
 E('profileSelectAll').onclick=()=>{const group=profileHiddenSamples[E('profileCompare').value];if(group){group.clear();drawChart();}};
 
+function workbook(rows){
+ const xml=value=>String(value).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+ const sheet=rows.map((row,i)=>'<row r="'+(i+1)+'">'+row.map(value=>
+  typeof value==='number'?'<c><v>'+value+'</v></c>':'<c t="inlineStr"><is><t xml:space="preserve">'+xml(value??'')+'</t></is></c>'
+ ).join('')+'</row>').join('');
+ const main='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+ const rel='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+ const packageRel='http://schemas.openxmlformats.org/package/2006/relationships';
+ const files={
+  '[Content_Types].xml':'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>',
+  '_rels/.rels':`<Relationships xmlns="${packageRel}"><Relationship Id="rId1" Type="${rel}/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+  'xl/workbook.xml':`<workbook xmlns="${main}" xmlns:r="${rel}"><sheets><sheet name="Full Data" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+  'xl/_rels/workbook.xml.rels':`<Relationships xmlns="${packageRel}"><Relationship Id="rId1" Type="${rel}/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`,
+  'xl/worksheets/sheet1.xml':`<worksheet xmlns="${main}"><sheetData>${sheet}</sheetData></worksheet>`
+ };
+ // XLSX is a ZIP archive. Store the small XML files without compression.
+ const encoder=new TextEncoder(),parts=[],directory=[];
+ let offset=0,dirSize=0;
+ const header=(size)=>new DataView(new ArrayBuffer(size));
+ for(const [name,content] of Object.entries(files)){
+  const path=encoder.encode(name),data=encoder.encode(content);
+  let crc=0xffffffff;
+  for(const byte of data){
+   crc^=byte;
+   for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);
+  }
+  const local=header(30),central=header(46);
+  local.setUint32(0,0x04034b50,true);local.setUint16(4,20,true);
+  local.setUint16(12,33,true);
+  local.setUint32(14,crc^0xffffffff,true);
+  local.setUint32(18,data.length,true);local.setUint32(22,data.length,true);local.setUint16(26,path.length,true);
+  central.setUint32(0,0x02014b50,true);central.setUint16(4,20,true);
+  new Uint8Array(central.buffer).set(new Uint8Array(local.buffer,4,26),6);
+  central.setUint32(42,offset,true);
+  parts.push(local.buffer,path,data);directory.push(central.buffer,path);
+  offset+=30+path.length+data.length;dirSize+=46+path.length;
+ }
+ const end=header(22),count=Object.keys(files).length;
+ end.setUint32(0,0x06054b50,true);end.setUint16(8,count,true);end.setUint16(10,count,true);
+ end.setUint32(12,dirSize,true);end.setUint32(16,offset,true);
+ return new Blob([...parts,...directory,end.buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
 function downloadBlob(blob,name){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000)}
 function csv(rows){return '\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n')}
 E('summaryCsv').onclick=()=>{if(!state.measurements.length){setStatus('Analyze lines before exporting.',true);return}let header=['Image','Sample','Side','Phenol Red (µL)','Sample ROI length (px)','Analyzed section (px)','Full sample length (mm)','Section length (mm)','Mean width','Width unit','Width SD','Width CV (%)','Edge Ra','Edge Rq','Left edge Rq','Right edge Rq','Relative Rq (%)','Undetected fraction (%)','Longest gap (%)','Gap count','Width defect count','Width defects per 100px','Width defects per 10mm','Detection coverage (%)','Length mode','Dark-core boundary level (%)','Edge window (px)','Defect threshold (%)','Edge straightness RMS','Relative straightness (%)','Centerline bending RMS','Overall edge angle difference (deg)','Algorithm','Sample tilt (deg from vertical)','Tilt correction status','Boundary signal','Fitted parallel width','Parallel-reference RMS','Parallel-reference P95','Uncertain edges (%)'];downloadBlob(new Blob([csv([header,...readoutRows()])],{type:'text/csv;charset=utf-8'}),'phenol_red_measurements.csv')};

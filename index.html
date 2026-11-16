@@ -110,6 +110,9 @@ main{max-width:1440px}
 #workspace-panel-range #lengthControls .setting{display:flex;align-items:center;gap:4px}
 #workspace-panel-range #lengthControls input{width:62px;min-height:28px;padding:3px 5px}
 @media(max-width:760px){#workspaceTabPanels{height:92px}}
+.sample-naming{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.sample-naming label{font-size:12px}
+.sample-naming input{width:112px;min-width:0;padding:3px 6px;border:1px solid var(--line);border-radius:6px;min-height:28px}
 </style></head><body>
 <header><div class="brand"><div class="brandmark" aria-hidden="true"></div><h1>Phenol Red <span class="version">v8.5 Experimental</span></h1></div><span id="runtimeNotice" class="runtime" role="status">Starting…</span></header>
 <main><section class="panel import-panel" aria-labelledby="importHeading">
@@ -123,6 +126,11 @@ main{max-width:1440px}
 <div class="image-preview"><div class="image-toolbar"><select id="sampleSelect" aria-label="Selected sample"><option>No samples</option></select><button id="zoomSample" title="Zoom to the selected sample">Zoom selected sample</button><div class="zoom-tools" role="group" aria-label="Zoom"><button id="zoomOut" aria-label="Zoom out">−</button><label for="imageZoom"><output id="zoomText">1×</output></label><input id="imageZoom" type="range" min="1" max="8" step="0.25" value="1" aria-label="Image zoom"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomFit">Fit</button></div></div>
 <div class="image-toolbar sample-actions" role="group" aria-label="Sample tools">
 <button type="button" id="adjustImageBox" aria-pressed="false" disabled>Adjust box</button><button type="button" id="addROI" disabled>Add box</button><button type="button" id="editROI" disabled>Redraw</button><button type="button" id="removeImageBox" disabled>Remove box</button><button type="button" id="cancelDraw" hidden>Cancel drawing</button>
+<form id="sampleNaming" class="sample-naming">
+<label for="samplePrefix">Name prefix</label>
+<input id="samplePrefix" type="text" placeholder="e.g. MR25" maxlength="100">
+<button type="submit" id="applySampleNames" disabled>Name samples</button>
+</form>
 
 </div>
 
@@ -621,7 +629,18 @@ function commitBox(sample,roi){
  setStatus('Box updated. Click Analyze to measure it.');
 }
 E('removeImageBox').onclick=()=>{if(state.chosen!=null)removeSample(state.chosen);};
-function refreshSamples(){let html='';for(let s of state.samples){let r=s.roi;html+=`<div class="sample ${s.id===state.chosen?'active':''}" data-id="${s.id}"><div><input class="txt sampleName" type="text" value="${htmlEscape(s.label)}" data-id="${s.id}" aria-label="Sample name"><div class="meta">${r.w} × ${r.h} px</div></div><div><label for="mm-${s.id}">Length · mm</label><br><input id="mm-${s.id}" data-id="${s.id}" class="length sampleMM" type="number" min="0" step="any" placeholder="Optional" value="${s.lengthmm||''}"></div><div class="actions"><button data-id="${s.id}" class="pick">Select</button><button data-id="${s.id}" class="erase danger">Remove</button></div></div>`}
+E('sampleNaming').onsubmit=event=>{
+ event.preventDefault();
+ if(!state.samples.length)return;
+ const prefix=E('samplePrefix').value.trim();
+ if(!prefix){E('samplePrefix').focus();return;}
+ const ordered=[...state.samples].sort((a,b)=>a.roi.x-b.roi.x||a.roi.y-b.roi.y);
+ ordered.forEach((sample,i)=>{sample.label=prefix+' '+(i+1);});
+ refreshSamples();updateResults();render();
+ setStatus(`Named ${ordered.length} samples from left to right.`);
+};
+function refreshSamples(){
+ E('applySampleNames').disabled=!state.samples.length;let html='';for(let s of state.samples){let r=s.roi;html+=`<div class="sample ${s.id===state.chosen?'active':''}" data-id="${s.id}"><div><input class="txt sampleName" type="text" value="${htmlEscape(s.label)}" data-id="${s.id}" aria-label="Sample name"><div class="meta">${r.w} × ${r.h} px</div></div><div><label for="mm-${s.id}">Length · mm</label><br><input id="mm-${s.id}" data-id="${s.id}" class="length sampleMM" type="number" min="0" step="any" placeholder="Optional" value="${s.lengthmm||''}"></div><div class="actions"><button data-id="${s.id}" class="pick">Select</button><button data-id="${s.id}" class="erase danger">Remove</button></div></div>`}
  refreshBoxControls();
  E('sampleList').innerHTML=html||'<p class="small">No samples. Use Auto-detect or draw a sample ROI.</p>';
  E('stats').innerHTML=`<span>${state.samples.length} samples · ${state.measurements.length} lines measured</span>`;

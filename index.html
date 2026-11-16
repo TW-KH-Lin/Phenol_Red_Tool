@@ -25,6 +25,26 @@
 canvas.adjusting-box{touch-action:none}
 .sample-actions{flex-wrap:wrap}.sample-actions .setting{display:flex;align-items:center;gap:6px}.sample-actions select{width:auto}
 .photo-tools{margin:6px 0}.photo-tools .settings{margin-top:8px}
+
+/* Compact controls with a separate hit area around the thin slider track. */
+button,.upload-button,.zoom-tools button,.actions button,.sample .actions button,.profile-filter-actions button{
+ min-height:28px;padding:3px 7px;font-size:12px;border-radius:6px
+}
+.actions button{flex:0 1 auto}
+.boundary-control{max-width:170px;margin-bottom:8px}
+.boundary-control input,.setting input[type=range]{width:100%;max-width:160px;margin:0}
+.sample-actions input[type=range]{max-width:92px}
+.zoom-tools input[type=range]{max-width:56px;flex:0 1 56px}
+input[type=range]{appearance:none;-webkit-appearance:none;height:24px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:#aebcdc;border-radius:3px}
+input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:12px;height:12px;margin-top:-4.5px;border-radius:50%;background:var(--blue)}
+input[type=range]::-moz-range-track{height:3px;background:#aebcdc;border-radius:3px}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:var(--blue)}
+input[type=range]:disabled{opacity:.45;cursor:default}
+@media(pointer:coarse){
+ button,.upload-button,.zoom-tools button,.actions button,.sample .actions button,.profile-filter-actions button{min-height:32px}
+ input[type=range]{height:32px}
+}
 </style></head><body>
 <header><div class="brand"><div class="brandmark" aria-hidden="true"></div><h1>Phenol Red <span class="version">v8.5 Experimental</span></h1></div><span id="runtimeNotice" class="runtime" role="status">Starting…</span></header>
 <main><div style="text-align:right;margin:0 0 8px"><a href="guide.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5">Help · 圖解教學 ↗</a> <a href="guide-en.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5;margin-left:10px">English ↗</a> <button type="button" id="updateApp" style="margin-left:8px">Update app</button></div><div class="experiment-banner">Experimental · Local defects <a href="phenol-red-v7.5.html">Open preserved v7.5</a></div>

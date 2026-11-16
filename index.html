@@ -77,11 +77,31 @@ main{max-width:1440px}
  .nearby-settings{padding-top:10px}
  .image-preview .zoom-tools{flex:0 1 auto}
 }
+
+.workspace-layout{display:inline-flex;align-items:center;gap:6px;font-size:12px}
+.workspace-layout select{min-height:28px;padding:3px 6px}
+.import-heading>.layout-options{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.workspace.tabbed-workspace{grid-template-columns:minmax(0,1fr)}
+#workspaceTabs{margin:4px 0 9px;border-bottom:1px solid var(--line)}
+#workspaceTabList{display:flex;gap:5px;overflow-x:auto;padding:3px 0 5px}
+#workspaceTabList button{flex:none;white-space:nowrap}
+#workspaceTabList [aria-selected="true"]{background:#e9f0ff;color:var(--blue);border-color:#a5bcec}
+.workspace-tab-panel{padding:5px 0;display:flex;flex-wrap:wrap;align-items:start;gap:6px 12px}
+.workspace-tab-panel>.group-body{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:0}
+.workspace-tab-panel .boundary-control{width:156px;margin:0}
+.workspace-tab-panel .setting{min-width:0;margin:0}
+.workspace-tab-panel .settings{display:flex;flex-wrap:wrap;align-items:start;gap:6px 12px;margin:0}
+.workspace-tab-panel .sample-actions{border:0;margin:0;padding:0}
+.workspace-tab-panel p{margin:3px 0}
+#workspaceTabActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0}
+#workspaceTabActions .status{margin:0}
 </style></head><body>
 <header><div class="brand"><div class="brandmark" aria-hidden="true"></div><h1>Phenol Red <span class="version">v8.5 Experimental</span></h1></div><span id="runtimeNotice" class="runtime" role="status">Starting…</span></header>
 <main><section class="panel import-panel" aria-labelledby="importHeading">
 <div class="import-heading"><h2 id="importHeading">Photo</h2>
-<details class="utility-menu"><summary>Help &amp; app</summary><div class="utility-links"><a href="guide.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5">Help · 圖解教學 ↗</a> <a href="guide-en.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5;margin-left:10px">English ↗</a> <button type="button" id="updateApp" style="margin-left:8px">Update app</button><a href="phenol-red-v7.5.html">Open preserved v7.5</a></div></details></div>
+<div class="layout-options"><label class="workspace-layout" for="workspaceLayout">Layout
+<select id="workspaceLayout"><option value="sidebar">Side panel</option><option value="tabs">Photo tabs</option></select></label>
+<details class="utility-menu"><summary>Help &amp; app</summary><div class="utility-links"><a href="guide.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5">Help · 圖解教學 ↗</a> <a href="guide-en.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5;margin-left:10px">English ↗</a> <button type="button" id="updateApp" style="margin-left:8px">Update app</button><a href="phenol-red-v7.5.html">Open preserved v7.5</a></div></details></div></div>
 <div class="uploadbar" id="dropZone"><label class="upload-button">Upload photo<input id="upload" type="file" accept="image/*" aria-label="Upload photo"></label><label class="upload-button secondary">Camera<input id="cameraUpload" type="file" accept="image/*" capture="environment" aria-label="Take photo"></label><button id="loadSyntheticDemo" type="button">Demo</button><span class="file-name" id="fileLabel">No photo selected</span><div id="uploadStatus" class="upload-status" role="status" aria-live="polite"></div></div></section>
 
 <section class="panel workspace">
@@ -91,6 +111,8 @@ main{max-width:1440px}
 
 </div>
 
+<div id="workspaceTabs" hidden><div id="workspaceTabList" role="tablist" aria-label="Photo controls"></div>
+<div id="workspaceTabPanels"></div><div id="workspaceTabActions"></div></div>
 <div class="imagebox" id="imageViewport" tabindex="0" aria-label="Image preview; scroll or drag to pan"><canvas id="imageCanvas" aria-label="Sample image with detected edges and reference lines"></canvas><div class="empty-image"><span>＋</span>Upload a photo to begin</div></div>
 <div class="image-bottom"><label class="checkrow"><input type="checkbox" id="autoContrast" title="Enhance the preview; measurements use the original image">Auto contrast</label><label class="checkrow edge"><input type="checkbox" id="showEdges" checked>Edges</label><label class="checkrow guide"><input type="checkbox" id="showReferences" checked>Guides</label><label class="checkrow guide"><input type="checkbox" id="showCenter" title="Yellow dashed line: center estimated from the original red body" checked>Center</label><label class="checkrow" style="color:#c77117"><input type="checkbox" id="showDefects" checked>Defect marks</label><span id="imageInfo">No image</span></div></div>
 <aside class="nearby-settings" aria-label="Analysis controls"><div class="control-head"><h2>Analyze</h2></div><div class="actions"><button class="primary" id="autodetect">Detect</button><button id="analyze">Analyze</button></div><p id="status" class="status" role="status" aria-live="polite"></p><details class="analysis-group"><summary>Sample detection</summary><div class="group-body"><div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div></div></details><details class="photo-tools"><summary>Image controls</summary>
@@ -1818,6 +1840,78 @@ E('localWindow').oninput=()=>{
 E('defectCsv').onclick=exportDefectResults;E('showDefects').onchange=render;E('showEdges').onchange=render;E('showCenter').onchange=render;
 E('showReferences').onchange=render;
 setLengthUI();render();refreshSamples();updateResults();
+
+function setupWorkspaceLayout(){
+ const workspace=document.querySelector('.workspace');
+ const preview=workspace.querySelector('.image-preview');
+ const aside=workspace.querySelector('.nearby-settings');
+ const groups=[
+  ['samples','Samples',[preview.querySelector('.sample-actions'),aside.querySelector('.analysis-group .group-body')]],
+  ['image','Image',Array.from(aside.querySelector('.photo-tools').children).filter(el=>el.tagName!=='SUMMARY')],
+  ['edges','Edges',[aside.querySelector('#threshold').closest('.group-body')]],
+  ['measure','Measurement',[aside.querySelector('#localWindow').closest('.group-body')]],
+  ['calibrate','Calibration',[aside.querySelector('#scaleMode').closest('.group-body')]]
+ ];
+ const toolbar=E('workspaceTabs'), tabList=E('workspaceTabList'), panels=E('workspaceTabPanels');
+ const actions=[aside.querySelector('.actions'),E('status')];
+ const anchors=new Map();
+ const move=(node,parent)=>{
+  if(!anchors.has(node)){
+   const anchor=document.createComment('Original control position');
+   node.before(anchor);anchors.set(node,anchor);
+  }
+  parent.append(node);
+ };
+ const tabs=groups.map(([key,label,nodes])=>{
+  const button=document.createElement('button'),panel=document.createElement('div');
+  button.type='button';button.id='workspace-tab-'+key;button.textContent=label;
+  button.setAttribute('role','tab');button.setAttribute('aria-controls','workspace-panel-'+key);
+  panel.id='workspace-panel-'+key;panel.className='workspace-tab-panel';
+  panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',button.id);
+  tabList.append(button);panels.append(panel);
+  return {button,panel,nodes};
+ });
+ function selectTab(index,focus=false){
+  tabs.forEach(({button,panel},i)=>{
+   const active=i===index;
+   button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;
+   panel.hidden=!active;
+  });
+  if(focus)tabs[index].button.focus();
+ }
+ tabs.forEach(({button},index)=>{
+  button.onclick=()=>selectTab(index);
+  button.onkeydown=event=>{
+   const next={ArrowLeft:(index+tabs.length-1)%tabs.length,ArrowRight:(index+1)%tabs.length,Home:0,End:tabs.length-1}[event.key];
+   if(next===undefined)return;
+   event.preventDefault();selectTab(next,true);
+  };
+ });
+ selectTab(0);
+ function applyLayout(tabbed){
+  if(tabbed){
+   tabs.forEach(({panel,nodes})=>nodes.forEach(node=>move(node,panel)));
+   actions.forEach(node=>move(node,E('workspaceTabActions')));
+  }else{
+   for(const [node,anchor] of anchors)anchor.after(node);
+  }
+  aside.hidden=tabbed;
+  toolbar.hidden=!tabbed;
+  workspace.classList.toggle('tabbed-workspace',tabbed);
+  E('workspaceLayout').value=tabbed?'tabs':'sidebar';
+  render();
+ }
+ E('workspaceLayout').onchange=()=>{
+  const tabbed=E('workspaceLayout').value==='tabs';
+  applyLayout(tabbed);
+  const url=new URL(location.href);
+  if(tabbed)url.searchParams.set('layout','tabs');else url.searchParams.delete('layout');
+  try{history.replaceState(null,'',url.href);}catch(error){/* Local file restrictions may block URL updates. */}
+ };
+ applyLayout(new URLSearchParams(location.search).get('layout')==='tabs');
+}
+setupWorkspaceLayout();
+
 
 E('updateApp').onclick=()=>{
  if((state.img||savedTables.size)&&!window.confirm('Updating clears the open analysis and saved image tables. Export first if needed. Update now?'))return;

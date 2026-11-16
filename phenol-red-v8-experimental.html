@@ -24,6 +24,7 @@
 #adjustImageBox[aria-pressed="true"]{background:var(--blue);color:white}
 canvas.adjusting-box{touch-action:none}
 .sample-actions{flex-wrap:wrap}.sample-actions .setting{display:flex;align-items:center;gap:6px}.sample-actions select{width:auto}
+.photo-tools{margin:6px 0}.photo-tools .settings{margin-top:8px}
 </style></head><body>
 <header><div class="brand"><div class="brandmark" aria-hidden="true"></div><h1>Phenol Red <span class="version">v8.5 Experimental</span></h1></div><span id="runtimeNotice" class="runtime" role="status">Starting…</span></header>
 <main><div style="text-align:right;margin:0 0 8px"><a href="guide.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5">Help · 圖解教學 ↗</a> <a href="guide-en.html" target="_blank" rel="noopener" style="font-size:12px;color:#245dd5;margin-left:10px">English ↗</a> <button type="button" id="updateApp" style="margin-left:8px">Update app</button></div><div class="experiment-banner">Experimental · Local defects <a href="phenol-red-v7.5.html">Open preserved v7.5</a></div>
@@ -34,6 +35,12 @@ canvas.adjusting-box{touch-action:none}
 <button type="button" id="addROI" disabled>Add box</button><button type="button" id="editROI" disabled>Redraw</button><button type="button" id="cancelDraw" hidden>Cancel drawing</button>
 <div class="setting"><label for="sampleDiscovery">Sample search</label><select id="sampleDiscovery"><option value="tolerant" selected>Tolerant</option><option value="strict">Strict</option></select></div><label class="checkrow"><input id="fineEdges" type="checkbox" checked>Trace fine detection</label>
 <div class="setting"><label for="fineSensitivity">Sensitivity <output id="fineSensitivityText" for="fineSensitivity">50</output></label><input id="fineSensitivity" type="range" min="0" max="150" step="5" value="50"></div></div>
+<details class="photo-tools"><summary>Image controls</summary>
+<div class="image-toolbar"><button type="button" id="rotate90">Rotate 90°</button><button type="button" id="rotate180">Rotate 180°</button><button type="button" id="resetPhoto">Reset image</button></div>
+<div class="settings">
+<div class="setting"><label for="photoContrast">Contrast <output id="photoContrastValue">100%</output></label><input id="photoContrast" type="range" min="50" max="200" value="100"></div>
+<div class="setting"><label for="photoExposure">Exposure <output id="photoExposureValue">0 EV</output></label><input id="photoExposure" type="range" min="-2" max="1" step=".1" value="0"></div>
+</div><p class="small">Contrast and exposure adjust the preview. Rotating resets the sample boxes.</p></details>
 <div class="imagebox" id="imageViewport" tabindex="0" aria-label="Image preview; scroll or drag to pan"><canvas id="imageCanvas" aria-label="Sample image with detected edges and reference lines"></canvas><div class="empty-image"><span>＋</span>Upload a photo to begin</div></div>
 <div class="image-bottom"><label class="checkrow"><input type="checkbox" id="autoContrast" title="Enhance the preview; measurements use the original image">Auto contrast</label><label class="checkrow edge"><input type="checkbox" id="showEdges" checked>Edges</label><label class="checkrow guide"><input type="checkbox" id="showReferences" checked>Guides</label><label class="checkrow guide"><input type="checkbox" id="showCenter" title="Yellow dashed line: center estimated from the original red body" checked>Center</label><label class="checkrow" style="color:#c77117"><input type="checkbox" id="showDefects" checked>Defect marks</label><span id="imageInfo">No image</span></div></div>
 <aside class="nearby-settings"><div class="control-head"><h2>Adjust</h2><span class="small">Live preview</span></div><div class="boundary-control"><label for="threshold">Boundary <span class="value" id="thresholdText">60%</span></label><input id="threshold" type="range" min="15" max="90" step="1" value="60"></div>
@@ -371,9 +378,12 @@ function contrastMap(pixels){
  return Uint8ClampedArray.from({length:256},(_,value)=>midpoint+(value-midpoint)*gain);
 }
 function previewImage(){
- if(!E('autoContrast').checked)return rawCanvas;
+ const contrast=Number(E('photoContrast').value)/100,exposure=Number(E('photoExposure').value);
+ if(!E('autoContrast').checked&&contrast===1&&exposure===0)return rawCanvas;
  if(!contrastPreview){
-  const map=contrastMap(raster);
+  const auto=E('autoContrast').checked?contrastMap(raster):null;
+  const gain=2**exposure;
+  const map=Uint8ClampedArray.from({length:256},(_,v)=>128+((auto?auto[v]:v)*gain-128)*contrast);
   const preview=document.createElement('canvas');
   preview.width=rawCanvas.width;
   preview.height=rawCanvas.height;
@@ -390,7 +400,14 @@ function previewImage(){
  }
  return contrastPreview;
 }
-E('autoContrast').onchange=render;
+function redrawPhotoTone(){
+ contrastPreview=null;
+ E('photoContrastValue').textContent=E('photoContrast').value+'%';
+ E('photoExposureValue').textContent=E('photoExposure').value+' EV';
+ render();
+}
+E('autoContrast').onchange=redrawPhotoTone;
+for(const id of ['photoContrast','photoExposure'])E(id).oninput=redrawPhotoTone;
 let boxAdjust=false,boxDrag=null;
 function setBoxAdjust(active){
  boxAdjust=active;
@@ -1616,6 +1633,48 @@ function csv(rows){return '\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').re
 E('summaryCsv').onclick=()=>{if(!state.measurements.length){setStatus('Analyze lines before exporting.',true);return}let header=['Image','Sample','Side','Phenol Red (µL)','Sample ROI length (px)','Analyzed section (px)','Full sample length (mm)','Section length (mm)','Mean width','Width unit','Width SD','Width CV (%)','Edge Ra','Edge Rq','Left edge Rq','Right edge Rq','Relative Rq (%)','Undetected fraction (%)','Longest gap (%)','Gap count','Width defect count','Width defects per 100px','Width defects per 10mm','Detection coverage (%)','Length mode','Dark-core boundary level (%)','Edge window (px)','Defect threshold (%)','Edge straightness RMS','Relative straightness (%)','Centerline bending RMS','Overall edge angle difference (deg)','Algorithm','Sample tilt (deg from vertical)','Tilt correction status','Boundary signal','Fitted parallel width','Parallel-reference RMS','Parallel-reference P95','Uncertain edges (%)'];downloadBlob(new Blob([csv([header,...readoutRows()])],{type:'text/csv;charset=utf-8'}),'phenol_red_measurements.csv')};
 E('profileCsv').onclick=()=>{if(!state.measurements.length)return;let rows=[['Image','Sample','Phenol Red (µL)','Cross-section index','Normalized axial position (%)','Rectified Y (px)','Detected','Width (px)','Left edge x (px)','Right edge x (px)','Detrended left (px)','Detrended right (px)','Original left X (px)','Original left Y (px)','Original right X (px)','Original right Y (px)','Sample tilt (deg)','Parallel left X (rectified px)','Parallel right X (rectified px)','Left deviation from parallel (px)','Right deviation from parallel (px)','Uncertain edge row','Initial body center X (rectified px)','Re-detected from unsmoothed row','Blue guide midpoint X (rectified px)','Raw width deviation (%)','Raw edge deviation (%)','Raw unevenness (%)','In worst width window','In worst edge window','In worst unevenness window']];for(let m of state.measurements)for(let i=0;i<m.Y.length;i++)rows.push([state.imgName,state.samples.find(s=>s.id===m.sampleId)?.label||m.sample,m.volume,i,fmt(100*i/Math.max(1,m.Y.length-1),2),m.Y[i],m.valid[i]?1:0,fmt(m.widths[i],3),fmt(m.L[i],3),fmt(m.R[i],3),fmt(m.DL[i],3),fmt(m.DR[i],3),fmt(imagePoint(m.frame,m.L[i],m.Y[i]).x,3),fmt(imagePoint(m.frame,m.L[i],m.Y[i]).y,3),fmt(imagePoint(m.frame,m.R[i],m.Y[i]).x,3),fmt(imagePoint(m.frame,m.R[i],m.Y[i]).y,3),fmt(m.tiltAngle,3),fmt(m.ideal.refLeft[i],3),fmt(m.ideal.refRight[i],3),fmt(m.ideal.errorLeft[i],3),fmt(m.ideal.errorRight[i],3),m.uncertain[i]?1:0,fmt(m.initialGuideCenter,3),m.recovered[i]?1:0,fmt((m.ideal.refLeft[i]+m.ideal.refRight[i])/2,3),m.local?.rows[i]?.width??null,m.local?.rows[i]?.edge??null,m.local?.rows[i]?.rough??null,...['width','edge','rough'].map(k=>{const w=m.local?.worst[k];return w&&i>=w.start&&i<w.endExclusive?1:0;})]);downloadBlob(new Blob([csv(rows)],{type:'text/csv;charset=utf-8'}),'phenol_red_line_profiles.csv')};
 E('overlayPng').onclick=()=>{if(!state.img)return;render();if(canvas.toBlob)canvas.toBlob(blob=>{if(blob)downloadBlob(blob,'phenol_red_edge_overlay.png')},'image/png');else{let a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='phenol_red_edge_overlay.png';a.click()}};
+let photoRotation=0;
+function rotateRaster(pixels,w,h,turns){
+ const width=turns%2?h:w,height=turns%2?w:h;
+ const rotated=new Uint8ClampedArray(pixels.length);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  const dx=turns===1?h-1-y:turns===2?w-1-x:y;
+  const dy=turns===1?x:turns===2?h-1-y:w-1-x;
+  const from=4*(y*w+x),to=4*(dy*width+dx);
+  for(let c=0;c<4;c++)rotated[to+c]=pixels[from+c];
+ }
+ return {pixels:rotated,width,height};
+}
+function rotatePhoto(turns){
+ if(!state.img||!turns)return;
+ clearTimeout(previewTimer);
+ const {pixels,width,height}=rotateRaster(raster,rawCanvas.width,rawCanvas.height,turns);
+ rawCanvas.width=width;rawCanvas.height=height;
+ rawCtx.putImageData(new ImageData(pixels,width,height),0,0);
+ raster=pixels;contrastPreview=null;
+ if(turns%2)[processedScaleX,processedScaleY]=[processedScaleY,processedScaleX];
+ photoRotation=(photoRotation+turns)%4;
+ boxDrag=null;setBoxAdjust(false);stripPick=null;
+ state.drawMode=null;state.down=null;state.pan=null;state.zoom=1;state.samples=[];state.measurements=[];state.chosen=null;
+ canvas.classList.remove('draw-enabled','panning');
+ E('imageViewport').scrollLeft=E('imageViewport').scrollTop=0;
+ E('fileLabel').textContent=`${state.imgName} · ${width} × ${height} px · ${photoRotation*90}°`;
+ if(E('scaleMode').value==='strip'){E('stripPx').value='';autoWidthNote='';}
+ refreshSamples();updateResults();render();
+ autoSamples();
+ if(E('scaleMode').value==='strip'&&state.samples.length)fillAutomaticStripWidth();
+ if(state.samples.length)analyze();
+}
+E('rotate90').onclick=()=>rotatePhoto(1);
+E('rotate180').onclick=()=>rotatePhoto(2);
+function resetPhotoTone(){
+ E('photoContrast').value='100';E('photoExposure').value='0';E('autoContrast').checked=false;
+}
+E('resetPhoto').onclick=()=>{
+ resetPhotoTone();
+ if(photoRotation)rotatePhoto(4-photoRotation);
+ redrawPhotoTone();
+};
 function loadImage(uri,label){return new Promise((resolve,reject)=>{
  let im=new Image();
  im.onload=()=>{try{
@@ -1628,6 +1687,9 @@ function loadImage(uri,label){return new Promise((resolve,reject)=>{
   rawCanvas.width=w;rawCanvas.height=h;rawCtx.drawImage(im,0,0,w,h);
   raster=rawCtx.getImageData(0,0,w,h).data;
   contrastPreview=null;
+  photoRotation=0;
+  resetPhotoTone();
+  E('photoContrastValue').textContent='100%';E('photoExposureValue').textContent='0 EV';
   imageRevision++;
   boxDrag=null;setBoxAdjust(false);
   stripPick=null;

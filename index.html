@@ -95,6 +95,11 @@ main{max-width:1440px}
 .workspace-tab-panel p{margin:3px 0}
 #workspaceTabActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0}
 #workspaceTabActions .status{margin:0}
+
+#workspace-panel-range .two-fields{max-width:190px}
+#workspace-panel-roughness>.setting{flex:0 1 190px}
+#workspace-panel-metrics>.setting{flex:0 1 auto}
+#workspaceTabList{scrollbar-width:thin}
 </style></head><body>
 <header><div class="brand"><div class="brandmark" aria-hidden="true"></div><h1>Phenol Red <span class="version">v8.5 Experimental</span></h1></div><span id="runtimeNotice" class="runtime" role="status">Starting…</span></header>
 <main><section class="panel import-panel" aria-labelledby="importHeading">
@@ -1849,7 +1854,10 @@ function setupWorkspaceLayout(){
   ['samples','Samples',[preview.querySelector('.sample-actions'),aside.querySelector('.analysis-group .group-body')]],
   ['image','Image',Array.from(aside.querySelector('.photo-tools').children).filter(el=>el.tagName!=='SUMMARY')],
   ['edges','Edges',[aside.querySelector('#threshold').closest('.group-body')]],
-  ['measure','Measurement',[aside.querySelector('#localWindow').closest('.group-body')]],
+  ['range','Range',[E('unequal').closest('.full'),E('autoTilt').closest('label')]],
+  ['roughness','Roughness',[E('trend').closest('.setting'),E('trendMm').closest('.setting')]],
+  ['metrics','Metrics',[E('localWindow').closest('.boundary-control'),E('edgeDisplay').closest('.setting'),
+   E('contourMode').closest('.setting'),E('defectPct').closest('.setting')]],
   ['calibrate','Calibration',[aside.querySelector('#scaleMode').closest('.group-body')]]
  ];
  const toolbar=E('workspaceTabs'), tabList=E('workspaceTabList'), panels=E('workspaceTabPanels');

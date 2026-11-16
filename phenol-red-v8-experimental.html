@@ -523,7 +523,7 @@ function refreshSamples(){let html='';for(let s of state.samples){let r=s.roi;ht
  E('sampleList').querySelectorAll('.sampleMM').forEach(i=>i.onchange=()=>{let s=state.samples.find(s=>s.id==i.dataset.id);let v=parseFloat(i.value);s.lengthmm=v>0?v:null;for(let m of state.measurements.filter(m=>m.sampleId===s.id)){m.physicalLengthMM=s.lengthmm?m.expectedLength/s.roi.h*s.lengthmm:null;m.defectsPer10mm=m.physicalLengthMM?10*m.defects/m.physicalLengthMM:NaN}updateResults()});
 }
 function removeSample(id){state.samples=state.samples.filter(s=>s.id!==id);state.measurements=state.measurements.filter(m=>m.sampleId!==id);state.chosen=state.samples[0]?.id??null;refreshSamples();updateResults();render()}
-function setLengthUI(){let checked=E('unequal').checked;E('lengthControls').classList.toggle('unavailable',!checked);E('lengthDesc').textContent=checked?'Applied to each sample.':'Full sample box.'}
+function setLengthUI(){let checked=E('unequal').checked;E('lengthControls').classList.toggle('unavailable',!checked);E('lengthDesc').textContent=checked?'Applied to each red line separately.':'Full detected red line.'}
 let previewTimer=null;
 function queuePreview(){
  clearTimeout(previewTimer);
@@ -745,7 +745,7 @@ function continuousStripeExtent(start,end,hasDye){
   last=y;
  }
  if(first!==null)runs.push([first,last+1]);
- const longest=Math.max(0,...runs.map(([a,b])=>b-a));
+ const longest=runs.reduce((max,[a,b])=>Math.max(max,b-a),0);
  const sustained=runs.filter(([a,b])=>b-a>=Math.max(24,longest*.18));
  return sustained.length?[sustained[0][0],sustained.at(-1)[1]]:null;
 }
@@ -765,19 +765,18 @@ function analyzeStripe(s,vol){
  const split=(centers[0]+centers[1])/2;
  if(vol===1)x1=Math.min(x1,Math.floor(split-1));else x0=Math.max(x0,Math.ceil(split+1));
  let y0=roi.y,y1=roi.y+roi.h;
- if(s.discoveryMode==='membrane-cross-sections'){
-  const extent=continuousStripeExtent(y0,y1,y=>{
-   const background=Math.min(sampleScore(x0+2,y),sampleScore(x1-2,y));
-   if(!Number.isFinite(background))return false;
-   let count=0;
-   const half=Math.max(5,Math.min(16,Math.round(sep*.28)));
-   for(let x=Math.max(x0,Math.round(center)-half);x<=Math.min(x1,Math.round(center)+half);x++){
-    if(sampleScore(x,y)>Math.max(12,background+9)&&++count>=3)return true;
-   }
-   return false;
-  });
-  if(extent)[y0,y1]=extent;
- }
+ const extent=continuousStripeExtent(y0,y1,y=>{
+  const background=Math.min(sampleScore(x0+2,y),sampleScore(x1-2,y));
+  if(!Number.isFinite(background))return false;
+  let count=0;
+  const half=Math.max(5,Math.min(16,Math.round(sep*.28)));
+  for(let x=Math.max(x0,Math.round(center)-half);x<=Math.min(x1,Math.round(center)+half);x++){
+   if(sampleScore(x,y)>Math.max(12,background+9)&&++count>=3)return true;
+  }
+  return false;
+ });
+ if(!extent)throw Error(`${s.label} ${vol} µL: could not locate a sustained red stripe in the sample box`);
+ [y0,y1]=extent;
  if(E('unequal').checked){
   const start=+E('startPct').value,end=+E('endPct').value,top=y0,height=y1-y0;
   if(!(start>=0&&end<=100&&start<end))throw Error('Start/end percentages must satisfy 0 ≤ start < end ≤ 100');
@@ -1395,7 +1394,7 @@ function sampleResultCard(sample,lines,sum,u){
  </div>
  <details class="result-details"><summary>Reference details</summary>
   ${E('contourMode').value==='legacy'?'<p class="small">Legacy contour uses a 59.275 mm window centered at 45% of the sample box. Calibration and continuous edges across that window are required.</p>':''}
-  <p class="small">Analysis range: ${E('unequal').checked?E('startPct').value+'–'+E('endPct').value+'% of '+(sample?.discoveryMode==='membrane-cross-sections'?'continuous stripe':'sample box'):(sample?.discoveryMode==='membrane-cross-sections'?'Continuous stripe':'Full sample box')}. Window locations are relative to this range.</p>
+  <p class="small">Analysis range: ${E('unequal').checked?E('startPct').value+'–'+E('endPct').value+'% of each red line':'Full detected red line'}. Window locations are relative to this range.</p>
   ${pair.filter(Boolean).map(m=>lineReference(m,sum)).join('')}
  </details></article>`;
 }
